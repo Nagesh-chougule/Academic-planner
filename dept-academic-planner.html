@@ -1,0 +1,2077 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Department Academic Planner — NEP 2020 (Maharashtra)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    :root {
+      --paper: #f7f5ee;
+      --blue: #1d4e6b;
+      --blue-deep: #0f3247;
+      --blue-pale: #e4ecf0;
+      --grid: rgba(29, 78, 107, 0.10);
+      --orange: #d9622b;
+      --orange-pale: #faeadf;
+      --green: #3f7d58;
+      --green-pale: #e6f0e9;
+      --red: #b23a3a;
+      --red-pale: #f6e5e3;
+      --purple: #5b4b8a;
+      --purple-pale: #ece8f5;
+      --ink: #1c232b;
+      --ink-soft: #5b6472;
+      --line: #d8d0bd;
+      --white: #fffdf8;
+      --shadow: 0 1px 2px rgba(15, 50, 71, .06), 0 8px 22px rgba(15, 50, 71, .08);
+      --radius: 9px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--paper);
+      background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+      background-size: 26px 26px;
+      color: var(--ink);
+      font-family: 'Inter', system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    #root {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      width: 272px;
+      flex-shrink: 0;
+      background: var(--blue-deep);
+      color: #e7edf1;
+      padding: 24px 0 20px;
+      position: relative;
+      overflow-y: auto;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0 22px 18px;
+      border-bottom: 1px solid rgba(231, 237, 241, .14);
+    }
+
+    .brand-mark {
+      width: 44px;
+      height: 44px;
+      border: 2px solid var(--orange);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transform: rotate(-3deg);
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: 10px;
+      color: var(--orange);
+      flex-shrink: 0;
+      text-align: center;
+      line-height: 1.1;
+    }
+
+    .brand-text .k {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: 16px;
+      line-height: 1.2;
+    }
+
+    .brand-text .s {
+      font-size: 9.5px;
+      letter-spacing: .07em;
+      text-transform: uppercase;
+      color: #9db2c1;
+      margin-top: 2px;
+    }
+
+    nav.idx {
+      padding: 10px 10px;
+    }
+
+    .idx-item {
+      display: flex;
+      align-items: baseline;
+      gap: 9px;
+      width: 100%;
+      text-align: left;
+      border: none;
+      background: none;
+      cursor: pointer;
+      color: #c9d6de;
+      font-size: 13px;
+      font-weight: 500;
+      padding: 8px 12px;
+      border-radius: 6px;
+      margin-bottom: 1px;
+      font-family: 'Inter';
+    }
+
+    .idx-item .no {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      color: #6f8798;
+      width: 18px;
+      flex-shrink: 0;
+    }
+
+    .idx-item:hover {
+      background: rgba(231, 237, 241, .08);
+      color: #fff;
+    }
+
+    .idx-item.active {
+      background: var(--orange);
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .idx-item.active .no {
+      color: #fff;
+      opacity: .75;
+    }
+
+    .idx-divider {
+      margin: 12px 20px 6px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 9.5px;
+      letter-spacing: .09em;
+      text-transform: uppercase;
+      color: #6f8798;
+    }
+
+    .sidebar-foot {
+      padding: 14px 22px 0;
+      margin-top: 6px;
+      border-top: 1px solid rgba(231, 237, 241, .14);
+      font-size: 10px;
+      color: #7e94a2;
+      line-height: 1.6;
+    }
+
+    main {
+      flex: 1;
+      min-width: 0;
+      padding: 34px 42px 70px;
+      max-width: 1220px;
+    }
+
+    .eyebrow {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--orange);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .eyebrow::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: var(--line);
+    }
+
+    h1.page-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: 30px;
+      margin: 0 0 6px;
+      color: var(--blue-deep);
+      letter-spacing: -.01em;
+    }
+
+    .page-sub {
+      color: var(--ink-soft);
+      font-size: 13.5px;
+      max-width: 700px;
+      margin-bottom: 24px;
+      line-height: 1.6;
+    }
+
+    .card {
+      background: var(--white);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 20px 22px;
+      box-shadow: var(--shadow);
+      margin-bottom: 16px;
+      position: relative;
+    }
+
+    .card.tick::before,
+    .card.tick::after {
+      content: "";
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      border-color: var(--blue);
+      border-style: solid;
+      top: 8px;
+    }
+
+    .card.tick::before {
+      left: 8px;
+      border-width: 2px 0 0 2px;
+    }
+
+    .card.tick::after {
+      right: 8px;
+      border-width: 2px 2px 0 0;
+    }
+
+    .card h3 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 16.5px;
+      margin: 0 0 4px;
+      color: var(--blue-deep);
+    }
+
+    .card p.desc {
+      color: var(--ink-soft);
+      font-size: 13px;
+      margin: 0 0 12px;
+      line-height: 1.5;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12.5px;
+    }
+
+    th {
+      text-align: left;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 9.5px;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      color: var(--ink-soft);
+      padding: 7px 8px;
+      border-bottom: 2px solid var(--blue);
+    }
+
+    td {
+      padding: 7px 8px;
+      border-bottom: 1px solid var(--line);
+      vertical-align: middle;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tfoot td {
+      font-weight: 700;
+      border-top: 2px solid var(--blue);
+      border-bottom: none;
+      font-family: 'IBM Plex Mono', monospace;
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 10px;
+      font-weight: 700;
+      background: var(--blue-pale);
+      color: var(--blue-deep);
+      font-family: 'IBM Plex Mono', monospace;
+      letter-spacing: .02em;
+    }
+
+    .tag.purple {
+      background: var(--purple-pale);
+      color: var(--purple);
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 999px;
+    }
+
+    .status.ok {
+      background: var(--green-pale);
+      color: var(--green);
+    }
+
+    .status.warn {
+      background: var(--orange-pale);
+      color: var(--orange);
+    }
+
+    .status.bad {
+      background: var(--red-pale);
+      color: var(--red);
+    }
+
+    .field {
+      margin-bottom: 13px;
+    }
+
+    .field label {
+      display: block;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--blue-deep);
+      margin-bottom: 5px;
+    }
+
+    input[type=text],
+    input[type=number],
+    select {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      font-family: 'Inter';
+      font-size: 13px;
+      background: var(--white);
+      color: var(--ink);
+    }
+
+    input:focus,
+    select:focus {
+      outline: 2px solid var(--orange);
+      outline-offset: 1px;
+      border-color: var(--orange);
+    }
+
+    .row2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .row3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 14px;
+    }
+
+    .row4 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+      gap: 14px;
+    }
+
+    button.primary {
+      background: var(--blue);
+      color: #fff;
+      border: none;
+      padding: 9px 17px;
+      border-radius: 7px;
+      font-family: 'Inter';
+      font-weight: 600;
+      font-size: 12.5px;
+      cursor: pointer;
+    }
+
+    button.primary:hover {
+      background: var(--blue-deep);
+    }
+
+    button.ghost {
+      background: none;
+      border: 1px solid var(--line);
+      color: var(--ink-soft);
+      padding: 7px 13px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      font-family: 'Inter';
+      font-weight: 600;
+    }
+
+    button.ghost:hover {
+      border-color: var(--orange);
+      color: var(--orange);
+    }
+
+    button.ghost.active {
+      border-color: var(--blue);
+      color: var(--blue);
+      background: var(--blue-pale);
+    }
+
+    button.danger {
+      background: none;
+      border: 1px solid var(--red-pale);
+      color: var(--red);
+      padding: 4px 9px;
+      border-radius: 5px;
+      font-size: 10.5px;
+      cursor: pointer;
+      font-family: 'Inter';
+      font-weight: 600;
+    }
+
+    button.chip-x {
+      background: none;
+      border: none;
+      color: inherit;
+      cursor: pointer;
+      font-weight: 700;
+      margin-left: 4px;
+      padding: 0 2px;
+    }
+
+    .add-row {
+      display: grid;
+      grid-template-columns: 1.2fr 2fr 1.3fr .5fr .5fr .5fr .7fr auto;
+      gap: 8px;
+      align-items: end;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px dashed var(--line);
+    }
+
+    .add-row .field {
+      margin-bottom: 0;
+    }
+
+    .sem-tabs,
+    .prog-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 16px;
+    }
+
+    .sem-tab {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11.5px;
+      font-weight: 600;
+      padding: 7px 12px;
+      border-radius: 6px;
+      border: 1px solid var(--line);
+      background: var(--white);
+      color: var(--ink-soft);
+      cursor: pointer;
+    }
+
+    .sem-tab.active {
+      background: var(--blue);
+      border-color: var(--blue);
+      color: #fff;
+    }
+
+    .sem-tab .c {
+      opacity: .75;
+      margin-left: 4px;
+    }
+
+    .grid4 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: 12px;
+      margin-bottom: 22px;
+    }
+
+    .stat {
+      background: var(--white);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 15px 17px;
+      box-shadow: var(--shadow);
+    }
+
+    .stat .n {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: 24px;
+      color: var(--blue-deep);
+    }
+
+    .stat .l {
+      font-size: 11px;
+      color: var(--ink-soft);
+      margin-top: 3px;
+      text-transform: uppercase;
+      letter-spacing: .03em;
+    }
+
+    .meter {
+      height: 7px;
+      border-radius: 99px;
+      background: var(--blue-pale);
+      overflow: hidden;
+      margin-top: 7px;
+    }
+
+    .meter>div {
+      height: 100%;
+      background: var(--blue);
+    }
+
+    .meter.bad>div {
+      background: var(--red);
+    }
+
+    .meter.warn>div {
+      background: var(--orange);
+    }
+
+    .empty {
+      text-align: center;
+      padding: 30px 18px;
+      color: var(--ink-soft);
+      font-size: 13px;
+      border: 1.5px dashed var(--line);
+      border-radius: var(--radius);
+      background: var(--blue-pale);
+    }
+
+    .roles-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    .roles-list li {
+      padding: 5px 0 5px 18px;
+      position: relative;
+      font-size: 13px;
+      line-height: 1.5;
+      color: var(--ink);
+    }
+
+    .roles-list li::before {
+      content: "—";
+      position: absolute;
+      left: 0;
+      color: var(--orange);
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--blue-pale);
+      color: var(--blue-deep);
+      border-radius: 999px;
+      padding: 3px 10px;
+      font-size: 11.5px;
+      font-weight: 600;
+      margin: 2px 4px 2px 0;
+    }
+
+    .titleblock {
+      border: 2px solid var(--blue-deep);
+      border-radius: 6px;
+      padding: 12px 16px;
+      margin-top: 22px;
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: 10px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10.5px;
+      background: var(--white);
+    }
+
+    .titleblock div span.l {
+      display: block;
+      color: var(--ink-soft);
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      margin-bottom: 2px;
+    }
+
+    .titleblock div span.v {
+      font-weight: 700;
+      color: var(--blue-deep);
+      font-size: 12px;
+    }
+
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
+    .selectbar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: end;
+      margin-bottom: 18px;
+      background: var(--white);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      box-shadow: var(--shadow);
+    }
+
+    .selectbar .field {
+      margin-bottom: 0;
+      min-width: 170px;
+    }
+
+    /* Sync status toast (Google Sheets backend) */
+    .sync-toast {
+      position: fixed;
+      right: 22px;
+      bottom: 22px;
+      z-index: 999;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 9px 16px;
+      border-radius: 7px;
+      box-shadow: var(--shadow);
+      color: #fff;
+      max-width: 360px;
+      line-height: 1.4;
+      transition: opacity .15s ease;
+    }
+
+    .sync-toast.loading {
+      background: var(--blue);
+    }
+
+    .sync-toast.saving {
+      background: var(--blue-deep);
+    }
+
+    .sync-toast.ok {
+      background: var(--green);
+    }
+
+    .sync-toast.error {
+      background: var(--red);
+    }
+
+    /* Timetable grid */
+    .tt-wrap {
+      overflow-x: auto;
+    }
+
+    table.tt {
+      border-collapse: collapse;
+      width: 100%;
+      min-width: 760px;
+    }
+
+    table.tt th,
+    table.tt td {
+      border: 1px solid var(--line);
+      text-align: center;
+      padding: 0;
+      font-size: 11.5px;
+    }
+
+    table.tt th {
+      background: var(--blue-pale);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      padding: 7px 4px;
+      color: var(--blue-deep);
+    }
+
+    table.tt td.period-lbl {
+      background: var(--blue-pale);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      padding: 6px 8px;
+      color: var(--blue-deep);
+      white-space: nowrap;
+    }
+
+    .tt-cell {
+      width: 120px;
+      height: 56px;
+      cursor: pointer;
+      padding: 4px 5px;
+      vertical-align: middle;
+    }
+
+    .tt-cell:hover {
+      background: var(--orange-pale);
+    }
+
+    .tt-cell.filled {
+      background: var(--green-pale);
+    }
+
+    .tt-cell.selected {
+      outline: 2px solid var(--orange);
+      outline-offset: -2px;
+    }
+
+    .tt-cell.clash {
+      background: var(--red-pale);
+    }
+
+    .tt-code {
+      font-weight: 700;
+      color: var(--blue-deep);
+      font-size: 11.5px;
+    }
+
+    .tt-fac {
+      font-size: 10px;
+      color: var(--ink-soft);
+    }
+
+    .tt-room {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 9.5px;
+      color: var(--ink-soft);
+    }
+
+    @media print {
+
+      .sidebar,
+      .toolbar,
+      .add-row,
+      .no-print,
+      .selectbar {
+        display: none !important;
+      }
+
+      main {
+        padding: 0;
+        max-width: 100%;
+      }
+
+      body {
+        background: #fff;
+      }
+    }
+
+    @media (max-width: 940px) {
+      #root {
+        flex-direction: column;
+      }
+
+      .sidebar {
+        width: 100%;
+      }
+
+      nav.idx {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+      }
+
+      main {
+        padding: 22px 14px 60px;
+      }
+
+      .row2,
+      .row3,
+      .row4 {
+        grid-template-columns: 1fr;
+      }
+
+      .add-row {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="root">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">DEPT<br>PLAN</div>
+        <div class="brand-text">
+          <div class="k">Academic Planner</div>
+          <div class="s">NEP 2020 · Maharashtra</div>
+        </div>
+      </div>
+      <div class="idx-divider">Reference</div>
+      <nav class="idx" id="nav-ref"></nav>
+      <div class="idx-divider">Department</div>
+      <nav class="idx" id="nav-dept"></nav>
+      <div class="idx-divider">Curriculum</div>
+      <nav class="idx" id="nav-curr"></nav>
+      <div class="idx-divider">Faculty Load</div>
+      <nav class="idx" id="nav-load"></nav>
+      <div class="idx-divider">Timetable</div>
+      <nav class="idx" id="nav-tt"></nav>
+      <div class="idx-divider">Output</div>
+      <nav class="idx" id="nav-out"></nav>
+      <div class="idx-divider">Data Exchange</div>
+      <nav class="idx" id="nav-data"></nav>
+      <div class="sidebar-foot">Credit framework per Govt. of Maharashtra GR (4 Jul &amp; 3 Aug 2023), DTE/SPPU NEP 2020
+        structure.</div>
+    </aside>
+    <main id="main"></main>
+  </div>
+  <div id="sync-toast" class="sync-toast" style="display:none;"></div>
+
+  <script>
+    /* ============================= FRAMEWORK DATA ============================= */
+    const CATEGORIES = [
+      { code: "BSC", name: "Basic Science Course", min: 14, max: 18, note: "Maths, Physics, Chemistry — Sem I–II mainly." },
+      { code: "ESC", name: "Engineering Science Course", min: 12, max: 16, note: "Basic Electrical/Electronics, Mechanics, Graphics, Programming — Sem I–II." },
+      { code: "PCC", name: "Programme Core Course", min: 44, max: 56, note: "Mandatory major-discipline courses, all four years." },
+      { code: "PEC", name: "Programme Elective Course", min: 20, max: 20, note: "Major electives, offered from Sem V onward." },
+      { code: "MDM", name: "Multidisciplinary Minor", min: 14, max: 14, note: "Compulsory minor from another discipline/faculty, Sem II–VIII." },
+      { code: "OE", name: "Open Elective", min: 8, max: 8, note: "Chosen compulsorily from a faculty other than the Major — Sem III–V." },
+      { code: "VSEC", name: "Vocational & Skill Enhancement", min: 8, max: 8, note: "VSC (4 Cr., hands-on) + SEC (4 Cr.) — first three years." },
+      { code: "AEC", name: "Ability Enhancement Course", min: 4, max: 4, note: "English (2 Cr.) + Modern Indian Language (2 Cr.) — Sem I–II." },
+      { code: "IKS", name: "Indian Knowledge System", min: 2, max: 2, note: "Sem I, from the approved IKS basket." },
+      { code: "VEC", name: "Value Education Course", min: 4, max: 4, note: "Sem III–IV." },
+      { code: "RM", name: "Research Methodology / Experiential Learning", min: 4, max: 4, note: "Typically Sem VII." },
+      { code: "CEP_FP", name: "Community Engagement / Field Project", min: 2, max: 2, note: "Minimum 2 Cr., Sem III (2nd year)." },
+      { code: "PRJ", name: "Project", min: 4, max: 4, note: "Major project, Sem VII–VIII." },
+      { code: "INT", name: "Internship / OJT", min: 12, max: 12, note: "One full semester, VII or VIII, 1 Cr. per 2 weeks (36–40 hrs)." },
+      { code: "CC", name: "Co-Curricular Course", min: 4, max: 4, note: "Health & Wellness, Yoga, Sports, NSS/NCC, Arts — Sem I–II." },
+    ];
+    const SUM_MIN = CATEGORIES.reduce((s, c) => s + c.min, 0);
+    const SUM_MAX = CATEGORIES.reduce((s, c) => s + c.max, 0);
+
+    /* ---- PG category tables (illustrative — Maharashtra has published overall PG credit
+       ranges and a research-project weightage, but not yet a granular per-category table
+       as detailed as the UG SPPU booklet. Confirm exact split with the affiliating
+       university's approved PG scheme before finalising.) ---- */
+    const PG2_CATEGORIES = [
+      { code: "PCC_PG", name: "Programme Core Course", min: 24, max: 30, note: "Core specialization courses — Sem I–II mainly." },
+      { code: "PEC_PG", name: "Programme Elective Course", min: 16, max: 20, note: "Specialization electives — Sem I–III." },
+      { code: "OE_PG", name: "Open Elective / MOOC", min: 4, max: 4, note: "Cross-disciplinary or SWAYAM/MOOC elective — Sem II." },
+      { code: "RM", name: "Research Methodology & IPR", min: 4, max: 4, note: "Sem I." },
+      { code: "SEM_PG", name: "Seminar", min: 2, max: 2, note: "Sem II or III." },
+      { code: "MP_PG", name: "Mini Project / Audit Course", min: 4, max: 4, note: "Sem II." },
+      { code: "DISS1", name: "Dissertation Phase-I", min: 8, max: 10, note: "Sem III — proposal &amp; literature review." },
+      { code: "DISS2", name: "Dissertation Phase-II", min: 16, max: 20, note: "Sem IV — full-time research (NEP: 2nd year devoted to research)." },
+    ];
+    const PG1_CATEGORIES = [
+      { code: "PCC_PG", name: "Programme Core Course", min: 12, max: 14, note: "Sem I." },
+      { code: "PEC_PG", name: "Programme Elective Course", min: 6, max: 8, note: "Sem I–II." },
+      { code: "OE_PG", name: "Open Elective / MOOC", min: 2, max: 2, note: "Sem I." },
+      { code: "RM", name: "Research Methodology & IPR", min: 2, max: 2, note: "Sem I." },
+      { code: "SEM_PG", name: "Seminar", min: 2, max: 2, note: "Sem I or II." },
+      { code: "RP", name: "Research Project / Dissertation", min: 12, max: 14, note: "Per Maharashtra GR — research weightage 12–14 Cr., Sem II." },
+    ];
+    const PROGRAM_TYPES = {
+      UG4: { key: "UG4", label: "UG — 4 Year (B.E. / B.Tech.)", semesters: 8, rangeLow: 160, rangeHigh: 176, hasMinor: true, categories: CATEGORIES },
+      PG2: { key: "PG2", label: "PG — 2 Year (M.E./M.Tech./MBA/MCA, after 3-yr UG)", semesters: 4, rangeLow: 80, rangeHigh: 88, hasMinor: false, categories: PG2_CATEGORIES },
+      PG1: { key: "PG1", label: "PG — 1 Year (after 4-yr Honours UG)", semesters: 2, rangeLow: 40, rangeHigh: 44, hasMinor: false, categories: PG1_CATEGORIES },
+    };
+    function categoriesForType(type) { return (PROGRAM_TYPES[type] || PROGRAM_TYPES.UG4).categories; }
+    function semestersForType(type) { return (PROGRAM_TYPES[type] || PROGRAM_TYPES.UG4).semesters; }
+
+    const GRADES = [["O", "Outstanding", "90–100", 10], ["A+", "Excellent", "75–89", 9], ["A", "Very Good", "60–74", 8], ["B+", "Good", "55–59", 7], ["B", "Above Average", "50–54", 6], ["C", "Average", "45–49", 5], ["D", "Pass", "40–44", 4], ["F", "Fail", "< 40", 0]];
+    const LEVELS = [
+      ["4.5", "UG Certificate", "1 year / Sem I–II", "40–44"], ["5.0", "UG Diploma", "2 years / Sem I–IV", "80–88"],
+      ["5.5", "Bachelor's (Vocation) / B.Sc.", "3 years / Sem I–VI", "120–132"], ["6.0", "Bachelor's Degree (BE/B.Tech) + Multidisciplinary Minor", "4 years / Sem I–VIII", "160–176"],
+      ["6.0+", "...with Honours + Multidisciplinary Minor", "4 years, +18–20 Cr.", "180–194"], ["6.0+", "...with Honours &amp; Research + Multidisciplinary Minor", "4 years, +18–20 Cr. (research)", "180–194"],
+      ["6.0+", "...with Double Minor (Multidisciplinary + Specialisation)", "4 years, +18–20 Cr.", "180–194"],
+    ];
+    const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const PERIODS = [
+      { id: 1, label: "P1", time: "9:00–10:00" }, { id: 2, label: "P2", time: "10:00–11:00" }, { id: 3, label: "P3", time: "11:15–12:15" },
+      { id: 4, label: "P4", time: "12:15–1:15" }, { id: 5, label: "P5", time: "2:00–3:00" }, { id: 6, label: "P6", time: "3:00–4:00" }, { id: 7, label: "P7", time: "4:00–5:00" },
+    ];
+
+    /* ============================= STATE ============================= */
+    let ROUTE = "reference-framework";
+    const DEFAULT_PROGRAMME = (type) => {
+      const t = PROGRAM_TYPES[type] || PROGRAM_TYPES.UG4;
+      return { id: uid(), type: t.key, name: "", major: "", minor: "", totalTarget: t.rangeLow, semMin: 20, semMax: 22, semesters: t.semesters, courses: [] };
+    };
+    let DEPARTMENT = { name: "" };
+    let PROGRAMS = [];
+    let FACULTY = [];
+    let TIMETABLE = [];
+    let ACTIVE_PROGRAM_ID = null;
+    let ACTIVE_SEM = 1;
+    let LOAD_PROGRAM_ID = null;
+    let LOAD_SEM = 1;
+    let TT_PROGRAM_ID = null;
+    let TT_SEM = 1;
+    let TT_DIVISION = "A";
+    let TT_SELECTED = null; // {day, period}
+    let EXPORT_VIEW = "curriculum";
+    let EXPORT_PROGRAM_ID = null;
+
+    let LOADED = false;
+
+    /* ============================= API CONFIG ============================= */
+    // Paste the Web App URL you get after deploying the Apps Script project
+    // (Deploy > New deployment > Web app). See the Deployment Guide.
+    const APP_CONFIG = {
+      API_URL: "https://script.google.com/macros/s/AKfycbyMUxCnDSizgD7p2hhohpXFKVVc90gULR-ZHVNpltXWJcyTfYKG0pVjNPwPt4Vu45kZ/exec",
+    };
+
+    /* ============================= SYNC STATUS TOAST ============================= */
+    let toastTimer = null;
+    function syncStatus(msg, kind) {
+      // kind: "loading" | "saving" | "ok" | "error"
+      const el = document.getElementById("sync-toast");
+      if (!el) return;
+      clearTimeout(toastTimer);
+      el.className = "sync-toast " + kind;
+      el.textContent = msg;
+      el.style.display = "block";
+      el.style.opacity = "1";
+      if (kind === "ok" || kind === "error") {
+        toastTimer = setTimeout(() => { el.style.opacity = "0"; setTimeout(() => { el.style.display = "none"; }, 200); }, kind === "ok" ? 1800 : 4500);
+      }
+    }
+
+    /* ============================= FRONTEND API LAYER ============================= */
+    /**
+     * Low-level request helper. GET requests are sent as query params (cacheable,
+     * no body). POST requests are sent with a text/plain body (JSON-encoded) —
+     * this deliberately avoids the application/json content-type so the browser
+     * treats it as a "simple request" and skips the CORS preflight that Apps
+     * Script web apps cannot answer.
+     */
+    async function apiRequest(method, params, body) {
+      if (!APP_CONFIG.API_URL || APP_CONFIG.API_URL.indexOf("PASTE_YOUR") === 0) {
+        throw new Error("Apps Script Web App URL is not configured yet (APP_CONFIG.API_URL).");
+      }
+      let url = APP_CONFIG.API_URL;
+      if (params) {
+        const qs = new URLSearchParams(params).toString();
+        url += (url.indexOf("?") === -1 ? "?" : "&") + qs;
+      }
+      const opts = { method };
+      if (method === "POST") {
+        opts.headers = { "Content-Type": "text/plain;charset=utf-8" };
+        opts.body = JSON.stringify(body || {});
+      }
+      let res;
+      try {
+        res = await fetch(url, opts);
+      } catch (networkErr) {
+        throw new Error("Network Error — could not reach Google Sheets backend.");
+      }
+      if (!res.ok) {
+        throw new Error("Google Sheets Error (HTTP " + res.status + ")");
+      }
+      let json;
+      try { json = await res.json(); }
+      catch (parseErr) { throw new Error("Google Sheets Error — invalid response."); }
+      if (!json.ok) {
+        throw new Error(json.error || "Google Sheets Error");
+      }
+      return json.data;
+    }
+    async function apiLoadAll() { return apiRequest("GET", { action: "getAll" }); }
+    async function apiSave(fullState) { return apiRequest("POST", null, { action: "saveAll", data: fullState }); }
+    async function apiGet(sheet, id) { return apiRequest("GET", { action: "getRecord", sheet, id }); }
+    async function apiSearch(sheet, field, value) { return apiRequest("GET", { action: "searchRecords", sheet, field, value }); }
+    async function apiCreate(sheet, record) { return apiRequest("POST", null, { action: "createRecord", sheet, record }); }
+    async function apiUpdate(sheet, id, record) { return apiRequest("POST", null, { action: "updateRecord", sheet, id, record }); }
+    async function apiDelete(sheet, id) { return apiRequest("POST", null, { action: "deleteRecord", sheet, id }); }
+
+    /* ============================= FLATTEN / INFLATE ============================= */
+    /**
+     * The planner's in-memory model nests courses inside programs and
+     * assignments inside courses. Google Sheets is flat, so every load/save
+     * flattens to six row-arrays (mirroring the existing Excel import/export
+     * shape in this app) and inflates back to the nested shape the UI expects.
+     */
+    function flattenState() {
+      const departmentRows = [{ id: "dept", name: DEPARTMENT.name || "" }];
+
+      const programRows = PROGRAMS.map(p => ({
+        id: p.id, name: p.name, type: p.type, major: p.major, minor: p.minor,
+        totalTarget: p.totalTarget, semMin: p.semMin, semMax: p.semMax, semesters: p.semesters
+      }));
+
+      const courseRows = [];
+      const assignRows = [];
+      PROGRAMS.forEach(p => (p.courses || []).forEach(c => {
+        courseRows.push({ id: c.id, programId: p.id, programName: p.name, sem: c.sem, code: c.code, title: c.title, category: c.category, L: c.L, T: c.T, P: c.P, credits: c.credits });
+        (c.assignments || []).forEach(a => {
+          assignRows.push({ id: a.id || uid(), courseId: c.id, programName: p.name, sem: c.sem, code: c.code, facultyId: a.facultyId, facultyName: facultyName(a.facultyId), hours: a.hours });
+        });
+      }));
+
+      const facultyRows = FACULTY.map(f => ({ id: f.id, name: f.name, designation: f.designation, specialization: f.specialization, maxLoad: f.maxLoad }));
+
+      const ttRows = TIMETABLE.map(t => {
+        const p = getProgram(t.programId);
+        return { id: t.id, programId: t.programId, programName: p ? p.name : "", semester: t.semester, division: t.division, day: t.day, period: t.period, courseId: t.courseId, code: t.code, facultyId: t.facultyId, facultyName: facultyName(t.facultyId), room: t.room };
+      });
+
+      return { department: departmentRows, programs: programRows, courses: courseRows, faculty: facultyRows, assignments: assignRows, timetable: ttRows };
+    }
+
+    function inflateState(data) {
+      const deptRow = (data.department || [])[0];
+      const newDept = { name: deptRow ? String(deptRow.name || "") : "" };
+
+      const newPrograms = (data.programs || []).map(r => ({
+        id: String(r.id || uid()), name: String(r.name || ""), type: r.type || "UG4",
+        major: String(r.major || ""), minor: String(r.minor || ""),
+        totalTarget: parseFloat(r.totalTarget) || 0, semMin: parseFloat(r.semMin) || 20, semMax: parseFloat(r.semMax) || 22,
+        semesters: parseInt(r.semesters, 10) || semestersForType(r.type || "UG4"), courses: []
+      }));
+      const idMap = {};
+      newPrograms.forEach(p => { idMap[p.id] = p; idMap["name:" + p.name] = p; });
+
+      const newFaculty = (data.faculty || []).map(r => ({
+        id: String(r.id || uid()), name: String(r.name || ""), designation: String(r.designation || ""),
+        specialization: String(r.specialization || ""), maxLoad: parseFloat(r.maxLoad) || 16
+      }));
+      const facIdMap = {};
+      newFaculty.forEach(f => { facIdMap[f.id] = f; facIdMap["name:" + f.name] = f; });
+      function resolveFaculty(id, name) {
+        if (id && facIdMap[String(id)]) return facIdMap[String(id)].id;
+        if (name && facIdMap["name:" + name]) return facIdMap["name:" + name].id;
+        return "";
+      }
+
+      const courseIdMap = {};
+      (data.courses || []).forEach(r => {
+        const prog = (r.programId && idMap[String(r.programId)]) || (r.programName && idMap["name:" + r.programName]);
+        if (!prog) return; // skip orphan rows
+        const course = {
+          id: String(r.id || uid()), sem: parseInt(r.sem, 10) || 1, code: String(r.code || ""), title: String(r.title || ""),
+          category: String(r.category || ""), L: parseFloat(r.L) || 0, T: parseFloat(r.T) || 0, P: parseFloat(r.P) || 0,
+          credits: parseFloat(r.credits) || 0, assignments: []
+        };
+        prog.courses.push(course);
+        courseIdMap[course.id] = course;
+        courseIdMap["key:" + prog.id + "|" + course.sem + "|" + course.code] = course;
+      });
+
+      (data.assignments || []).forEach(r => {
+        let course = r.courseId && courseIdMap[String(r.courseId)];
+        if (!course && r.programName && r.sem && r.code) {
+          const prog = idMap["name:" + r.programName];
+          if (prog) course = courseIdMap["key:" + prog.id + "|" + parseInt(r.sem, 10) + "|" + r.code];
+        }
+        if (!course) return;
+        const facultyId = resolveFaculty(r.facultyId, r.facultyName);
+        if (!facultyId) return;
+        course.assignments.push({ id: String(r.id || uid()), facultyId, hours: parseFloat(r.hours) || 0 });
+      });
+
+      const newTimetable = [];
+      (data.timetable || []).forEach(r => {
+        const prog = (r.programId && idMap[String(r.programId)]) || (r.programName && idMap["name:" + r.programName]);
+        if (!prog) return;
+        let course = r.courseId && courseIdMap[String(r.courseId)];
+        if (!course && r.code) course = courseIdMap["key:" + prog.id + "|" + parseInt(r.semester, 10) + "|" + r.code];
+        if (!course) return;
+        newTimetable.push({
+          id: String(r.id || uid()), programId: prog.id, semester: parseInt(r.semester, 10) || 1, division: String(r.division || "A"),
+          day: String(r.day || "Mon"), period: parseInt(r.period, 10) || 1, courseId: course.id, code: course.code,
+          facultyId: resolveFaculty(r.facultyId, r.facultyName), room: String(r.room || "")
+        });
+      });
+
+      return { department: newDept, programs: newPrograms, faculty: newFaculty, timetable: newTimetable };
+    }
+
+    /* ============================= LOAD / SAVE (Google Sheets backend) ============================= */
+    async function loadProject() {
+      try {
+        syncStatus("Loading…", "loading");
+        const data = await apiLoadAll();
+        const inflated = inflateState(data);
+        DEPARTMENT = inflated.department;
+        PROGRAMS = inflated.programs;
+        FACULTY = inflated.faculty;
+        TIMETABLE = inflated.timetable;
+        syncStatus("✓ Loaded from Google Sheets", "ok");
+      } catch (e) {
+        console.error("load error", e);
+        syncStatus("⚠ " + (e.message || "Failed to load from Google Sheets"), "error");
+        // fresh/empty project on failure so the UI still renders
+      }
+      PROGRAMS.forEach(p => { if (!p.type) p.type = "UG4"; if (!p.semesters) p.semesters = semestersForType(p.type); });
+      if (PROGRAMS.length) { ACTIVE_PROGRAM_ID = PROGRAMS[0].id; LOAD_PROGRAM_ID = PROGRAMS[0].id; TT_PROGRAM_ID = PROGRAMS[0].id; EXPORT_PROGRAM_ID = PROGRAMS[0].id; }
+      LOADED = true;
+    }
+    async function saveProject() {
+      try {
+        syncStatus("Saving…", "saving");
+        await apiSave(flattenState());
+        syncStatus("✓ Saved successfully", "ok");
+      } catch (e) {
+        console.error("save error", e);
+        syncStatus("⚠ " + (e.message || "Failed to save to Google Sheets"), "error");
+      }
+    }
+    function esc(s) { return (s || "").toString().replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
+    function uid() { return "id_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7); }
+    function toRoman(n) { return ["I", "II", "III", "IV", "V", "VI", "VII", "VIII"][n - 1]; }
+    function semRange(n) { return Array.from({ length: n || 8 }, (_, i) => i + 1); }
+    function getProgram(id) { return PROGRAMS.find(p => p.id === id) || null; }
+    function facultyName(id) { const f = FACULTY.find(f => f.id === id); return f ? f.name : "—"; }
+
+    /* ============================= NAV ============================= */
+    const NAV_REF = [["reference-framework", "UG Credit Framework"], ["reference-pg", "PG Credit Framework"], ["reference-grading", "Grading & Progression"]];
+    const NAV_DEPT = [["dept-setup", "Department & Programs"]];
+    const NAV_CURR = [["builder", "Curriculum Builder"], ["validation", "Validation Dashboard"]];
+    const NAV_LOAD = [["faculty", "Faculty Directory"], ["load-dist", "Load Distribution"], ["load-summary", "Load Summary"]];
+    const NAV_TT = [["timetable", "Timetable Builder"], ["clash", "Clash Report"]];
+    const NAV_OUT = [["export", "Export / Print"]];
+    const NAV_DATA = [["excel", "Excel Import / Export"]];
+
+    function renderNav() {
+      const build = list => list.map(([id, label], i) => `
+    <button class="idx-item ${ROUTE === id ? 'active' : ''}" data-route="${id}"><span class="no">${String(i + 1).padStart(2, '0')}</span>${label}</button>`).join("");
+      document.getElementById("nav-ref").innerHTML = build(NAV_REF);
+      document.getElementById("nav-dept").innerHTML = build(NAV_DEPT);
+      document.getElementById("nav-curr").innerHTML = build(NAV_CURR);
+      document.getElementById("nav-load").innerHTML = build(NAV_LOAD);
+      document.getElementById("nav-tt").innerHTML = build(NAV_TT);
+      document.getElementById("nav-out").innerHTML = build(NAV_OUT);
+      document.getElementById("nav-data").innerHTML = build(NAV_DATA);
+      document.querySelectorAll(".idx-item").forEach(b => b.addEventListener("click", () => { ROUTE = b.dataset.route; render(); }));
+    }
+    function pageHeader(eyebrow, title, sub) { return `<div class="eyebrow">${eyebrow}</div><h1 class="page-title">${title}</h1><p class="page-sub">${sub}</p>`; }
+    function noProgramsEmpty() { return `<div class="empty">No programmes yet. Go to <strong>Department &amp; Programs</strong> to add one.</div>`; }
+
+    /* ============================= REFERENCE ============================= */
+    function pageReferenceFramework() {
+      return `
+    ${pageHeader("Reference · 01", "NEP 2020 Credit Framework", "Maharashtra's applicable structure for AICTE-regulated 4-year UG Engineering/Technology programmes — GR dated 4 Jul 2023 &amp; 3 Aug 2023, per DTE/SPPU guidelines.")}
+    <div class="card tick"><h3>Degree levels &amp; credit requirements</h3>
+      <table><thead><tr><th>Level</th><th>Qualification</th><th>Duration</th><th>Credits</th></tr></thead>
+        <tbody>${LEVELS.map(([lv, q, d, c]) => `<tr><td><span class="tag">${lv}</span></td><td>${q}</td><td>${d}</td><td style="font-family:'IBM Plex Mono',monospace;">${c}</td></tr>`).join("")}</tbody>
+      </table>
+    </div>
+    <div class="card tick"><h3>Course category credit allocation (160–176 Cr. base degree)</h3>
+      <p class="desc">Sum of category minimums ≈ ${SUM_MIN} Cr.; sum of maximums ≈ ${SUM_MAX} Cr.</p>
+      <table><thead><tr><th>Code</th><th>Category</th><th>Target credits</th><th>Placement note</th></tr></thead>
+        <tbody>${CATEGORIES.map(c => `<tr><td><span class="tag">${c.code}</span></td><td>${c.name}</td><td style="font-family:'IBM Plex Mono',monospace;">${c.min === c.max ? c.min : c.min + '–' + c.max}</td><td style="color:var(--ink-soft); font-size:12px;">${c.note}</td></tr>`).join("")}</tbody>
+      </table>
+    </div>
+    <div class="card tick"><h3>Definition of credit</h3>
+      <ul class="roles-list">
+        <li>1 hour Lecture (L) per week per semester = 1 credit</li>
+        <li>1 hour Tutorial (T) per week per semester = 1 credit</li>
+        <li>2 hours Practical (P) / Laboratory per week = 1 credit</li>
+        <li>Internship: 1 credit per 2 weeks of engagement (36–40 hours)</li>
+      </ul>
+    </div>
+  `;
+    }
+    function pageReferencePG() {
+      return `
+    ${pageHeader("Reference · 01b", "PG Credit Framework (M.E./M.Tech./MBA/MCA etc.)", "NEP 2020 postgraduate structure as announced for Maharashtra, read together with the UGC Curriculum &amp; Credit Framework for PG Programmes. The state has published overall credit ranges and a research-project weightage; category-wise splits below are illustrative — confirm the exact scheme with the affiliating university.")}
+    <div class="card tick"><h3>PG qualification types</h3>
+      <table><thead><tr><th>Type</th><th>Eligibility</th><th>Duration</th><th>Credits</th></tr></thead>
+        <tbody>
+          <tr><td><span class="tag">PG2</span></td><td>3-year/6-semester Bachelor's degree (min. 120 Cr.)</td><td>2 years / 4 semesters</td><td style="font-family:'IBM Plex Mono',monospace;">80–88</td></tr>
+          <tr><td><span class="tag">PG1</span></td><td>4-year Bachelor's with Honours / Honours with Research (min. 160 Cr.)</td><td>1 year / 2 semesters</td><td style="font-family:'IBM Plex Mono',monospace;">40–44</td></tr>
+          <tr><td><span class="tag">PG-Dip</span></td><td>Exit after year 1 of a 2-year PG</td><td>1 year</td><td style="font-family:'IBM Plex Mono',monospace;">≈40–48*</td></tr>
+        </tbody>
+      </table>
+      <p class="desc" style="margin-top:10px;">* PG Diploma exit credit figure varies by university — confirm locally. Unlike UG, the PG framework has <strong>no Minor</strong> component; electives support the chosen Major/specialization. 20–22 credits per semester applies here too. For the 2-year PG, NEP recommends the second year be devoted substantially to research/dissertation.</p>
+    </div>
+    <div class="card tick"><h3>2-Year PG (4 semesters, 80–88 Cr.) — category allocation</h3>
+      <table><thead><tr><th>Code</th><th>Category</th><th>Target credits</th><th>Placement note</th></tr></thead>
+        <tbody>${PG2_CATEGORIES.map(c => `<tr><td><span class="tag">${c.code}</span></td><td>${c.name}</td><td style="font-family:'IBM Plex Mono',monospace;">${c.min === c.max ? c.min : c.min + '–' + c.max}</td><td style="color:var(--ink-soft); font-size:12px;">${c.note}</td></tr>`).join("")}</tbody>
+      </table>
+    </div>
+    <div class="card tick"><h3>1-Year PG (2 semesters, 40–44 Cr.) — category allocation</h3>
+      <table><thead><tr><th>Code</th><th>Category</th><th>Target credits</th><th>Placement note</th></tr></thead>
+        <tbody>${PG1_CATEGORIES.map(c => `<tr><td><span class="tag">${c.code}</span></td><td>${c.name}</td><td style="font-family:'IBM Plex Mono',monospace;">${c.min === c.max ? c.min : c.min + '–' + c.max}</td><td style="color:var(--ink-soft); font-size:12px;">${c.note}</td></tr>`).join("")}</tbody>
+      </table>
+    </div>
+  `;
+    }
+    function pageReferenceGrading() {
+      return `
+    ${pageHeader("Reference · 02", "Grading, Passing &amp; Progression", "10-point scale used across SPPU/Maharashtra affiliated engineering colleges, with ATKT progression rules.")}
+    <div class="card tick"><h3>Grade scale</h3>
+      <table><thead><tr><th>Marks</th><th>Grade point</th><th>Letter</th></tr></thead>
+        <tbody>${GRADES.map(([l, d, r, gp]) => `<tr><td>${r}%</td><td style="font-family:'IBM Plex Mono',monospace;">${gp}</td><td><span class="tag">${l}</span> ${d}</td></tr>`).join("")}</tbody>
+      </table>
+    </div>
+    <div class="card tick"><h3>ATKT — progression to next year</h3>
+      <ul class="roles-list">
+        <li>Register for 2nd year (Sem III): ≥ 50% credits of Sem I + II combined.</li>
+        <li>Register for 3rd year (Sem V): ≥ 50% credits of Sem III + IV, and all Sem I + II credits.</li>
+        <li>Register for 4th year (Sem VII): ≥ 50% credits of Sem V + VI, and all Sem III + IV credits.</li>
+        <li>Degree on securing the full prescribed credits and clearing all mandatory non-credit courses.</li>
+      </ul>
+    </div>
+  `;
+    }
+
+    /* ============================= DEPARTMENT & PROGRAMS ============================= */
+    function pageDeptSetup() {
+      return `
+    ${pageHeader("Department · 01", "Department & Programmes", "Name the department, then add every UG programme it runs — each gets its own curriculum, built separately.")}
+    <div class="card tick">
+      <form id="f-dept">
+        <div class="field"><label>Department name</label><input type="text" name="deptName" value="${esc(DEPARTMENT.name)}" placeholder="e.g. Department of Computer Science & Engineering"></div>
+        <button class="primary" type="submit">Save</button>
+        <span id="dept-saved" style="margin-left:12px; font-size:12px; color:var(--green); font-weight:600; display:none;">✓ Saved</span>
+      </form>
+    </div>
+    <div class="card tick">
+      <h3>Programmes <span class="tag" style="margin-left:6px;">${PROGRAMS.length}</span></h3>
+      ${PROGRAMS.length === 0 ? `<div class="empty">No programmes yet — add the first one below.</div>` : `
+      <table>
+        <thead><tr><th>Programme</th><th>Type</th><th>Major</th><th>Minor</th><th>Target Cr.</th><th>Sems</th><th>Courses</th><th></th></tr></thead>
+        <tbody>
+          ${PROGRAMS.map(p => `<tr>
+            <td><strong>${esc(p.name) || '(untitled)'}</strong></td>
+            <td><span class="tag ${p.type !== 'UG4' ? 'purple' : ''}">${p.type}</span></td>
+            <td>${esc(p.major) || '—'}</td><td>${esc(p.minor) || '—'}</td>
+            <td style="font-family:'IBM Plex Mono',monospace;">${p.totalTarget}</td>
+            <td style="font-family:'IBM Plex Mono',monospace;">${p.semesters}</td>
+            <td>${p.courses.length}</td>
+            <td><button class="danger" data-id="${p.id}">Delete</button></td>
+          </tr>`).join("")}
+        </tbody>
+      </table>`}
+      <form id="f-add-program" class="add-row" style="grid-template-columns:1.5fr 1.3fr 1.1fr 1.1fr .6fr .6fr .6fr auto;">
+        <div class="field"><label>Programme title</label><input type="text" name="name" placeholder="e.g. B.E. Computer Engineering / M.Tech Computer Engineering" required></div>
+        <div class="field"><label>Programme type</label>
+          <select name="type" id="sel-new-prog-type">${Object.values(PROGRAM_TYPES).map(t => `<option value="${t.key}">${t.label}</option>`).join("")}</select>
+        </div>
+        <div class="field"><label>Major / specialization</label><input type="text" name="major" placeholder="Computer Engineering"></div>
+        <div class="field"><label id="lbl-new-prog-minor">Minor</label><input type="text" name="minor" placeholder="Data Science"></div>
+        <div class="field"><label>Target Cr.</label><input type="number" name="totalTarget" id="inp-new-prog-target" value="160"></div>
+        <div class="field"><label>Sem min</label><input type="number" name="semMin" value="20"></div>
+        <div class="field"><label>Sem max</label><input type="number" name="semMax" value="22"></div>
+        <button class="primary" type="submit">Add programme</button>
+      </form>
+    </div>
+  `;
+    }
+    function bindDeptSetup() {
+      const f1 = document.getElementById("f-dept");
+      if (f1) f1.addEventListener("submit", async e => {
+        e.preventDefault();
+        DEPARTMENT.name = new FormData(f1).get("deptName") || "";
+        await saveProject();
+        const b = document.getElementById("dept-saved"); b.style.display = "inline"; setTimeout(() => b.style.display = "none", 1600);
+      });
+      document.querySelectorAll("main .danger").forEach(b => {
+        b.addEventListener("click", async () => {
+          if (!confirm("Delete this programme and all its courses?")) return;
+          PROGRAMS = PROGRAMS.filter(p => p.id !== b.dataset.id);
+          TIMETABLE = TIMETABLE.filter(t => t.programId !== b.dataset.id);
+          await saveProject();
+          render();
+        });
+      });
+      const selType = document.getElementById("sel-new-prog-type");
+      const inpTarget = document.getElementById("inp-new-prog-target");
+      const lblMinor = document.getElementById("lbl-new-prog-minor");
+      function syncTypeUI() {
+        const t = PROGRAM_TYPES[selType.value] || PROGRAM_TYPES.UG4;
+        inpTarget.value = t.rangeLow;
+        lblMinor.textContent = t.hasMinor ? "Minor" : "Minor (n/a for PG)";
+      }
+      if (selType) { selType.addEventListener("change", syncTypeUI); syncTypeUI(); }
+      const f2 = document.getElementById("f-add-program");
+      if (f2) f2.addEventListener("submit", async e => {
+        e.preventDefault();
+        const fd = new FormData(f2);
+        const type = fd.get("type") || "UG4";
+        const prog = DEFAULT_PROGRAMME(type);
+        prog.name = fd.get("name"); prog.major = fd.get("major"); prog.minor = fd.get("minor");
+        prog.totalTarget = parseInt(fd.get("totalTarget"), 10) || prog.totalTarget;
+        prog.semMin = parseInt(fd.get("semMin"), 10); prog.semMax = parseInt(fd.get("semMax"), 10);
+        PROGRAMS.push(prog);
+        if (!ACTIVE_PROGRAM_ID) { ACTIVE_PROGRAM_ID = prog.id; LOAD_PROGRAM_ID = prog.id; TT_PROGRAM_ID = prog.id; EXPORT_PROGRAM_ID = prog.id; }
+        await saveProject();
+        render();
+      });
+    }
+
+    /* ============================= PROGRAM SELECTOR (shared widget) ============================= */
+    function programSelector(selectedId, onChangeAttr) {
+      if (PROGRAMS.length === 0) return "";
+      return `<div class="field"><label>Programme</label>
+    <select id="${onChangeAttr}">${PROGRAMS.map(p => `<option value="${p.id}" ${p.id === selectedId ? 'selected' : ''}>${esc(p.name) || '(untitled)'}</option>`).join("")}</select>
+  </div>`;
+    }
+
+    /* ============================= CURRICULUM BUILDER ============================= */
+    function semesterCourses(prog, sem) { return prog.courses.filter(c => c.sem === sem); }
+    function semesterTotal(prog, sem) { return semesterCourses(prog, sem).reduce((s, c) => s + (parseFloat(c.credits) || 0), 0); }
+
+    function pageBuilder() {
+      if (PROGRAMS.length === 0) return pageHeader("Curriculum · 01", "Curriculum Builder", "") + noProgramsEmpty();
+      const prog = getProgram(ACTIVE_PROGRAM_ID) || PROGRAMS[0];
+      ACTIVE_PROGRAM_ID = prog.id;
+      if (ACTIVE_SEM > prog.semesters) ACTIVE_SEM = 1;
+      const sc = semesterCourses(prog, ACTIVE_SEM);
+      const total = semesterTotal(prog, ACTIVE_SEM);
+      const status = total === 0 ? null : (total < prog.semMin || total > prog.semMax ? "warn" : "ok");
+      return `
+    ${pageHeader("Curriculum · 01", "Curriculum Builder", "Add courses to each semester of the selected programme, tagged by NEP category.")}
+    <div class="selectbar">${programSelector(prog.id, "sel-builder-prog")}<span class="tag ${prog.type !== 'UG4' ? 'purple' : ''}" style="align-self:center;">${PROGRAM_TYPES[prog.type].label}</span></div>
+    <div class="sem-tabs">
+      ${semRange(prog.semesters).map(s => { const t = semesterTotal(prog, s); return `<button class="sem-tab ${ACTIVE_SEM === s ? 'active' : ''}" data-sem="${s}">SEM ${toRoman(s)}<span class="c">${t || 0} Cr.</span></button>`; }).join("")}
+    </div>
+    <div class="card tick">
+      <h3>Semester ${toRoman(ACTIVE_SEM)} ${status ? `<span class="status ${status}" style="margin-left:8px;">${status === 'ok' ? '✓ IN RANGE' : '⚠ CHECK RANGE'}</span>` : ''}</h3>
+      <p class="desc">Target ${prog.semMin}–${prog.semMax} credits per semester.</p>
+      ${sc.length === 0 ? `<div class="empty">No courses added yet for this semester.</div>` : `
+      <table>
+        <thead><tr><th style="width:13%">Code</th><th>Title</th><th style="width:15%">Category</th><th style="width:7%">L</th><th style="width:7%">T</th><th style="width:7%">P</th><th style="width:9%">Credits</th><th style="width:6%"></th></tr></thead>
+        <tbody>${sc.map(c => `<tr>
+          <td style="font-family:'IBM Plex Mono',monospace;">${esc(c.code)}</td><td>${esc(c.title)}</td><td><span class="tag">${c.category}</span></td>
+          <td>${c.L || 0}</td><td>${c.T || 0}</td><td>${c.P || 0}</td>
+          <td style="font-family:'IBM Plex Mono',monospace; font-weight:700;">${c.credits}</td>
+          <td><button class="danger" data-id="${c.id}">✕</button></td></tr>`).join("")}</tbody>
+        <tfoot><tr><td colspan="6">Semester total</td><td colspan="2">${total} Cr.</td></tr></tfoot>
+      </table>`}
+      <form id="f-add-course" class="add-row">
+        <div class="field"><label>Code</label><input type="text" name="code" placeholder="PCC-301" required></div>
+        <div class="field"><label>Title</label><input type="text" name="title" placeholder="Data Structures" required></div>
+        <div class="field"><label>Category</label><select name="category" required>${categoriesForType(prog.type).map(c => `<option value="${c.code}">${c.code} — ${c.name}</option>`).join("")}</select></div>
+        <div class="field"><label>L</label><input type="number" name="L" min="0" value="0"></div>
+        <div class="field"><label>T</label><input type="number" name="T" min="0" value="0"></div>
+        <div class="field"><label>P</label><input type="number" name="P" min="0" value="0"></div>
+        <div class="field"><label>Credits</label><input type="number" step="0.5" name="credits" min="0" required></div>
+        <button class="primary" type="submit">Add</button>
+      </form>
+    </div>
+  `;
+    }
+    function bindBuilder() {
+      const sel = document.getElementById("sel-builder-prog");
+      if (sel) sel.addEventListener("change", () => { ACTIVE_PROGRAM_ID = sel.value; ACTIVE_SEM = 1; render(); });
+      document.querySelectorAll(".sem-tab").forEach(b => b.addEventListener("click", () => { ACTIVE_SEM = parseInt(b.dataset.sem, 10); render(); }));
+      document.querySelectorAll("main .danger").forEach(b => {
+        b.addEventListener("click", async () => {
+          const prog = getProgram(ACTIVE_PROGRAM_ID);
+          prog.courses = prog.courses.filter(c => c.id !== b.dataset.id);
+          TIMETABLE = TIMETABLE.filter(t => t.courseId !== b.dataset.id);
+          await saveProject(); render();
+        });
+      });
+      const f = document.getElementById("f-add-course");
+      if (f) f.addEventListener("submit", async e => {
+        e.preventDefault();
+        const fd = new FormData(f);
+        const prog = getProgram(ACTIVE_PROGRAM_ID);
+        prog.courses.push({
+          id: uid(), sem: ACTIVE_SEM, code: fd.get("code"), title: fd.get("title"), category: fd.get("category"),
+          L: parseFloat(fd.get("L")) || 0, T: parseFloat(fd.get("T")) || 0, P: parseFloat(fd.get("P")) || 0,
+          credits: parseFloat(fd.get("credits")) || 0, assignments: []
+        });
+        await saveProject(); render();
+      });
+    }
+
+    /* ============================= VALIDATION ============================= */
+    function categoryTotal(prog, code) { return prog.courses.filter(c => c.category === code).reduce((s, c) => s + (parseFloat(c.credits) || 0), 0); }
+    function grandTotal(prog) { return prog.courses.reduce((s, c) => s + (parseFloat(c.credits) || 0), 0); }
+
+    function pageValidation() {
+      if (PROGRAMS.length === 0) return pageHeader("Curriculum · 02", "Validation Dashboard", "") + noProgramsEmpty();
+      const prog = getProgram(ACTIVE_PROGRAM_ID) || PROGRAMS[0];
+      ACTIVE_PROGRAM_ID = prog.id;
+      const gt = grandTotal(prog);
+      const typeMeta = PROGRAM_TYPES[prog.type];
+      const targetLow = prog.totalTarget;
+      const targetHigh = prog.type === "UG4" ? (prog.totalTarget <= 176 ? 176 : 194) : typeMeta.rangeHigh;
+      const overallStatus = gt === 0 ? null : (gt < targetLow ? "bad" : gt > targetHigh ? "warn" : "ok");
+      const coreCode = prog.type === "UG4" ? "PCC" : "PCC_PG";
+      const elecCode = prog.type === "UG4" ? "PEC" : "PEC_PG";
+      const majorCredits = categoryTotal(prog, coreCode) + categoryTotal(prog, elecCode);
+      const majorPct = gt > 0 ? Math.round(majorCredits / gt * 100) : 0;
+      return `
+    ${pageHeader("Curriculum · 02", "Validation Dashboard", "Live comparison of the selected programme against the Maharashtra NEP 2020 credit framework.")}
+    <div class="selectbar">${programSelector(prog.id, "sel-val-prog")}<span class="tag ${prog.type !== 'UG4' ? 'purple' : ''}" style="align-self:center;">${typeMeta.label}</span></div>
+    <div class="grid4">
+      <div class="stat"><div class="n">${gt}</div><div class="l">Total credits designed</div><div class="meter ${overallStatus === 'bad' ? 'bad' : overallStatus === 'warn' ? 'warn' : ''}"><div style="width:${Math.min(100, gt / targetHigh * 100)}%"></div></div></div>
+      <div class="stat"><div class="n">${targetLow}–${targetHigh}</div><div class="l">Target range (Cr.)</div></div>
+      <div class="stat"><div class="n">${majorPct}%</div><div class="l">Major-discipline share</div><div class="meter ${majorPct < 50 ? 'bad' : ''}"><div style="width:${Math.min(100, majorPct)}%"></div></div></div>
+      <div class="stat"><div class="n">${prog.courses.length}</div><div class="l">Courses entered</div></div>
+    </div>
+    <div class="card tick"><h3>Per-semester credit load</h3>
+      <table><thead><tr><th>Semester</th><th>Credits</th><th>Target</th><th>Status</th></tr></thead>
+        <tbody>${semRange(prog.semesters).map(s => {
+        const t = semesterTotal(prog, s); const st = t === 0 ? null : (t < prog.semMin || t > prog.semMax ? "warn" : "ok");
+        return `<tr><td>Sem ${toRoman(s)}</td><td style="font-family:'IBM Plex Mono',monospace;">${t}</td><td style="font-family:'IBM Plex Mono',monospace; color:var(--ink-soft);">${prog.semMin}–${prog.semMax}</td><td>${st ? `<span class="status ${st}">${st === 'ok' ? '✓ OK' : '⚠ CHECK'}</span>` : `<span class="status warn">— empty</span>`}</td></tr>`;
+      }).join("")}</tbody>
+      </table>
+    </div>
+    <div class="card tick"><h3>Category-wise credit allocation</h3>
+      <table><thead><tr><th>Code</th><th>Category</th><th>Designed</th><th>Target</th><th>Status</th></tr></thead>
+        <tbody>${categoriesForType(prog.type).map(cat => {
+        const t = categoryTotal(prog, cat.code); const st = t === 0 ? null : (t < cat.min ? "bad" : t > cat.max ? "warn" : "ok");
+        return `<tr><td><span class="tag">${cat.code}</span></td><td>${cat.name}</td><td style="font-family:'IBM Plex Mono',monospace; font-weight:700;">${t}</td><td style="font-family:'IBM Plex Mono',monospace; color:var(--ink-soft);">${cat.min === cat.max ? cat.min : cat.min + '–' + cat.max}</td><td>${st ? `<span class="status ${st}">${st === 'ok' ? '✓ OK' : st === 'bad' ? '⚠ UNDER' : '⚠ OVER'}</span>` : `<span class="status warn">— none yet</span>`}</td></tr>`;
+      }).join("")}</tbody>
+      </table>
+    </div>
+  `;
+    }
+    function bindValidation() {
+      const sel = document.getElementById("sel-val-prog");
+      if (sel) sel.addEventListener("change", () => { ACTIVE_PROGRAM_ID = sel.value; render(); });
+    }
+
+    /* ============================= FACULTY DIRECTORY ============================= */
+    function pageFaculty() {
+      return `
+    ${pageHeader("Faculty Load · 01", "Faculty Directory", "Add every faculty member in the department, with their maximum weekly teaching-hour load.")}
+    <div class="card tick">
+      <h3>Faculty <span class="tag" style="margin-left:6px;">${FACULTY.length}</span></h3>
+      ${FACULTY.length === 0 ? `<div class="empty">No faculty added yet.</div>` : `
+      <table><thead><tr><th>Name</th><th>Designation</th><th>Specialisation</th><th>Max load/week</th><th></th></tr></thead>
+        <tbody>${FACULTY.map(f => `<tr><td><strong>${esc(f.name)}</strong></td><td>${esc(f.designation) || '—'}</td><td>${esc(f.specialization) || '—'}</td><td style="font-family:'IBM Plex Mono',monospace;">${f.maxLoad} hrs</td><td><button class="danger" data-id="${f.id}">Delete</button></td></tr>`).join("")}</tbody>
+      </table>`}
+      <form id="f-add-faculty" class="add-row" style="grid-template-columns:1.3fr 1.1fr 1.3fr .8fr auto;">
+        <div class="field"><label>Name</label><input type="text" name="name" placeholder="Dr. A. B. Patil" required></div>
+        <div class="field"><label>Designation</label><input type="text" name="designation" placeholder="Assistant Professor"></div>
+        <div class="field"><label>Specialisation</label><input type="text" name="specialization" placeholder="Data Structures, DBMS"></div>
+        <div class="field"><label>Max load (hrs/wk)</label><input type="number" name="maxLoad" value="16" min="1" max="30"></div>
+        <button class="primary" type="submit">Add faculty</button>
+      </form>
+    </div>
+  `;
+    }
+    function bindFaculty() {
+      document.querySelectorAll("main .danger").forEach(b => {
+        b.addEventListener("click", async () => {
+          if (!confirm("Delete this faculty member? Their assignments will also be removed.")) return;
+          FACULTY = FACULTY.filter(f => f.id !== b.dataset.id);
+          PROGRAMS.forEach(p => p.courses.forEach(c => { c.assignments = (c.assignments || []).filter(a => a.facultyId !== b.dataset.id); }));
+          TIMETABLE = TIMETABLE.filter(t => t.facultyId !== b.dataset.id);
+          await saveProject(); render();
+        });
+      });
+      const f = document.getElementById("f-add-faculty");
+      if (f) f.addEventListener("submit", async e => {
+        e.preventDefault();
+        const fd = new FormData(f);
+        FACULTY.push({ id: uid(), name: fd.get("name"), designation: fd.get("designation"), specialization: fd.get("specialization"), maxLoad: parseFloat(fd.get("maxLoad")) || 16 });
+        await saveProject(); render();
+      });
+    }
+
+    /* ============================= LOAD DISTRIBUTION ============================= */
+    function courseHours(c) { return (parseFloat(c.L) || 0) + (parseFloat(c.T) || 0) + (parseFloat(c.P) || 0); }
+    function assignedHours(c) { return (c.assignments || []).reduce((s, a) => s + (parseFloat(a.hours) || 0), 0); }
+
+    function pageLoadDist() {
+      if (PROGRAMS.length === 0) return pageHeader("Faculty Load · 02", "Load Distribution", "") + noProgramsEmpty();
+      if (FACULTY.length === 0) return pageHeader("Faculty Load · 02", "Load Distribution", "") + `<div class="empty">Add faculty in the Faculty Directory first.</div>`;
+      const prog = getProgram(LOAD_PROGRAM_ID) || PROGRAMS[0];
+      LOAD_PROGRAM_ID = prog.id;
+      if (LOAD_SEM > prog.semesters) LOAD_SEM = 1;
+      const sc = semesterCourses(prog, LOAD_SEM);
+      return `
+    ${pageHeader("Faculty Load · 02", "Load Distribution", "Assign faculty to each course. Weekly hours default to the course's L+T+P; split across two teachers for lab batches if needed.")}
+    <div class="selectbar">
+      ${programSelector(prog.id, "sel-load-prog")}
+      <div class="field"><label>Semester</label><select id="sel-load-sem">${semRange(prog.semesters).map(s => `<option value="${s}" ${s === LOAD_SEM ? 'selected' : ''}>Sem ${toRoman(s)}</option>`).join("")}</select></div>
+    </div>
+    ${sc.length === 0 ? `<div class="empty">No courses in Sem ${toRoman(LOAD_SEM)} of this programme yet.</div>` : sc.map(c => {
+        const total = courseHours(c); const assigned = assignedHours(c);
+        const st = assigned === 0 ? "bad" : assigned < total ? "warn" : assigned > total ? "warn" : "ok";
+        return `
+      <div class="card tick" data-course="${c.id}">
+        <h3>${esc(c.code)} — ${esc(c.title)} <span class="tag" style="margin-left:6px;">${c.category}</span>
+          <span class="status ${st}" style="margin-left:8px;">${assigned}/${total} hrs ${st === 'ok' ? '✓' : '⚠'}</span>
+        </h3>
+        <div>${(c.assignments || []).map(a => `<span class="chip">${esc(facultyName(a.facultyId))} — ${a.hours} hrs<button class="chip-x" data-course="${c.id}" data-fac="${a.facultyId}">✕</button></span>`).join("") || `<span style="color:var(--ink-soft); font-size:12.5px;">No faculty assigned yet.</span>`}</div>
+        <form class="f-assign add-row" data-course="${c.id}" style="grid-template-columns:2fr 1fr auto;">
+          <div class="field"><label>Faculty</label><select name="facultyId" required>${FACULTY.map(f => `<option value="${f.id}">${esc(f.name)}</option>`).join("")}</select></div>
+          <div class="field"><label>Hours/week</label><input type="number" step="0.5" name="hours" value="${Math.max(0, total - assigned) || total}" min="0"></div>
+          <button class="primary" type="submit">Assign</button>
+        </form>
+      </div>`;
+      }).join("")}
+  `;
+    }
+    function bindLoadDist() {
+      const selP = document.getElementById("sel-load-prog");
+      if (selP) selP.addEventListener("change", () => { LOAD_PROGRAM_ID = selP.value; LOAD_SEM = 1; render(); });
+      const selS = document.getElementById("sel-load-sem");
+      if (selS) selS.addEventListener("change", () => { LOAD_SEM = parseInt(selS.value, 10); render(); });
+      document.querySelectorAll(".chip-x").forEach(b => {
+        b.addEventListener("click", async () => {
+          const prog = getProgram(LOAD_PROGRAM_ID);
+          const c = prog.courses.find(c => c.id === b.dataset.course);
+          c.assignments = (c.assignments || []).filter(a => a.facultyId !== b.dataset.fac);
+          await saveProject(); render();
+        });
+      });
+      document.querySelectorAll(".f-assign").forEach(f => {
+        f.addEventListener("submit", async e => {
+          e.preventDefault();
+          const fd = new FormData(f);
+          const prog = getProgram(LOAD_PROGRAM_ID);
+          const c = prog.courses.find(c => c.id === f.dataset.course);
+          c.assignments = c.assignments || [];
+          const facultyId = fd.get("facultyId");
+          const existing = c.assignments.find(a => a.facultyId === facultyId);
+          if (existing) existing.hours = parseFloat(fd.get("hours")) || 0;
+          else c.assignments.push({ id: uid(), facultyId, hours: parseFloat(fd.get("hours")) || 0 });
+          await saveProject(); render();
+        });
+      });
+    }
+
+    /* ============================= LOAD SUMMARY ============================= */
+    function facultyTotalLoad(facId) {
+      let total = 0; const courses = [];
+      PROGRAMS.forEach(p => p.courses.forEach(c => {
+        (c.assignments || []).forEach(a => {
+          if (a.facultyId === facId) { total += parseFloat(a.hours) || 0; courses.push({ prog: p.name, sem: c.sem, code: c.code, title: c.title, hours: a.hours }); }
+        });
+      }));
+      return { total, courses };
+    }
+    function pageLoadSummary() {
+      if (FACULTY.length === 0) return pageHeader("Faculty Load · 03", "Load Summary", "") + `<div class="empty">Add faculty in the Faculty Directory first.</div>`;
+      return `
+    ${pageHeader("Faculty Load · 03", "Load Summary", "Total weekly teaching hours per faculty member, across every programme and semester.")}
+    ${FACULTY.map(f => {
+        const { total, courses } = facultyTotalLoad(f.id);
+        const st = total === 0 ? null : total > f.maxLoad ? "bad" : total === f.maxLoad ? "ok" : "warn";
+        return `
+      <div class="card tick">
+        <h3>${esc(f.name)} <span style="color:var(--ink-soft); font-weight:400; font-size:13px;">— ${esc(f.designation) || ''}</span>
+          <span class="status ${st || 'warn'}" style="margin-left:8px;">${total}/${f.maxLoad} hrs ${st === 'bad' ? '⚠ OVERLOADED' : st === 'ok' ? '✓ AT CAPACITY' : st === 'warn' ? '· under capacity' : '— unassigned'}</span>
+        </h3>
+        <div class="meter ${st === 'bad' ? 'bad' : st === 'warn' ? 'warn' : ''}"><div style="width:${Math.min(100, total / f.maxLoad * 100)}%"></div></div>
+        ${courses.length === 0 ? `<p class="desc" style="margin-top:10px;">No courses assigned.</p>` : `
+        <table style="margin-top:12px;"><thead><tr><th>Programme</th><th>Sem</th><th>Course</th><th>Hrs/wk</th></tr></thead>
+          <tbody>${courses.map(c => `<tr><td>${esc(c.prog)}</td><td>${toRoman(c.sem)}</td><td>${esc(c.code)} — ${esc(c.title)}</td><td style="font-family:'IBM Plex Mono',monospace;">${c.hours}</td></tr>`).join("")}</tbody>
+        </table>`}
+      </div>`;
+      }).join("")}
+  `;
+    }
+
+    /* ============================= TIMETABLE ============================= */
+    function ttEntriesFor(progId, sem, div) { return TIMETABLE.filter(t => t.programId === progId && t.semester === sem && t.division === div); }
+    function ttFindCell(progId, sem, div, day, period) { return TIMETABLE.find(t => t.programId === progId && t.semester === sem && t.division === div && t.day === day && t.period === period); }
+    function ttClashesFor(entry) {
+      if (!entry) return [];
+      return TIMETABLE.filter(t => t.id !== entry.id && t.day === entry.day && t.period === entry.period &&
+        ((entry.facultyId && t.facultyId === entry.facultyId) || (entry.room && t.room && t.room === entry.room)));
+    }
+
+    function pageTimetable() {
+      if (PROGRAMS.length === 0) return pageHeader("Timetable · 01", "Timetable Builder", "") + noProgramsEmpty();
+      const prog = getProgram(TT_PROGRAM_ID) || PROGRAMS[0];
+      TT_PROGRAM_ID = prog.id;
+      if (TT_SEM > prog.semesters) TT_SEM = 1;
+      const courses = semesterCourses(prog, TT_SEM);
+      const selectedEntry = TT_SELECTED ? ttFindCell(prog.id, TT_SEM, TT_DIVISION, TT_SELECTED.day, TT_SELECTED.period) : null;
+      return `
+    ${pageHeader("Timetable · 01", "Timetable Builder", "Click any cell to assign a course, faculty and room. Clashing faculty/room bookings are flagged in red.")}
+    <div class="selectbar">
+      ${programSelector(prog.id, "sel-tt-prog")}
+      <div class="field"><label>Semester</label><select id="sel-tt-sem">${semRange(prog.semesters).map(s => `<option value="${s}" ${s === TT_SEM ? 'selected' : ''}>Sem ${toRoman(s)}</option>`).join("")}</select></div>
+      <div class="field"><label>Division</label><input type="text" id="sel-tt-div" value="${esc(TT_DIVISION)}" style="width:80px;"></div>
+    </div>
+    ${courses.length === 0 ? `<div class="empty">No courses in Sem ${toRoman(TT_SEM)} of this programme yet — add them in the Curriculum Builder first.</div>` : `
+    <div class="card tick">
+      <h3>Sem ${toRoman(TT_SEM)} · Division ${esc(TT_DIVISION)}</h3>
+      <div class="tt-wrap">
+        <table class="tt">
+          <thead><tr><th>Period</th>${DAYS.map(d => `<th>${d}</th>`).join("")}</tr></thead>
+          <tbody>
+            ${PERIODS.map(p => `<tr>
+              <td class="period-lbl">${p.label}<br>${p.time}</td>
+              ${DAYS.map(d => {
+        const e = ttFindCell(prog.id, TT_SEM, TT_DIVISION, d, p.id);
+        const clashCount = e ? ttClashesFor(e).length : 0;
+        const isSel = TT_SELECTED && TT_SELECTED.day === d && TT_SELECTED.period === p.id;
+        const cls = ["tt-cell", e ? "filled" : "", clashCount > 0 ? "clash" : "", isSel ? "selected" : ""].filter(Boolean).join(" ");
+        return `<td class="${cls}" data-day="${d}" data-period="${p.id}">
+                  ${e ? `<div class="tt-code">${esc(e.code)}</div><div class="tt-fac">${esc(facultyName(e.facultyId))}</div><div class="tt-room">${esc(e.room) || ''}</div>` : ''}
+                </td>`;
+      }).join("")}
+            </tr>`).join("")}
+          </tbody>
+        </table>
+      </div>
+      ${TT_SELECTED ? `
+      <div style="margin-top:18px; padding-top:16px; border-top:1px dashed var(--line);">
+        <h3>Edit slot — ${TT_SELECTED.day}, ${PERIODS.find(p => p.id === TT_SELECTED.period).label}</h3>
+        <form id="f-tt-edit" class="row3">
+          <div class="field"><label>Course</label>
+            <select name="courseId" id="tt-course-select">
+              <option value="">— clear slot —</option>
+              ${courses.map(c => `<option value="${c.id}" ${selectedEntry && selectedEntry.courseId === c.id ? 'selected' : ''}>${esc(c.code)} — ${esc(c.title)}</option>`).join("")}
+            </select>
+          </div>
+          <div class="field"><label>Faculty</label>
+            <select name="facultyId">
+              <option value="">— none —</option>
+              ${FACULTY.map(f => `<option value="${f.id}" ${selectedEntry && selectedEntry.facultyId === f.id ? 'selected' : ''}>${esc(f.name)}</option>`).join("")}
+            </select>
+          </div>
+          <div class="field"><label>Room</label><input type="text" name="room" value="${selectedEntry ? esc(selectedEntry.room) : ''}" placeholder="LH-201"></div>
+        </form>
+        <div style="display:flex; gap:10px;">
+          <button class="primary" id="btn-tt-save">Save slot</button>
+          <button class="ghost" id="btn-tt-clear">Clear slot</button>
+          <button class="ghost" id="btn-tt-cancel">Cancel</button>
+        </div>
+        ${selectedEntry && ttClashesFor(selectedEntry).length > 0 ? `<p style="color:var(--red); font-size:12.5px; margin-top:10px; font-weight:600;">⚠ This slot clashes with ${ttClashesFor(selectedEntry).length} other booking(s) — see Clash Report.</p>` : ''}
+      </div>` : `<p class="desc no-print" style="margin-top:14px;">Click a cell above to assign or edit that slot.</p>`}
+    </div>`}
+  `;
+    }
+    function bindTimetable() {
+      const selP = document.getElementById("sel-tt-prog");
+      if (selP) selP.addEventListener("change", () => { TT_PROGRAM_ID = selP.value; TT_SEM = 1; TT_SELECTED = null; render(); });
+      const selS = document.getElementById("sel-tt-sem");
+      if (selS) selS.addEventListener("change", () => { TT_SEM = parseInt(selS.value, 10); TT_SELECTED = null; render(); });
+      const selD = document.getElementById("sel-tt-div");
+      if (selD) selD.addEventListener("change", () => { TT_DIVISION = selD.value || "A"; TT_SELECTED = null; render(); });
+      document.querySelectorAll(".tt-cell").forEach(td => {
+        td.addEventListener("click", () => { TT_SELECTED = { day: td.dataset.day, period: parseInt(td.dataset.period, 10) }; render(); });
+      });
+      const btnSave = document.getElementById("btn-tt-save");
+      if (btnSave) btnSave.addEventListener("click", async () => {
+        const f = document.getElementById("f-tt-edit");
+        const fd = new FormData(f);
+        const courseId = fd.get("courseId");
+        const prog = getProgram(TT_PROGRAM_ID);
+        const existing = ttFindCell(prog.id, TT_SEM, TT_DIVISION, TT_SELECTED.day, TT_SELECTED.period);
+        if (!courseId) { if (existing) TIMETABLE = TIMETABLE.filter(t => t.id !== existing.id); await saveProject(); render(); return; }
+        const course = prog.courses.find(c => c.id === courseId);
+        const entry = {
+          id: existing ? existing.id : uid(), programId: prog.id, semester: TT_SEM, division: TT_DIVISION,
+          day: TT_SELECTED.day, period: TT_SELECTED.period, courseId, code: course.code,
+          facultyId: fd.get("facultyId") || "", room: fd.get("room") || ""
+        };
+        if (existing) TIMETABLE = TIMETABLE.map(t => t.id === existing.id ? entry : t);
+        else TIMETABLE.push(entry);
+        await saveProject(); render();
+      });
+      const btnClear = document.getElementById("btn-tt-clear");
+      if (btnClear) btnClear.addEventListener("click", async () => {
+        const prog = getProgram(TT_PROGRAM_ID);
+        const existing = ttFindCell(prog.id, TT_SEM, TT_DIVISION, TT_SELECTED.day, TT_SELECTED.period);
+        if (existing) TIMETABLE = TIMETABLE.filter(t => t.id !== existing.id);
+        await saveProject(); render();
+      });
+      const btnCancel = document.getElementById("btn-tt-cancel");
+      if (btnCancel) btnCancel.addEventListener("click", () => { TT_SELECTED = null; render(); });
+    }
+
+    /* ============================= CLASH REPORT ============================= */
+    function pageClash() {
+      const seen = new Set(); const clashes = [];
+      TIMETABLE.forEach(t => {
+        ttClashesFor(t).forEach(o => {
+          const key = [t.id, o.id].sort().join("|");
+          if (!seen.has(key)) { seen.add(key); clashes.push([t, o]); }
+        });
+      });
+      return `
+    ${pageHeader("Timetable · 02", "Clash Report", "Every pair of timetable slots sharing the same day and period with the same faculty or room.")}
+    ${clashes.length === 0 ? `<div class="empty">No clashes detected across the current timetable(s).</div>` : `
+    <div class="card tick">
+      <table>
+        <thead><tr><th>Day / Period</th><th>Slot A</th><th>Slot B</th><th>Conflict</th></tr></thead>
+        <tbody>${clashes.map(([a, b]) => {
+        const progA = getProgram(a.programId), progB = getProgram(b.programId);
+        const perLbl = PERIODS.find(p => p.id === a.period);
+        const conflictType = a.facultyId && a.facultyId === b.facultyId ? "Faculty" : "Room";
+        return `<tr>
+            <td>${a.day} · ${perLbl.label}</td>
+            <td>${esc(progA ? progA.name : '')} Sem ${toRoman(a.semester)}-${esc(a.division)} · ${esc(a.code)}</td>
+            <td>${esc(progB ? progB.name : '')} Sem ${toRoman(b.semester)}-${esc(b.division)} · ${esc(b.code)}</td>
+            <td><span class="status bad">${conflictType}</span></td>
+          </tr>`;
+      }).join("")}</tbody>
+      </table>
+    </div>`}
+  `;
+    }
+
+    /* ============================= EXPORT ============================= */
+    function pageExport() {
+      const prog = getProgram(EXPORT_PROGRAM_ID) || PROGRAMS[0];
+      if (prog) EXPORT_PROGRAM_ID = prog.id;
+      const today = new Date().toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' });
+      return `
+    ${pageHeader("Output", "Export / Print", "Choose what to print or export: the curriculum sheet, faculty load summary, or a timetable grid.")}
+    <div class="toolbar no-print">
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <button class="ghost ${EXPORT_VIEW === 'curriculum' ? 'active' : ''}" data-view="curriculum">Curriculum Sheet</button>
+        <button class="ghost ${EXPORT_VIEW === 'load' ? 'active' : ''}" data-view="load">Load Summary</button>
+        <button class="ghost ${EXPORT_VIEW === 'timetable' ? 'active' : ''}" data-view="timetable">Timetable</button>
+      </div>
+      <div style="display:flex; gap:10px;">
+        <button class="primary" id="btn-print">Print / Save as PDF</button>
+        ${EXPORT_VIEW === 'curriculum' ? `<button class="ghost" id="btn-csv">Download CSV</button>` : ''}
+      </div>
+    </div>
+    ${EXPORT_VIEW === 'curriculum' ? exportCurriculum(prog, today) : ''}
+    ${EXPORT_VIEW === 'load' ? exportLoad(today) : ''}
+    ${EXPORT_VIEW === 'timetable' ? exportTimetable(prog, today) : ''}
+  `;
+    }
+    function exportCurriculum(prog, today) {
+      if (!prog) return noProgramsEmpty();
+      const gt = grandTotal(prog);
+      return `
+    <div class="selectbar no-print">${programSelector(prog.id, "sel-export-prog")}<span class="tag ${prog.type !== 'UG4' ? 'purple' : ''}" style="align-self:center;">${PROGRAM_TYPES[prog.type].label}</span></div>
+    ${semRange(prog.semesters).map(s => {
+        const sc = semesterCourses(prog, s); if (sc.length === 0) return "";
+        return `<div class="card tick"><h3>Semester ${toRoman(s)}</h3>
+        <table><thead><tr><th style="width:13%">Code</th><th>Title</th><th style="width:15%">Category</th><th style="width:7%">L</th><th style="width:7%">T</th><th style="width:7%">P</th><th style="width:9%">Credits</th></tr></thead>
+        <tbody>${sc.map(c => `<tr><td style="font-family:'IBM Plex Mono',monospace;">${esc(c.code)}</td><td>${esc(c.title)}</td><td><span class="tag">${c.category}</span></td><td>${c.L || 0}</td><td>${c.T || 0}</td><td>${c.P || 0}</td><td style="font-family:'IBM Plex Mono',monospace; font-weight:700;">${c.credits}</td></tr>`).join("")}</tbody>
+        <tfoot><tr><td colspan="6">Semester total</td><td>${semesterTotal(prog, s)} Cr.</td></tr></tfoot></table></div>`;
+      }).join("") || `<div class="empty">No courses added yet for this programme.</div>`}
+    <div class="titleblock">
+      <div><span class="l">Programme</span><span class="v">${esc(prog.name)}</span></div>
+      <div><span class="l">Major</span><span class="v">${esc(prog.major) || '—'}</span></div>
+      <div><span class="l">Minor</span><span class="v">${esc(prog.minor) || '—'}</span></div>
+      <div><span class="l">Total credits</span><span class="v">${gt} / ${prog.totalTarget}</span></div>
+      <div style="grid-column:1/3;"><span class="l">Department</span><span class="v">${esc(DEPARTMENT.name) || '—'}</span></div>
+      <div><span class="l">Generated</span><span class="v">${today}</span></div>
+      <div><span class="l">Status</span><span class="v">DRAFT</span></div>
+    </div>
+  `;
+    }
+    function exportLoad(today) {
+      if (FACULTY.length === 0) return `<div class="empty">No faculty added yet.</div>`;
+      return `
+    <div class="card tick"><h3>Faculty load summary</h3>
+      <table><thead><tr><th>Name</th><th>Designation</th><th>Assigned hrs/wk</th><th>Max load</th><th>Status</th></tr></thead>
+      <tbody>${FACULTY.map(f => {
+        const { total } = facultyTotalLoad(f.id);
+        const st = total === 0 ? '—' : total > f.maxLoad ? 'Overloaded' : total === f.maxLoad ? 'At capacity' : 'Under capacity';
+        return `<tr><td>${esc(f.name)}</td><td>${esc(f.designation) || '—'}</td><td style="font-family:'IBM Plex Mono',monospace;">${total}</td><td style="font-family:'IBM Plex Mono',monospace;">${f.maxLoad}</td><td>${st}</td></tr>`;
+      }).join("")}</tbody></table>
+    </div>
+    <div class="titleblock">
+      <div><span class="l">Department</span><span class="v">${esc(DEPARTMENT.name) || '—'}</span></div>
+      <div><span class="l">Faculty count</span><span class="v">${FACULTY.length}</span></div>
+      <div><span class="l">Generated</span><span class="v">${today}</span></div>
+      <div><span class="l">Status</span><span class="v">DRAFT</span></div>
+    </div>
+  `;
+    }
+    function exportTimetable(prog, today) {
+      if (!prog) return noProgramsEmpty();
+      if (TT_SEM > prog.semesters) TT_SEM = 1;
+      return `
+    <div class="selectbar no-print">
+      ${programSelector(prog.id, "sel-export-prog")}
+      <div class="field"><label>Semester</label><select id="sel-export-sem">${semRange(prog.semesters).map(s => `<option value="${s}" ${s === TT_SEM ? 'selected' : ''}>Sem ${toRoman(s)}</option>`).join("")}</select></div>
+      <div class="field"><label>Division</label><input type="text" id="sel-export-div" value="${esc(TT_DIVISION)}" style="width:80px;"></div>
+    </div>
+    <div class="card tick">
+      <h3>${esc(prog.name)} — Sem ${toRoman(TT_SEM)} — Division ${esc(TT_DIVISION)}</h3>
+      <div class="tt-wrap"><table class="tt">
+        <thead><tr><th>Period</th>${DAYS.map(d => `<th>${d}</th>`).join("")}</tr></thead>
+        <tbody>${PERIODS.map(p => `<tr><td class="period-lbl">${p.label}<br>${p.time}</td>${DAYS.map(d => {
+        const e = ttFindCell(prog.id, TT_SEM, TT_DIVISION, d, p.id);
+        return `<td class="tt-cell ${e ? 'filled' : ''}">${e ? `<div class="tt-code">${esc(e.code)}</div><div class="tt-fac">${esc(facultyName(e.facultyId))}</div><div class="tt-room">${esc(e.room) || ''}</div>` : ''}</td>`;
+      }).join("")}</tr>`).join("")}</tbody>
+      </table></div>
+    </div>
+    <div class="titleblock">
+      <div><span class="l">Department</span><span class="v">${esc(DEPARTMENT.name) || '—'}</span></div>
+      <div><span class="l">Programme</span><span class="v">${esc(prog.name)}</span></div>
+      <div><span class="l">Semester / Division</span><span class="v">${toRoman(TT_SEM)} / ${esc(TT_DIVISION)}</span></div>
+      <div><span class="l">Generated</span><span class="v">${today}</span></div>
+    </div>
+  `;
+    }
+    function bindExport() {
+      document.querySelectorAll("[data-view]").forEach(b => b.addEventListener("click", () => { EXPORT_VIEW = b.dataset.view; render(); }));
+      const btnPrint = document.getElementById("btn-print");
+      if (btnPrint) btnPrint.addEventListener("click", () => window.print());
+      const selEP = document.getElementById("sel-export-prog");
+      if (selEP) selEP.addEventListener("change", () => { EXPORT_PROGRAM_ID = selEP.value; render(); });
+      const selES = document.getElementById("sel-export-sem");
+      if (selES) selES.addEventListener("change", () => { TT_SEM = parseInt(selES.value, 10); render(); });
+      const selED = document.getElementById("sel-export-div");
+      if (selED) selED.addEventListener("change", () => { TT_DIVISION = selED.value || "A"; render(); });
+      const btnCsv = document.getElementById("btn-csv");
+      if (btnCsv) btnCsv.addEventListener("click", () => {
+        const prog = getProgram(EXPORT_PROGRAM_ID);
+        if (!prog) return;
+        let csv = "Semester,Code,Title,Category,L,T,P,Credits\n";
+        prog.courses.slice().sort((a, b) => a.sem - b.sem).forEach(c => {
+          csv += `${toRoman(c.sem)},"${(c.code || '').replace(/"/g, '""')}","${(c.title || '').replace(/"/g, '""')}",${c.category},${c.L || 0},${c.T || 0},${c.P || 0},${c.credits}\n`;
+        });
+        const blob = new Blob([csv], { type: "text/csv" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url; a.download = (prog.name || "curriculum").replace(/[^a-z0-9]+/gi, "_") + "_NEP2020.csv";
+        a.click(); URL.revokeObjectURL(url);
+      });
+    }
+
+    /* ============================= EXCEL IMPORT / EXPORT ============================= */
+    function allCourses() {
+      const out = [];
+      PROGRAMS.forEach(p => p.courses.forEach(c => out.push({ prog: p, course: c })));
+      return out;
+    }
+    function pageExcel() {
+      const courseCount = allCourses().length;
+      const assignCount = allCourses().reduce((s, { course }) => s + (course.assignments || []).length, 0);
+      return `
+    ${pageHeader("Data Exchange", "Excel Import / Export", "Every table in this planner — Programmes, Courses, Faculty, Load Assignments, and the Timetable — lives in one workbook with matching sheet names, so Excel can be your working copy or backup.")}
+    <div class="grid4">
+      <div class="stat"><div class="n">${PROGRAMS.length}</div><div class="l">Programmes</div></div>
+      <div class="stat"><div class="n">${courseCount}</div><div class="l">Courses</div></div>
+      <div class="stat"><div class="n">${FACULTY.length}</div><div class="l">Faculty</div></div>
+      <div class="stat"><div class="n">${assignCount}</div><div class="l">Load assignments</div></div>
+      <div class="stat"><div class="n">${TIMETABLE.length}</div><div class="l">Timetable slots</div></div>
+    </div>
+    <div class="card tick">
+      <h3>Export to Excel</h3>
+      <p class="desc">Downloads one .xlsx workbook with six sheets: Department, Programs, Courses, Faculty, Assignments, Timetable. Every row carries the IDs that link the tables together — keep the ID columns intact if you plan to re-import.</p>
+      <button class="primary" id="btn-xl-export">Download workbook (.xlsx)</button>
+    </div>
+    <div class="card tick">
+      <h3>Import from Excel</h3>
+      <p class="desc">Upload a workbook in the same shape (edited from a previous export, or built from the template below). This <strong>replaces</strong> everything currently in the planner — Department, Programmes, Courses, Faculty, Assignments and Timetable — so export a backup first if you're unsure.</p>
+      <input type="file" id="inp-xl-file" accept=".xlsx,.xls" style="margin-bottom:12px;">
+      <br>
+      <button class="primary" id="btn-xl-import">Import &amp; replace</button>
+      <button class="ghost" id="btn-xl-template" style="margin-left:8px;">Download blank template</button>
+      <p id="xl-status" style="margin-top:12px; font-size:12.5px; font-weight:600; display:none;"></p>
+    </div>
+    <div class="card tick">
+      <h3>Sheet reference</h3>
+      <table>
+        <thead><tr><th>Sheet</th><th>Columns</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td><span class="tag">Department</span></td><td style="font-family:'IBM Plex Mono',monospace; font-size:11px;">Name</td><td>Single row.</td></tr>
+          <tr><td><span class="tag">Programs</span></td><td style="font-family:'IBM Plex Mono',monospace; font-size:11px;">id, name, type, major, minor, totalTarget, semMin, semMax, semesters</td><td>type is UG4, PG2, or PG1.</td></tr>
+          <tr><td><span class="tag">Courses</span></td><td style="font-family:'IBM Plex Mono',monospace; font-size:11px;">id, programId, programName, sem, code, title, category, L, T, P, credits</td><td>programId links back to Programs; programName is for readability only.</td></tr>
+          <tr><td><span class="tag">Faculty</span></td><td style="font-family:'IBM Plex Mono',monospace; font-size:11px;">id, name, designation, specialization, maxLoad</td><td></td></tr>
+          <tr><td><span class="tag">Assignments</span></td><td style="font-family:'IBM Plex Mono',monospace; font-size:11px;">courseId, programName, sem, code, facultyId, facultyName, hours</td><td>Links Faculty to Courses (Load Distribution).</td></tr>
+          <tr><td><span class="tag">Timetable</span></td><td style="font-family:'IBM Plex Mono',monospace; font-size:11px;">id, programId, programName, semester, division, day, period, courseId, code, facultyId, facultyName, room</td><td>day is Mon–Sat; period is 1–7.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  `;
+    }
+    function buildWorkbook() {
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet([{ Name: DEPARTMENT.name || "" }]), "Department");
+
+      const programRows = PROGRAMS.map(p => ({
+        id: p.id, name: p.name, type: p.type, major: p.major, minor: p.minor,
+        totalTarget: p.totalTarget, semMin: p.semMin, semMax: p.semMax, semesters: p.semesters
+      }));
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(programRows), "Programs");
+
+      const courseRows = [];
+      const assignRows = [];
+      PROGRAMS.forEach(p => p.courses.forEach(c => {
+        courseRows.push({ id: c.id, programId: p.id, programName: p.name, sem: c.sem, code: c.code, title: c.title, category: c.category, L: c.L, T: c.T, P: c.P, credits: c.credits });
+        (c.assignments || []).forEach(a => {
+          assignRows.push({ courseId: c.id, programName: p.name, sem: c.sem, code: c.code, facultyId: a.facultyId, facultyName: facultyName(a.facultyId), hours: a.hours });
+        });
+      }));
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(courseRows), "Courses");
+
+      const facultyRows = FACULTY.map(f => ({ id: f.id, name: f.name, designation: f.designation, specialization: f.specialization, maxLoad: f.maxLoad }));
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(facultyRows), "Faculty");
+
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(assignRows), "Assignments");
+
+      const ttRows = TIMETABLE.map(t => {
+        const p = getProgram(t.programId);
+        return { id: t.id, programId: t.programId, programName: p ? p.name : "", semester: t.semester, division: t.division, day: t.day, period: t.period, courseId: t.courseId, code: t.code, facultyId: t.facultyId, facultyName: facultyName(t.facultyId), room: t.room };
+      });
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(ttRows), "Timetable");
+
+      return wb;
+    }
+    function downloadWorkbook(wb, filename) {
+      XLSX.writeFile(wb, filename);
+    }
+    function sheetRows(wb, name) {
+      const ws = wb.Sheets[name];
+      return ws ? XLSX.utils.sheet_to_json(ws, { defval: "" }) : [];
+    }
+    async function importWorkbook(file) {
+      const status = document.getElementById("xl-status");
+      const setStatus = (msg, ok) => { if (status) { status.style.display = "block"; status.style.color = ok ? "var(--green)" : "var(--red)"; status.textContent = msg; } };
+      try {
+        const buf = await file.arrayBuffer();
+        const wb = XLSX.read(buf, { type: "array" });
+
+        const deptRows = sheetRows(wb, "Department");
+        const newDept = { name: deptRows[0] ? String(deptRows[0].Name || "") : "" };
+
+        const progRows = sheetRows(wb, "Programs");
+        if (progRows.length === 0) throw new Error("No rows found in the 'Programs' sheet.");
+        const idMap = {}; // old/sheet id -> program object
+        const newPrograms = progRows.map(r => {
+          const type = PROGRAM_TYPES[r.type] ? r.type : "UG4";
+          const p = {
+            id: String(r.id || uid()), name: String(r.name || ""), type,
+            major: String(r.major || ""), minor: String(r.minor || ""),
+            totalTarget: parseInt(r.totalTarget, 10) || PROGRAM_TYPES[type].rangeLow,
+            semMin: parseInt(r.semMin, 10) || 20, semMax: parseInt(r.semMax, 10) || 22,
+            semesters: parseInt(r.semesters, 10) || semestersForType(type),
+            courses: []
+          };
+          idMap[p.id] = p;
+          if (r.name) idMap["name:" + r.name] = p; // fallback lookup by name
+          return p;
+        });
+
+        const facRows = sheetRows(wb, "Faculty");
+        const facIdMap = {};
+        const newFaculty = facRows.map(r => {
+          const f = { id: String(r.id || uid()), name: String(r.name || ""), designation: String(r.designation || ""), specialization: String(r.specialization || ""), maxLoad: parseFloat(r.maxLoad) || 16 };
+          facIdMap[f.id] = f;
+          if (f.name) facIdMap["name:" + f.name] = f;
+          return f;
+        });
+        function resolveFaculty(id, name) {
+          if (id && facIdMap[String(id)]) return facIdMap[String(id)].id;
+          if (name && facIdMap["name:" + name]) return facIdMap["name:" + name].id;
+          return "";
+        }
+
+        const courseRows = sheetRows(wb, "Courses");
+        const courseIdMap = {};
+        courseRows.forEach(r => {
+          let prog = (r.programId && idMap[String(r.programId)]) || (r.programName && idMap["name:" + r.programName]);
+          if (!prog) return; // skip orphan rows
+          const course = {
+            id: String(r.id || uid()), sem: parseInt(r.sem, 10) || 1, code: String(r.code || ""), title: String(r.title || ""),
+            category: String(r.category || ""), L: parseFloat(r.L) || 0, T: parseFloat(r.T) || 0, P: parseFloat(r.P) || 0,
+            credits: parseFloat(r.credits) || 0, assignments: []
+          };
+          prog.courses.push(course);
+          courseIdMap[course.id] = course;
+          courseIdMap["key:" + prog.id + "|" + course.sem + "|" + course.code] = course;
+        });
+
+        const assignRows = sheetRows(wb, "Assignments");
+        assignRows.forEach(r => {
+          let course = r.courseId && courseIdMap[String(r.courseId)];
+          if (!course && r.programName && r.sem && r.code) {
+            const prog = idMap["name:" + r.programName];
+            if (prog) course = courseIdMap["key:" + prog.id + "|" + parseInt(r.sem, 10) + "|" + r.code];
+          }
+          if (!course) return;
+          const facultyId = resolveFaculty(r.facultyId, r.facultyName);
+          if (!facultyId) return;
+          course.assignments.push({ facultyId, hours: parseFloat(r.hours) || 0 });
+        });
+
+        const ttRows = sheetRows(wb, "Timetable");
+        const newTimetable = [];
+        ttRows.forEach(r => {
+          let prog = (r.programId && idMap[String(r.programId)]) || (r.programName && idMap["name:" + r.programName]);
+          if (!prog) return;
+          let course = r.courseId && courseIdMap[String(r.courseId)];
+          if (!course && r.code) course = courseIdMap["key:" + prog.id + "|" + parseInt(r.semester, 10) + "|" + r.code];
+          if (!course) return;
+          newTimetable.push({
+            id: String(r.id || uid()), programId: prog.id, semester: parseInt(r.semester, 10) || 1, division: String(r.division || "A"),
+            day: String(r.day || "Mon"), period: parseInt(r.period, 10) || 1, courseId: course.id, code: course.code,
+            facultyId: resolveFaculty(r.facultyId, r.facultyName), room: String(r.room || "")
+          });
+        });
+
+        DEPARTMENT = newDept; PROGRAMS = newPrograms; FACULTY = newFaculty; TIMETABLE = newTimetable;
+        ACTIVE_PROGRAM_ID = PROGRAMS[0] ? PROGRAMS[0].id : null;
+        LOAD_PROGRAM_ID = ACTIVE_PROGRAM_ID; TT_PROGRAM_ID = ACTIVE_PROGRAM_ID; EXPORT_PROGRAM_ID = ACTIVE_PROGRAM_ID;
+        await saveProject();
+        setStatus(`✓ Imported ${newPrograms.length} programme(s), ${courseRows.length} course(s), ${newFaculty.length} faculty, ${assignRows.length} assignment(s), ${newTimetable.length} timetable slot(s).`, true);
+        render();
+      } catch (err) {
+        setStatus("⚠ Import failed: " + err.message, false);
+      }
+    }
+    function bindExcel() {
+      const btnExport = document.getElementById("btn-xl-export");
+      if (btnExport) btnExport.addEventListener("click", () => {
+        const wb = buildWorkbook();
+        downloadWorkbook(wb, (DEPARTMENT.name || "department_academic_planner").replace(/[^a-z0-9]+/gi, "_") + ".xlsx");
+      });
+      const btnTemplate = document.getElementById("btn-xl-template");
+      if (btnTemplate) btnTemplate.addEventListener("click", () => {
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet([{ Name: "Department of ..." }]), "Department");
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet([{ id: "", name: "", type: "UG4", major: "", minor: "", totalTarget: 160, semMin: 20, semMax: 22, semesters: 8 }]), "Programs");
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet([{ id: "", programId: "", programName: "", sem: 1, code: "", title: "", category: "", L: 0, T: 0, P: 0, credits: 0 }]), "Courses");
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet([{ id: "", name: "", designation: "", specialization: "", maxLoad: 16 }]), "Faculty");
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet([{ courseId: "", programName: "", sem: 1, code: "", facultyId: "", facultyName: "", hours: 0 }]), "Assignments");
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet([{ id: "", programId: "", programName: "", semester: 1, division: "A", day: "Mon", period: 1, courseId: "", code: "", facultyId: "", facultyName: "", room: "" }]), "Timetable");
+        downloadWorkbook(wb, "academic_planner_template.xlsx");
+      });
+      const btnImport = document.getElementById("btn-xl-import");
+      if (btnImport) btnImport.addEventListener("click", () => {
+        const fileInput = document.getElementById("inp-xl-file");
+        if (!fileInput.files[0]) { alert("Choose a .xlsx file first."); return; }
+        if (!confirm("This will replace everything currently in the planner with the contents of this workbook. Continue?")) return;
+        importWorkbook(fileInput.files[0]);
+      });
+    }
+
+    /* ============================= ROUTER ============================= */
+    const PAGES = {
+      "reference-framework": { render: pageReferenceFramework },
+      "reference-pg": { render: pageReferencePG },
+      "reference-grading": { render: pageReferenceGrading },
+      "dept-setup": { render: pageDeptSetup, bind: bindDeptSetup },
+      "builder": { render: pageBuilder, bind: bindBuilder },
+      "validation": { render: pageValidation, bind: bindValidation },
+      "faculty": { render: pageFaculty, bind: bindFaculty },
+      "load-dist": { render: pageLoadDist, bind: bindLoadDist },
+      "load-summary": { render: pageLoadSummary },
+      "timetable": { render: pageTimetable, bind: bindTimetable },
+      "clash": { render: pageClash },
+      "export": { render: pageExport, bind: bindExport },
+      "excel": { render: pageExcel, bind: bindExcel },
+    };
+
+    async function render() {
+      if (!LOADED) await loadProject();
+      renderNav();
+      const page = PAGES[ROUTE] || PAGES["reference-framework"];
+      const main = document.getElementById("main");
+      main.innerHTML = page.render();
+      if (page.bind) page.bind();
+    }
+    render();
+  </script>
+</body>
+
+</html>
