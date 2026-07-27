@@ -1553,7 +1553,17 @@
       };
     }
 
-    async function apiSave(fullState) {
+    async function apiSave(fullState, opts = {}) {
+      // opts.wipeFirst: used by the "Replace all previous data" import path.
+      // Clearing the in-memory arrays and re-upserting is NOT enough to remove
+      // old rows from Supabase — upsert only inserts/updates rows that are
+      // present in the payload, it never deletes rows that are simply absent
+      // from it. Anything left over from before the import stays in the
+      // database forever and reappears on the next page load. So when
+      // wipeFirst is set we explicitly DELETE every existing row for this
+      // user before inserting the freshly imported ones.
+      if (opts.wipeFirst) await wipeRemoteUserData();
+
       // Upserts must respect foreign-key dependency order: courses reference
       // programs, and assignments/timetable reference courses+faculty+programs.
       // Firing all 6 tables at once via Promise.all lets a child row's INSERT
@@ -1591,6 +1601,31 @@
       if (tt.error) throw tt.error;
 
       return { ok: true };
+    }
+
+    // Deletes every existing programs/faculty/courses/assignments/timetable row
+    // belonging to the signed-in user. RLS ("delete own <table>" policies, see
+    // supabase_setup.sql) already scopes every one of these deletes to
+    // `user_id = auth.uid()`, so this can never touch another user's data —
+    // the `.neq('id', NIL_UUID)` filter is just there because supabase-js
+    // requires *some* filter on a bulk delete, and no real row will ever have
+    // that all-zero id. Deleted child-tables-first (timetable/assignments
+    // before courses, courses before programs/faculty) so this is correct
+    // even if the on-delete-cascade rules in the schema were ever changed.
+    // The `department` row is intentionally left alone — it's a 1-per-user
+    // settings row, not part of what "replace all previous data" means.
+    async function wipeRemoteUserData() {
+      const NIL_UUID = '00000000-0000-0000-0000-000000000000';
+      const tt = await supabaseClient.from('timetable').delete().neq('id', NIL_UUID);
+      if (tt.error) throw tt.error;
+      const asg = await supabaseClient.from('assignments').delete().neq('id', NIL_UUID);
+      if (asg.error) throw asg.error;
+      const crs = await supabaseClient.from('courses').delete().neq('id', NIL_UUID);
+      if (crs.error) throw crs.error;
+      const fac = await supabaseClient.from('faculty').delete().neq('id', NIL_UUID);
+      if (fac.error) throw fac.error;
+      const progs = await supabaseClient.from('programs').delete().neq('id', NIL_UUID);
+      if (progs.error) throw progs.error;
     }
 
     /* ============================= FLATTEN / INFLATE ============================= */
@@ -1749,14 +1784,14 @@
         // Refresh the page to try again.
       }
     }
-    async function saveProject() {
+    async function saveProject(options = {}) {
       try {
-        syncStatus("Saving…", "saving");
+        syncStatus(options.wipeFirst ? "Deleting old data…" : "Saving…", "saving");
         // Repair any blank/duplicate course codes first — otherwise a single bad
         // row (often left over from an Excel import) blocks this and every future
         // save with a raw database error.
         const fixed = dedupeCourseCodes();
-        await apiSave(flattenState());
+        await apiSave(flattenState(), { wipeFirst: !!options.wipeFirst });
         if (fixed > 0) {
           syncStatus(`✓ Saved (auto-assigned a unique code to ${fixed} course${fixed > 1 ? 's' : ''} that had a missing/duplicate code)`, "ok");
           render(); // the fixed codes are now visible in the course tables
@@ -2876,7 +2911,11 @@
           LOAD_PROGRAM_ID = ACTIVE_PROGRAM_ID; TT_PROGRAM_ID = ACTIVE_PROGRAM_ID; EXPORT_PROGRAM_ID = ACTIVE_PROGRAM_ID;
         }
 
-        await saveProject();
+        // "replace" must delete the old rows in Supabase too — upsert alone
+        // only touches rows present in the new payload, so anything left
+        // over from before the import would otherwise silently reappear on
+        // the next page load/refresh.
+        await saveProject({ wipeFirst: mode === "replace" });
         const verb = mode === "add" ? "Added" : "Imported";
         setStatus(`✓ ${verb} ${newPrograms.length} programme(s), ${courseRows.length} course(s), ${newFaculty.length} faculty, ${assignRows.length} assignment(s), ${newTimetable.length} timetable slot(s).`, true);
         render();
