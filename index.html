@@ -3,12 +3,18 @@
 
 <head>
   <meta charset="UTF-8">
+  <meta name="description"
+    content="Department Academic Planner for NEP 2020 (Maharashtra) — design curricula, manage faculty load, and build timetables for UG and PG engineering programmes.">
   <title>Department Academic Planner — NEP 2020 (Maharashtra)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="preconnect" href="https://fonts.googleapis.com">
+  <!-- Supabase JS v2 — explicit UMD bundle so window.supabase is defined in all browsers -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <link
     href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
     rel="stylesheet">
+  <!-- CDN: SRI hash omitted — compute with: openssl dgst -sha384 -binary xlsx.full.min.js | openssl base64 -A
+       then add integrity="sha384-..." crossorigin="anonymous" for production hardening. -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style>
     :root {
@@ -177,6 +183,34 @@
       min-width: 0;
       padding: 34px 42px 70px;
       max-width: 1220px;
+      overflow-y: auto;
+      height: 100vh;
+    }
+
+    /* ===== STICKY FORMS ===== */
+    .faculty-sticky-form {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--white);
+      border-bottom: 1px solid var(--line);
+      box-shadow: 0 4px 14px rgba(15, 50, 71, .10);
+      margin: -20px -22px 16px;
+      padding: 16px 22px 14px;
+      border-radius: var(--radius) var(--radius) 0 0;
+    }
+
+    .prog-sticky-form,
+    .course-sticky-form {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: var(--white);
+      border-bottom: 1px solid var(--line);
+      box-shadow: 0 4px 14px rgba(15, 50, 71, .10);
+      margin: -20px -22px 16px;
+      padding: 16px 22px 14px;
+      border-radius: var(--radius) var(--radius) 0 0;
     }
 
     .eyebrow {
@@ -351,6 +385,8 @@
 
     input[type=text],
     input[type=number],
+    input[type=email],
+    input[type=password],
     select {
       width: 100%;
       padding: 8px 10px;
@@ -360,6 +396,129 @@
       font-size: 13px;
       background: var(--white);
       color: var(--ink);
+    }
+
+    /* ============================= AUTH GATE ============================= */
+    #auth-gate {
+      min-height: 100vh;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .auth-card {
+      width: 100%;
+      max-width: 380px;
+      background: var(--white);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 28px 26px 24px;
+    }
+
+    .auth-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .auth-tabs {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 18px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .auth-tab {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-family: 'Inter';
+      font-weight: 600;
+      font-size: 12.5px;
+      color: var(--ink-soft);
+      padding: 8px 4px 10px;
+      margin-right: 14px;
+      border-bottom: 2px solid transparent;
+    }
+
+    .auth-tab.active {
+      color: var(--blue-deep);
+      border-bottom-color: var(--orange);
+    }
+
+    .auth-msg {
+      font-size: 12px;
+      padding: 9px 11px;
+      border-radius: 6px;
+      margin-bottom: 14px;
+      display: none;
+    }
+
+    .auth-msg.ok {
+      display: block;
+      background: var(--green-pale);
+      color: var(--green);
+    }
+
+    .auth-msg.error {
+      display: block;
+      background: var(--red-pale);
+      color: var(--red);
+    }
+
+    .auth-link {
+      background: none;
+      border: none;
+      color: var(--blue);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 0;
+      font-family: 'Inter';
+    }
+
+    .auth-link:hover {
+      color: var(--orange);
+    }
+
+    #user-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 14px 22px 0;
+      margin-top: 6px;
+      border-top: 1px solid rgba(231, 237, 241, .14);
+    }
+
+    #user-bar .email {
+      font-size: 10.5px;
+      color: #9db2c1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    #user-bar button {
+      background: none;
+      border: 1px solid rgba(231, 237, 241, .3);
+      color: #c9d6de;
+      font-size: 10.5px;
+      font-weight: 600;
+      padding: 5px 9px;
+      border-radius: 5px;
+      cursor: pointer;
+      flex-shrink: 0;
+      font-family: 'Inter';
+    }
+
+    #user-bar button:hover {
+      border-color: var(--orange);
+      color: #fff;
     }
 
     input:focus,
@@ -677,6 +836,77 @@
       background: var(--red);
     }
 
+    /* Import mode chooser modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 50, 71, .45);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-box {
+      background: var(--white);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 26px 26px 22px;
+      max-width: 460px;
+      width: 100%;
+    }
+
+    .modal-box h3 {
+      margin: 0 0 8px;
+      font-family: 'Space Grotesk', sans-serif;
+      color: var(--blue-deep);
+    }
+
+    .modal-box .desc {
+      color: var(--ink-soft);
+      font-size: 13px;
+      line-height: 1.55;
+      margin-bottom: 18px;
+    }
+
+    .modal-option {
+      display: block;
+      width: 100%;
+      text-align: left;
+      border: 1px solid var(--line);
+      background: var(--paper);
+      border-radius: 7px;
+      padding: 12px 14px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      transition: border-color .12s ease, background .12s ease;
+    }
+
+    .modal-option:hover {
+      border-color: var(--orange);
+      background: var(--orange-pale);
+    }
+
+    .modal-option .mo-title {
+      font-weight: 700;
+      font-size: 13.5px;
+      color: var(--blue-deep);
+      margin-bottom: 3px;
+    }
+
+    .modal-option .mo-sub {
+      font-size: 12px;
+      color: var(--ink-soft);
+      line-height: 1.5;
+    }
+
+    .modal-box .modal-cancel {
+      margin-top: 6px;
+    }
+
     /* Timetable grid */
     .tt-wrap {
       overflow-x: auto;
@@ -792,6 +1022,8 @@
 
       main {
         padding: 22px 14px 60px;
+        overflow-y: auto;
+        height: 100vh;
       }
 
       .row2,
@@ -808,7 +1040,7 @@
 </head>
 
 <body>
-  <div id="root">
+  <div id="root" style="display:none;">
     <aside class="sidebar">
       <div class="brand">
         <div class="brand-mark">DEPT<br>PLAN</div>
@@ -833,10 +1065,68 @@
       <nav class="idx" id="nav-data"></nav>
       <div class="sidebar-foot">Credit framework per Govt. of Maharashtra GR (4 Jul &amp; 3 Aug 2023), DTE/SPPU NEP 2020
         structure.</div>
+      <div id="user-bar">
+        <span class="email" id="user-email">—</span>
+        <button id="btn-signout" type="button">Sign out</button>
+      </div>
     </aside>
     <main id="main"></main>
   </div>
   <div id="sync-toast" class="sync-toast" style="display:none;"></div>
+
+  <div id="auth-gate">
+    <div class="auth-card">
+      <div class="auth-brand">
+        <div class="brand-mark" style="transform:rotate(-3deg);">DEPT<br>PLAN</div>
+        <div>
+          <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:16px;color:var(--blue-deep);">
+            Academic Planner</div>
+          <div
+            style="font-size:9.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-soft);margin-top:2px;">
+            NEP 2020 · Maharashtra</div>
+        </div>
+      </div>
+      <div class="auth-tabs" id="auth-tabs">
+        <button type="button" class="auth-tab active" data-tab="signin">Sign in</button>
+        <button type="button" class="auth-tab" data-tab="signup">Create account</button>
+      </div>
+      <div id="auth-msg" class="auth-msg"></div>
+
+      <form id="f-signin">
+        <div class="field"><label>Email</label><input type="email" name="email" required autocomplete="username"></div>
+        <div class="field"><label>Password</label><input type="password" name="password" required
+            autocomplete="current-password"></div>
+        <button type="submit" class="primary" style="width:100%;margin-bottom:10px;">Sign in</button>
+        <button type="button" class="auth-link" id="btn-forgot">Forgot password?</button>
+      </form>
+
+      <form id="f-signup" style="display:none;">
+        <div class="field"><label>Email</label><input type="email" name="email" required autocomplete="username"></div>
+        <div class="field"><label>Password</label><input type="password" name="password" required minlength="6"
+            autocomplete="new-password"></div>
+        <div class="field"><label>Confirm password</label><input type="password" name="password2" required minlength="6"
+            autocomplete="new-password"></div>
+        <button type="submit" class="primary" style="width:100%;">Create account</button>
+        <p style="font-size:11px;color:var(--ink-soft);margin-top:10px;">You'll get a confirmation email — verify it
+          before signing in, depending on your project's auth settings.</p>
+      </form>
+
+      <form id="f-reset" style="display:none;">
+        <p style="font-size:12px;color:var(--ink-soft);margin-top:0;">Enter your account email — we'll send a password
+          reset link.</p>
+        <div class="field"><label>Email</label><input type="email" name="email" required autocomplete="username"></div>
+        <button type="submit" class="primary" style="width:100%;margin-bottom:10px;">Send reset link</button>
+        <button type="button" class="auth-link" id="btn-back-to-signin">Back to sign in</button>
+      </form>
+
+      <form id="f-newpass" style="display:none;">
+        <p style="font-size:12px;color:var(--ink-soft);margin-top:0;">Choose a new password for your account.</p>
+        <div class="field"><label>New password</label><input type="password" name="password" required minlength="6"
+            autocomplete="new-password"></div>
+        <button type="submit" class="primary" style="width:100%;">Update password</button>
+      </form>
+    </div>
+  </div>
 
   <script>
     /* ============================= FRAMEWORK DATA ============================= */
@@ -924,14 +1214,298 @@
     let EXPORT_VIEW = "curriculum";
     let EXPORT_PROGRAM_ID = null;
 
-    let LOADED = false;
+    // Which record (if any) each "add" form is currently editing. null = normal
+    // "add new" mode. Set when the user clicks "Edit" on a row; cleared on
+    // successful Update or Cancel.
+    let EDIT_PROGRAM_ID = null;
+    let EDIT_COURSE_ID = null;
+    let EDIT_FACULTY_ID = null;
+
+    let LOADED = false;          // true only after a successful load
+    let LOAD_ATTEMPTED = false;   // prevents infinite retry loops on persistent errors
+
+    /* ============================= DRAFT AUTOSAVE / UNSAVED-CHANGES GUARD ============================= */
+    // Keeps whatever the user is typing in an add/edit form safe against an accidental
+    // tab close, refresh, or (now-fixed) unexpected re-render: every keystroke is
+    // mirrored into localStorage, and is restored automatically the next time that
+    // form is rendered — until the record is saved or the user explicitly cancels.
+    const DRAFT_STORE_KEY = "dap_form_drafts_v1";
+    let DIRTY = false; // true whenever a watched form has unsaved input
+
+    function loadAllDrafts() {
+      try { return JSON.parse(localStorage.getItem(DRAFT_STORE_KEY) || "{}"); }
+      catch (e) { return {}; }
+    }
+    function saveDraftFor(formKey, values) {
+      const all = loadAllDrafts();
+      all[formKey] = values;
+      try { localStorage.setItem(DRAFT_STORE_KEY, JSON.stringify(all)); }
+      catch (e) { /* localStorage unavailable/full — draft just won't persist */ }
+    }
+    function getDraftFor(formKey) {
+      return loadAllDrafts()[formKey] || null;
+    }
+    function clearDraftFor(formKey) {
+      const all = loadAllDrafts();
+      if (formKey in all) {
+        delete all[formKey];
+        try { localStorage.setItem(DRAFT_STORE_KEY, JSON.stringify(all)); } catch (e) { }
+      }
+    }
+    // Wires a form so every keystroke is saved as a draft and marks the app dirty.
+    // formKey should be stable per logical form (e.g. "program", "course:<progId>",
+    // "faculty") so a draft doesn't leak into the wrong form.
+    function watchFormDraft(form, formKey) {
+      if (!form) return;
+      form.addEventListener("input", () => {
+        const fd = new FormData(form);
+        const values = {};
+        fd.forEach((v, k) => { values[k] = v; });
+        saveDraftFor(formKey, values);
+        DIRTY = true;
+      });
+    }
+    // Restores a previously-saved draft's values into the freshly-rendered form.
+    function applyDraftToForm(form, formKey) {
+      const draft = getDraftFor(formKey);
+      if (!draft || !form) return;
+      Object.keys(draft).forEach(name => {
+        const el = form.elements[name];
+        if (el) el.value = draft[name];
+      });
+      DIRTY = true; // a restored draft is, by definition, unsaved
+    }
+    // Native "are you sure you want to leave" prompt — browsers show their own generic
+    // wording regardless of e.returnValue's text, so we just need to set it.
+    window.addEventListener("beforeunload", (e) => {
+      if (!DIRTY) return;
+      e.preventDefault();
+      e.returnValue = "";
+    });
 
     /* ============================= API CONFIG ============================= */
-    // Paste the Web App URL you get after deploying the Apps Script project
-    // (Deploy > New deployment > Web app). See the Deployment Guide.
+    // SUPABASE_KEY is the public anon key — safe to expose in client-side code ONLY when
+    // Row-Level Security (RLS) is enabled on every table (department, programs, faculty,
+    // courses, assignments, timetable). Verify RLS policies in the Supabase dashboard
+    // before deploying to production.
     const APP_CONFIG = {
-      API_URL: "https://script.google.com/macros/s/AKfycbyMUxCnDSizgD7p2hhohpXFKVVc90gULR-ZHVNpltXWJcyTfYKG0pVjNPwPt4Vu45kZ/exec",
+      SUPABASE_URL: "https://ujmmwimxesbuikbqmtpz.supabase.co",
+      SUPABASE_KEY: "sb_publishable_5nbhnOjTwIw06JTVcDw5eg_a49JGvJY"
     };
+
+    // Initialise Supabase client
+    if (!window.supabase || !window.supabase.createClient) {
+      document.getElementById('main').innerHTML =
+        '<div style="padding:40px;color:#b23a3a;font-family:monospace;font-size:14px;">'
+        + '⚠ Supabase library failed to load from CDN. Check your internet connection and refresh.'
+        + '</div>';
+      throw new Error('Supabase CDN bundle not loaded — window.supabase is undefined.');
+    }
+    // NOTE: intentionally named `supabaseClient`, NOT `supabase`. The UMD bundle above already
+    // attaches a global named `supabase` (window.supabase, the library namespace with .createClient
+    // on it). Classic <script> tags on a page share one global scope for let/const, so declaring
+    // `const supabase = ...` here would collide with that existing global and throw
+    // "SyntaxError: Identifier 'supabase' has already been declared". Every DB call below must use
+    // this `supabaseClient` instance — never redeclare a local named `supabase`.
+    const supabaseClient = window.supabase.createClient(APP_CONFIG.SUPABASE_URL, APP_CONFIG.SUPABASE_KEY);
+
+    /* ============================= AUTH: CORE FUNCTIONS ============================= */
+    // These five functions are the only ones that talk to Supabase Auth directly.
+    // Everything else (the gate UI, the router) calls these.
+    async function signUp(email, password) {
+      const { data, error } = await supabaseClient.auth.signUp({ email, password });
+      if (error) throw error;
+      return data; // data.session is null if email confirmation is required
+    }
+    async function signIn(email, password) {
+      const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      return data;
+    }
+    async function signOut() {
+      const { error } = await supabaseClient.auth.signOut();
+      if (error) throw error;
+    }
+    async function resetPassword(email) {
+      // redirectTo must be added to Supabase Dashboard → Authentication → URL Configuration
+      // → Redirect URLs, otherwise Supabase will reject/ignore the redirect.
+      const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + window.location.pathname
+      });
+      if (error) throw error;
+    }
+    async function getCurrentUser() {
+      const { data, error } = await supabaseClient.auth.getUser();
+      if (error) return null;
+      return data.user;
+    }
+
+    /* ============================= AUTH: GATE UI ============================= */
+    let CURRENT_USER = null;
+    let AUTH_RECOVERY_MODE = false; // true when the user arrived via a password-reset email link
+
+    function showApp(show) {
+      document.getElementById('root').style.display = show ? 'flex' : 'none';
+      document.getElementById('auth-gate').style.display = show ? 'none' : 'flex';
+    }
+    function authMsg(text, kind) {
+      const el = document.getElementById('auth-msg');
+      if (!text) { el.className = 'auth-msg'; el.textContent = ''; return; }
+      el.className = 'auth-msg ' + kind;
+      el.textContent = text;
+    }
+    function showAuthForm(which) {
+      // which: "signin" | "signup" | "reset" | "newpass"
+      ['signin', 'signup', 'reset', 'newpass'].forEach(f => {
+        document.getElementById('f-' + f).style.display = (f === which) ? 'block' : 'none';
+      });
+      document.getElementById('auth-tabs').style.display = (which === 'signin' || which === 'signup') ? 'flex' : 'none';
+      document.querySelectorAll('.auth-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === which));
+      authMsg('', null);
+    }
+    function renderUserBar() {
+      const emailEl = document.getElementById('user-email');
+      if (emailEl) emailEl.textContent = CURRENT_USER ? CURRENT_USER.email : '';
+    }
+    function bindAuthGate() {
+      document.querySelectorAll('.auth-tab').forEach(t => t.addEventListener('click', () => showAuthForm(t.dataset.tab)));
+      document.getElementById('btn-forgot').addEventListener('click', () => showAuthForm('reset'));
+      document.getElementById('btn-back-to-signin').addEventListener('click', () => showAuthForm('signin'));
+
+      document.getElementById('f-signin').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        authMsg('', null);
+        try {
+          await signIn(fd.get('email').trim(), fd.get('password'));
+          // onAuthStateChange (SIGNED_IN) picks up from here and loads the app.
+        } catch (err) {
+          authMsg(err.message || 'Could not sign in.', 'error');
+        }
+      });
+
+      document.getElementById('f-signup').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        const email = fd.get('email').trim();
+        const password = fd.get('password');
+        if (password !== fd.get('password2')) { authMsg('Passwords do not match.', 'error'); return; }
+        authMsg('', null);
+        try {
+          const data = await signUp(email, password);
+          if (data.session) {
+            // Email confirmation is disabled on this project — user is signed in immediately.
+          } else {
+            authMsg('✓ Account created. Check your inbox to confirm your email, then sign in.', 'ok');
+            showAuthForm('signin');
+          }
+        } catch (err) {
+          authMsg(err.message || 'Could not create account.', 'error');
+        }
+      });
+
+      document.getElementById('f-reset').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        authMsg('', null);
+        try {
+          await resetPassword(fd.get('email').trim());
+          authMsg('✓ Reset link sent — check your inbox.', 'ok');
+        } catch (err) {
+          authMsg(err.message || 'Could not send reset email.', 'error');
+        }
+      });
+
+      document.getElementById('f-newpass').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        authMsg('', null);
+        try {
+          const { error } = await supabaseClient.auth.updateUser({ password: fd.get('password') });
+          if (error) throw error;
+          AUTH_RECOVERY_MODE = false;
+          authMsg('✓ Password updated. You are signed in.', 'ok');
+          setTimeout(() => { showAuthForm('signin'); }, 1200);
+        } catch (err) {
+          authMsg(err.message || 'Could not update password.', 'error');
+        }
+      });
+
+      const btnSignout = document.getElementById('btn-signout');
+      if (btnSignout) btnSignout.addEventListener('click', async () => {
+        try { await signOut(); } catch (err) { console.error(err); }
+      });
+    }
+
+    function resetAppState() {
+      DEPARTMENT = { name: "" }; PROGRAMS = []; FACULTY = []; TIMETABLE = [];
+      ACTIVE_PROGRAM_ID = null; LOAD_PROGRAM_ID = null; TT_PROGRAM_ID = null; EXPORT_PROGRAM_ID = null;
+      LOADED = false; LOAD_ATTEMPTED = false;
+      ROUTE = "reference-framework";
+    }
+
+    async function bootstrap() {
+      bindAuthGate();
+
+      // Supabase redirects password-reset links back here with type=recovery in the URL hash.
+      // Detect that up front so we show the "set new password" form instead of the normal gate.
+      if (window.location.hash.includes('type=recovery')) {
+        AUTH_RECOVERY_MODE = true;
+      }
+
+      const { data: { session } } = await supabaseClient.auth.getSession();
+
+      if (session && AUTH_RECOVERY_MODE) {
+        showApp(false);
+        showAuthForm('newpass');
+      } else if (session) {
+        CURRENT_USER = session.user;
+        showApp(true);
+        renderUserBar();
+        render();
+      } else {
+        showApp(false);
+        showAuthForm('signin');
+      }
+
+      supabaseClient.auth.onAuthStateChange((event, session) => {
+        // ROOT CAUSE OF THE "AUTO-REFRESH" / DATA-LOSS BUG:
+        // Supabase's client re-fires the 'SIGNED_IN' event any time it silently
+        // re-validates an already-active session — most commonly when the browser tab
+        // regains focus/visibility, not just on an actual new login. The old code below
+        // unconditionally ran resetAppState() + render() on *every* 'SIGNED_IN' event,
+        // which wiped DEPARTMENT/PROGRAMS/FACULTY/TIMETABLE from memory, snapped ROUTE
+        // back to page 1, and re-fetched everything from Supabase. Any typing in an
+        // open form (which lives only in the DOM, not in these arrays, until submit)
+        // was destroyed in the process. To the user this looked exactly like the page
+        // reloading on its own. FIX: only reset in-memory state for a genuinely *new*
+        // sign-in (a different user, or the first sign-in of this page load) — repeat
+        // 'SIGNED_IN' events for the same already-loaded user are now a no-op.
+        if (event === 'SIGNED_IN' && !AUTH_RECOVERY_MODE) {
+          const isNewSignIn = !CURRENT_USER || CURRENT_USER.id !== session.user.id || !LOADED;
+          CURRENT_USER = session.user;
+          if (isNewSignIn) {
+            resetAppState();
+            showApp(true);
+            renderUserBar();
+            render();
+          } else {
+            // Same user, session was just silently re-validated — leave app state,
+            // current route, and any in-progress form/draft completely untouched.
+            renderUserBar();
+          }
+        } else if (event === 'PASSWORD_RECOVERY') {
+          AUTH_RECOVERY_MODE = true;
+          showApp(false);
+          showAuthForm('newpass');
+        } else if (event === 'SIGNED_OUT') {
+          CURRENT_USER = null;
+          resetAppState();
+          showApp(false);
+          showAuthForm('signin');
+        }
+      });
+    }
 
     /* ============================= SYNC STATUS TOAST ============================= */
     let toastTimer = null;
@@ -949,62 +1523,87 @@
       }
     }
 
-    /* ============================= FRONTEND API LAYER ============================= */
-    /**
-     * Low-level request helper. GET requests are sent as query params (cacheable,
-     * no body). POST requests are sent with a text/plain body (JSON-encoded) —
-     * this deliberately avoids the application/json content-type so the browser
-     * treats it as a "simple request" and skips the CORS preflight that Apps
-     * Script web apps cannot answer.
-     */
-    async function apiRequest(method, params, body) {
-      if (!APP_CONFIG.API_URL || APP_CONFIG.API_URL.indexOf("PASTE_YOUR") === 0) {
-        throw new Error("Apps Script Web App URL is not configured yet (APP_CONFIG.API_URL).");
-      }
-      let url = APP_CONFIG.API_URL;
-      if (params) {
-        const qs = new URLSearchParams(params).toString();
-        url += (url.indexOf("?") === -1 ? "?" : "&") + qs;
-      }
-      const opts = { method };
-      if (method === "POST") {
-        opts.headers = { "Content-Type": "text/plain;charset=utf-8" };
-        opts.body = JSON.stringify(body || {});
-      }
-      let res;
-      try {
-        res = await fetch(url, opts);
-      } catch (networkErr) {
-        throw new Error("Network Error — could not reach Google Sheets backend.");
-      }
-      if (!res.ok) {
-        throw new Error("Google Sheets Error (HTTP " + res.status + ")");
-      }
-      let json;
-      try { json = await res.json(); }
-      catch (parseErr) { throw new Error("Google Sheets Error — invalid response."); }
-      if (!json.ok) {
-        throw new Error(json.error || "Google Sheets Error");
-      }
-      return json.data;
+    /* ============================= SUPABASE LOAD / SAVE ============================= */
+
+    async function apiLoadAll() {
+      const [dept, progs, fac, crs, asg, tt] = await Promise.all([
+        supabaseClient.from('department').select('*'),
+        supabaseClient.from('programs').select('*'),
+        supabaseClient.from('faculty').select('*'),
+        supabaseClient.from('courses').select('*'),
+        supabaseClient.from('assignments').select('*'),
+        supabaseClient.from('timetable').select('*')
+      ]);
+
+      // Check every query for errors — a failure in any table returns incomplete data.
+      const failed = [
+        { name: 'department', r: dept }, { name: 'programs', r: progs },
+        { name: 'faculty', r: fac }, { name: 'courses', r: crs },
+        { name: 'assignments', r: asg }, { name: 'timetable', r: tt }
+      ].find(t => t.r.error);
+      if (failed) throw new Error(`Failed to load '${failed.name}': ${failed.r.error.message}`);
+
+      return {
+        department: dept.data || [],
+        programs: progs.data || [],
+        faculty: fac.data || [],
+        courses: crs.data || [],
+        assignments: asg.data || [],
+        timetable: tt.data || []
+      };
     }
-    async function apiLoadAll() { return apiRequest("GET", { action: "getAll" }); }
-    async function apiSave(fullState) { return apiRequest("POST", null, { action: "saveAll", data: fullState }); }
-    async function apiGet(sheet, id) { return apiRequest("GET", { action: "getRecord", sheet, id }); }
-    async function apiSearch(sheet, field, value) { return apiRequest("GET", { action: "searchRecords", sheet, field, value }); }
-    async function apiCreate(sheet, record) { return apiRequest("POST", null, { action: "createRecord", sheet, record }); }
-    async function apiUpdate(sheet, id, record) { return apiRequest("POST", null, { action: "updateRecord", sheet, id, record }); }
-    async function apiDelete(sheet, id) { return apiRequest("POST", null, { action: "deleteRecord", sheet, id }); }
+
+    async function apiSave(fullState) {
+      // Upserts must respect foreign-key dependency order: courses reference
+      // programs, and assignments/timetable reference courses+faculty+programs.
+      // Firing all 6 tables at once via Promise.all lets a child row's INSERT
+      // reach Postgres before its parent row has committed — e.g. a freshly
+      // imported program and its courses land in the same save, and the
+      // courses upsert can race ahead of the programs upsert, tripping
+      // "courses_programId_fkey" (or the equivalent constraints on
+      // assignments/timetable). Independent tables at the same level are
+      // still batched together for speed; only dependent levels are awaited
+      // in sequence.
+      // onConflict:'id' ensures existing rows are updated rather than duplicated.
+
+      const dept = await supabaseClient.from('department').upsert(fullState.department, { onConflict: 'user_id' });
+      if (dept.error) throw dept.error;
+
+      // programs and faculty have no dependency on each other — safe in parallel.
+      const [progs, fac] = await Promise.all([
+        supabaseClient.from('programs').upsert(fullState.programs, { onConflict: 'id' }),
+        supabaseClient.from('faculty').upsert(fullState.faculty, { onConflict: 'id' })
+      ]);
+      if (progs.error) throw progs.error;
+      if (fac.error) throw fac.error;
+
+      // courses depends on programs, so it must wait for the upsert above to commit.
+      const crs = await supabaseClient.from('courses').upsert(fullState.courses, { onConflict: 'id' });
+      if (crs.error) throw crs.error;
+
+      // assignments (courses+faculty) and timetable (programs+courses+faculty)
+      // both depend only on tables already committed above — safe in parallel.
+      const [asg, tt] = await Promise.all([
+        supabaseClient.from('assignments').upsert(fullState.assignments, { onConflict: 'id' }),
+        supabaseClient.from('timetable').upsert(fullState.timetable, { onConflict: 'id' })
+      ]);
+      if (asg.error) throw asg.error;
+      if (tt.error) throw tt.error;
+
+      return { ok: true };
+    }
 
     /* ============================= FLATTEN / INFLATE ============================= */
     /**
      * The planner's in-memory model nests courses inside programs and
-     * assignments inside courses. Google Sheets is flat, so every load/save
-     * flattens to six row-arrays (mirroring the existing Excel import/export
-     * shape in this app) and inflates back to the nested shape the UI expects.
+     * assignments inside courses. Supabase stores flat rows, so every
+     * load/save flattens to six row-arrays and inflates back to the nested
+     * shape the UI expects. The same shape is used for Excel import/export.
      */
     function flattenState() {
-      const departmentRows = [{ id: "dept", name: DEPARTMENT.name || "" }];
+      // department.user_id is the primary key (one row per signed-in user) and is filled
+      // in automatically by a database trigger reading auth.uid() — no id/user_id sent here.
+      const departmentRows = [{ name: DEPARTMENT.name || "" }];
 
       const programRows = PROGRAMS.map(p => ({
         id: p.id, name: p.name, type: p.type, major: p.major, minor: p.minor,
@@ -1098,8 +1697,39 @@
       return { department: newDept, programs: newPrograms, faculty: newFaculty, timetable: newTimetable };
     }
 
-    /* ============================= LOAD / SAVE (Google Sheets backend) ============================= */
+    /* ============================= COURSE-CODE DE-DUPLICATION ============================= */
+    // The Supabase 'courses' table has a UNIQUE(programId, sem, code) constraint.
+    // Rows with a blank code (common from older Excel imports, where the Code
+    // cell was left empty) all collide on code="" the moment more than one such
+    // course exists in the same programme+semester — and because apiSave()
+    // upserts the *entire* courses array in a single batch, that collision fails
+    // the whole save, not just the offending row (this is what produces the
+    // "duplicate key value violates unique constraint courses_program_sem_code_unique"
+    // error). This scans for blank/duplicate codes within each programme+semester
+    // and auto-assigns a unique fallback code so the save can go through. Returns
+    // the number of rows it had to fix, so the caller can tell the user.
+    function dedupeCourseCodes() {
+      let fixedCount = 0;
+      PROGRAMS.forEach(p => {
+        const seen = {}; // key: `${sem}::${code lowercase}` -> true, scoped to this programme
+        (p.courses || []).forEach(c => {
+          let code = (c.code || "").trim();
+          let key = c.sem + "::" + code.toLowerCase();
+          if (code === "" || seen[key]) {
+            code = (code || "NC") + "-" + c.id.slice(0, 5).toUpperCase();
+            key = c.sem + "::" + code.toLowerCase();
+            c.code = code;
+            fixedCount++;
+          }
+          seen[key] = true;
+        });
+      });
+      return fixedCount;
+    }
+
+    /* ============================= LOAD / SAVE (Supabase backend) ============================= */
     async function loadProject() {
+      LOAD_ATTEMPTED = true;
       try {
         syncStatus("Loading…", "loading");
         const data = await apiLoadAll();
@@ -1108,29 +1738,49 @@
         PROGRAMS = inflated.programs;
         FACULTY = inflated.faculty;
         TIMETABLE = inflated.timetable;
-        syncStatus("✓ Loaded from Google Sheets", "ok");
+        PROGRAMS.forEach(p => { if (!p.type) p.type = "UG4"; if (!p.semesters) p.semesters = semestersForType(p.type); });
+        if (PROGRAMS.length) { ACTIVE_PROGRAM_ID = PROGRAMS[0].id; LOAD_PROGRAM_ID = PROGRAMS[0].id; TT_PROGRAM_ID = PROGRAMS[0].id; EXPORT_PROGRAM_ID = PROGRAMS[0].id; }
+        LOADED = true; // Only set on full success
+        syncStatus("✓ Loaded from Supabase", "ok");
       } catch (e) {
         console.error("load error", e);
-        syncStatus("⚠ " + (e.message || "Failed to load from Google Sheets"), "error");
-        // fresh/empty project on failure so the UI still renders
+        syncStatus("⚠ " + (e.message || "Failed to load data"), "error");
+        // LOADED stays false; LOAD_ATTEMPTED prevents an infinite retry loop.
+        // Refresh the page to try again.
       }
-      PROGRAMS.forEach(p => { if (!p.type) p.type = "UG4"; if (!p.semesters) p.semesters = semestersForType(p.type); });
-      if (PROGRAMS.length) { ACTIVE_PROGRAM_ID = PROGRAMS[0].id; LOAD_PROGRAM_ID = PROGRAMS[0].id; TT_PROGRAM_ID = PROGRAMS[0].id; EXPORT_PROGRAM_ID = PROGRAMS[0].id; }
-      LOADED = true;
     }
     async function saveProject() {
       try {
         syncStatus("Saving…", "saving");
+        // Repair any blank/duplicate course codes first — otherwise a single bad
+        // row (often left over from an Excel import) blocks this and every future
+        // save with a raw database error.
+        const fixed = dedupeCourseCodes();
         await apiSave(flattenState());
-        syncStatus("✓ Saved successfully", "ok");
+        if (fixed > 0) {
+          syncStatus(`✓ Saved (auto-assigned a unique code to ${fixed} course${fixed > 1 ? 's' : ''} that had a missing/duplicate code)`, "ok");
+          render(); // the fixed codes are now visible in the course tables
+        } else {
+          syncStatus("✓ Saved successfully", "ok");
+        }
       } catch (e) {
         console.error("save error", e);
-        syncStatus("⚠ " + (e.message || "Failed to save to Google Sheets"), "error");
+        // Postgres unique_violation (error code 23505) on this specific constraint
+        // means two courses still ended up with the same programme+semester+code —
+        // give an actionable message instead of the raw database text.
+        const raw = (e && e.message) || "";
+        if (e && e.code === "23505" || /courses_program_sem_code_unique/i.test(raw)) {
+          syncStatus("⚠ Two courses in the same semester have the same code — please make course codes unique within a semester and try again.", "error");
+        } else {
+          syncStatus("⚠ " + (raw || "Failed to save data"), "error");
+        }
       }
     }
     function esc(s) { return (s || "").toString().replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
-    function uid() { return "id_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7); }
-    function toRoman(n) { return ["I", "II", "III", "IV", "V", "VI", "VII", "VIII"][n - 1]; }
+    // crypto.randomUUID() is supported in all modern browsers (Chrome 92+, Firefox 95+,
+    // Safari 15.4+) and produces standard, collision-resistant UUIDs.
+    function uid() { return crypto.randomUUID(); }
+    function toRoman(n) { return (["I", "II", "III", "IV", "V", "VI", "VII", "VIII"][n - 1]) || String(n); }
     function semRange(n) { return Array.from({ length: n || 8 }, (_, i) => i + 1); }
     function getProgram(id) { return PROGRAMS.find(p => p.id === id) || null; }
     function facultyName(id) { const f = FACULTY.find(f => f.id === id); return f ? f.name : "—"; }
@@ -1240,8 +1890,29 @@
       </form>
     </div>
     <div class="card tick">
-      <h3>Programmes <span class="tag" style="margin-left:6px;">${PROGRAMS.length}</span></h3>
-      ${PROGRAMS.length === 0 ? `<div class="empty">No programmes yet — add the first one below.</div>` : `
+      ${(() => {
+          const editing = EDIT_PROGRAM_ID ? PROGRAMS.find(p => p.id === EDIT_PROGRAM_ID) : null; return `
+      <div class="prog-sticky-form">
+        <h3 style="margin:0 0 10px;">Programmes <span class="tag" style="margin-left:6px;">${PROGRAMS.length}</span></h3>
+        <h4 style="margin:0 0 6px; font-size:13px; color:var(--ink-soft);">${editing ? `Editing “${esc(editing.name) || '(untitled)'}”` : 'Add a new programme'}</h4>
+        <form id="f-add-program" class="add-row" style="grid-template-columns:1.5fr 1.3fr 1.1fr 1.1fr .6fr .6fr .6fr auto; margin-top:0; padding-top:0; border-top:none;">
+          <div class="field"><label>Programme title</label><input type="text" name="name" value="${editing ? esc(editing.name) : ''}" placeholder="e.g. B.E. Computer Engineering / M.Tech Computer Engineering" required></div>
+          <div class="field"><label>Programme type</label>
+            <select name="type" id="sel-new-prog-type">${Object.values(PROGRAM_TYPES).map(t => `<option value="${t.key}" ${editing && editing.type === t.key ? 'selected' : ''}>${t.label}</option>`).join("")}</select>
+          </div>
+          <div class="field"><label>Major / specialization</label><input type="text" name="major" value="${editing ? esc(editing.major) : ''}" placeholder="Computer Engineering"></div>
+          <div class="field"><label id="lbl-new-prog-minor">Minor</label><input type="text" name="minor" value="${editing ? esc(editing.minor) : ''}" placeholder="Data Science"></div>
+          <div class="field"><label>Target Cr.</label><input type="number" name="totalTarget" id="inp-new-prog-target" value="${editing ? editing.totalTarget : 160}"></div>
+          <div class="field"><label>Sem min</label><input type="number" name="semMin" value="${editing ? editing.semMin : 20}"></div>
+          <div class="field"><label>Sem max</label><input type="number" name="semMax" value="${editing ? editing.semMax : 22}"></div>
+          <button class="primary" type="submit">${editing ? 'Update programme' : 'Add programme'}</button>
+          ${editing ? `<button class="ghost" type="button" id="btn-cancel-edit-program">Cancel</button>` : ''}
+        </form>
+        <p id="prog-form-error" style="color:var(--red); font-size:12.5px; margin-top:8px; display:none;"></p>
+      </div>
+      `;
+        })()}
+      ${PROGRAMS.length === 0 ? `<div class="empty">No programmes yet — add the first one above.</div>` : `
       <table>
         <thead><tr><th>Programme</th><th>Type</th><th>Major</th><th>Minor</th><th>Target Cr.</th><th>Sems</th><th>Courses</th><th></th></tr></thead>
         <tbody>
@@ -1252,22 +1923,10 @@
             <td style="font-family:'IBM Plex Mono',monospace;">${p.totalTarget}</td>
             <td style="font-family:'IBM Plex Mono',monospace;">${p.semesters}</td>
             <td>${p.courses.length}</td>
-            <td><button class="danger" data-id="${p.id}">Delete</button></td>
+            <td style="white-space:nowrap;"><button class="ghost" data-edit-id="${p.id}">Edit</button> <button class="danger" data-id="${p.id}">Delete</button></td>
           </tr>`).join("")}
         </tbody>
       </table>`}
-      <form id="f-add-program" class="add-row" style="grid-template-columns:1.5fr 1.3fr 1.1fr 1.1fr .6fr .6fr .6fr auto;">
-        <div class="field"><label>Programme title</label><input type="text" name="name" placeholder="e.g. B.E. Computer Engineering / M.Tech Computer Engineering" required></div>
-        <div class="field"><label>Programme type</label>
-          <select name="type" id="sel-new-prog-type">${Object.values(PROGRAM_TYPES).map(t => `<option value="${t.key}">${t.label}</option>`).join("")}</select>
-        </div>
-        <div class="field"><label>Major / specialization</label><input type="text" name="major" placeholder="Computer Engineering"></div>
-        <div class="field"><label id="lbl-new-prog-minor">Minor</label><input type="text" name="minor" placeholder="Data Science"></div>
-        <div class="field"><label>Target Cr.</label><input type="number" name="totalTarget" id="inp-new-prog-target" value="160"></div>
-        <div class="field"><label>Sem min</label><input type="number" name="semMin" value="20"></div>
-        <div class="field"><label>Sem max</label><input type="number" name="semMax" value="22"></div>
-        <button class="primary" type="submit">Add programme</button>
-      </form>
     </div>
   `;
     }
@@ -1277,40 +1936,84 @@
         e.preventDefault();
         DEPARTMENT.name = new FormData(f1).get("deptName") || "";
         await saveProject();
+        clearDraftFor("dept"); DIRTY = false;
         const b = document.getElementById("dept-saved"); b.style.display = "inline"; setTimeout(() => b.style.display = "none", 1600);
       });
+      watchFormDraft(f1, "dept");
+      applyDraftToForm(f1, "dept");
+
       document.querySelectorAll("main .danger").forEach(b => {
         b.addEventListener("click", async () => {
           if (!confirm("Delete this programme and all its courses?")) return;
           PROGRAMS = PROGRAMS.filter(p => p.id !== b.dataset.id);
           TIMETABLE = TIMETABLE.filter(t => t.programId !== b.dataset.id);
+          if (EDIT_PROGRAM_ID === b.dataset.id) { EDIT_PROGRAM_ID = null; clearDraftFor("program"); }
           await saveProject();
           render();
         });
       });
+      document.querySelectorAll("main [data-edit-id]").forEach(b => {
+        b.addEventListener("click", () => {
+          EDIT_PROGRAM_ID = b.dataset.editId;
+          clearDraftFor("program"); // start the edit from the record's current saved values
+          render();
+        });
+      });
+      const btnCancel = document.getElementById("btn-cancel-edit-program");
+      if (btnCancel) btnCancel.addEventListener("click", () => {
+        EDIT_PROGRAM_ID = null;
+        clearDraftFor("program"); DIRTY = false;
+        render();
+      });
+
       const selType = document.getElementById("sel-new-prog-type");
       const inpTarget = document.getElementById("inp-new-prog-target");
       const lblMinor = document.getElementById("lbl-new-prog-minor");
       function syncTypeUI() {
         const t = PROGRAM_TYPES[selType.value] || PROGRAM_TYPES.UG4;
-        inpTarget.value = t.rangeLow;
+        if (!EDIT_PROGRAM_ID) inpTarget.value = t.rangeLow; // don't clobber an edited value
         lblMinor.textContent = t.hasMinor ? "Minor" : "Minor (n/a for PG)";
       }
-      if (selType) { selType.addEventListener("change", syncTypeUI); syncTypeUI(); }
+      if (selType) { selType.addEventListener("change", syncTypeUI); if (!EDIT_PROGRAM_ID) syncTypeUI(); }
+
       const f2 = document.getElementById("f-add-program");
+      const errEl = document.getElementById("prog-form-error");
+      function showProgError(msg) { errEl.textContent = msg; errEl.style.display = "block"; }
       if (f2) f2.addEventListener("submit", async e => {
         e.preventDefault();
+        errEl.style.display = "none";
         const fd = new FormData(f2);
+        const name = (fd.get("name") || "").trim();
+        const semMin = parseInt(fd.get("semMin"), 10);
+        const semMax = parseInt(fd.get("semMax"), 10);
+        const totalTarget = parseInt(fd.get("totalTarget"), 10);
+        // Validation: catch bad input before it ever reaches saved state.
+        if (!name) return showProgError("Programme title is required.");
+        if (!totalTarget || totalTarget <= 0) return showProgError("Target credits must be a positive number.");
+        if (!semMin || !semMax || semMin <= 0 || semMax <= 0) return showProgError("Sem min/max must be positive numbers.");
+        if (semMin > semMax) return showProgError("Sem min cannot be greater than Sem max.");
+
         const type = fd.get("type") || "UG4";
-        const prog = DEFAULT_PROGRAMME(type);
-        prog.name = fd.get("name"); prog.major = fd.get("major"); prog.minor = fd.get("minor");
-        prog.totalTarget = parseInt(fd.get("totalTarget"), 10) || prog.totalTarget;
-        prog.semMin = parseInt(fd.get("semMin"), 10); prog.semMax = parseInt(fd.get("semMax"), 10);
-        PROGRAMS.push(prog);
-        if (!ACTIVE_PROGRAM_ID) { ACTIVE_PROGRAM_ID = prog.id; LOAD_PROGRAM_ID = prog.id; TT_PROGRAM_ID = prog.id; EXPORT_PROGRAM_ID = prog.id; }
+        if (EDIT_PROGRAM_ID) {
+          const prog = PROGRAMS.find(p => p.id === EDIT_PROGRAM_ID);
+          if (!prog) { showProgError("This programme no longer exists — it may have been deleted."); EDIT_PROGRAM_ID = null; render(); return; }
+          prog.name = name; prog.type = type; prog.major = fd.get("major"); prog.minor = fd.get("minor");
+          prog.totalTarget = totalTarget; prog.semMin = semMin; prog.semMax = semMax;
+          prog.semesters = semestersForType(type) || prog.semesters;
+          EDIT_PROGRAM_ID = null;
+        } else {
+          const prog = DEFAULT_PROGRAMME(type);
+          prog.name = name; prog.major = fd.get("major"); prog.minor = fd.get("minor");
+          prog.totalTarget = totalTarget; prog.semMin = semMin; prog.semMax = semMax;
+          PROGRAMS.push(prog);
+          if (!ACTIVE_PROGRAM_ID) { ACTIVE_PROGRAM_ID = prog.id; LOAD_PROGRAM_ID = prog.id; TT_PROGRAM_ID = prog.id; EXPORT_PROGRAM_ID = prog.id; }
+        }
+        clearDraftFor("program"); DIRTY = false;
         await saveProject();
         render();
       });
+      watchFormDraft(f2, "program");
+      applyDraftToForm(f2, "program");
     }
 
     /* ============================= PROGRAM SELECTOR (shared widget) ============================= */
@@ -1340,55 +2043,106 @@
       ${semRange(prog.semesters).map(s => { const t = semesterTotal(prog, s); return `<button class="sem-tab ${ACTIVE_SEM === s ? 'active' : ''}" data-sem="${s}">SEM ${toRoman(s)}<span class="c">${t || 0} Cr.</span></button>`; }).join("")}
     </div>
     <div class="card tick">
-      <h3>Semester ${toRoman(ACTIVE_SEM)} ${status ? `<span class="status ${status}" style="margin-left:8px;">${status === 'ok' ? '✓ IN RANGE' : '⚠ CHECK RANGE'}</span>` : ''}</h3>
-      <p class="desc">Target ${prog.semMin}–${prog.semMax} credits per semester.</p>
+      ${(() => {
+          const editing = EDIT_COURSE_ID ? sc.find(c => c.id === EDIT_COURSE_ID) : null; return `
+      <div class="course-sticky-form">
+        <h3 style="margin:0 0 4px;">Semester ${toRoman(ACTIVE_SEM)} ${status ? `<span class="status ${status}" style="margin-left:8px;">${status === 'ok' ? '✓ IN RANGE' : '⚠ CHECK RANGE'}</span>` : ''}</h3>
+        <p class="desc" style="margin:0 0 10px;">Target ${prog.semMin}–${prog.semMax} credits per semester.</p>
+        <h4 style="margin:0 0 6px; font-size:13px; color:var(--ink-soft);">${editing ? `Editing “${esc(editing.code)} — ${esc(editing.title)}”` : 'Add a course'}</h4>
+        <form id="f-add-course" class="add-row" style="margin-top:0; padding-top:0; border-top:none;">
+          <div class="field"><label>Code</label><input type="text" name="code" value="${editing ? esc(editing.code) : ''}" placeholder="PCC-301" required></div>
+          <div class="field"><label>Title</label><input type="text" name="title" value="${editing ? esc(editing.title) : ''}" placeholder="Data Structures" required></div>
+          <div class="field"><label>Category</label><select name="category" required>${categoriesForType(prog.type).map(c => `<option value="${c.code}" ${editing && editing.category === c.code ? 'selected' : ''}>${c.code} — ${c.name}</option>`).join("")}</select></div>
+          <div class="field"><label>L</label><input type="number" name="L" min="0" value="${editing ? editing.L || 0 : 0}"></div>
+          <div class="field"><label>T</label><input type="number" name="T" min="0" value="${editing ? editing.T || 0 : 0}"></div>
+          <div class="field"><label>P</label><input type="number" name="P" min="0" value="${editing ? editing.P || 0 : 0}"></div>
+          <div class="field"><label>Credits</label><input type="number" step="0.5" name="credits" min="0" value="${editing ? editing.credits : ''}" required></div>
+          <button class="primary" type="submit">${editing ? 'Update' : 'Add'}</button>
+          ${editing ? `<button class="ghost" type="button" id="btn-cancel-edit-course">Cancel</button>` : ''}
+        </form>
+        <p id="course-form-error" style="color:var(--red); font-size:12.5px; margin-top:8px; display:none;"></p>
+      </div>
+      `;
+        })()}
       ${sc.length === 0 ? `<div class="empty">No courses added yet for this semester.</div>` : `
       <table>
-        <thead><tr><th style="width:13%">Code</th><th>Title</th><th style="width:15%">Category</th><th style="width:7%">L</th><th style="width:7%">T</th><th style="width:7%">P</th><th style="width:9%">Credits</th><th style="width:6%"></th></tr></thead>
+        <thead><tr><th style="width:13%">Code</th><th>Title</th><th style="width:15%">Category</th><th style="width:7%">L</th><th style="width:7%">T</th><th style="width:7%">P</th><th style="width:9%">Credits</th><th style="width:9%"></th></tr></thead>
         <tbody>${sc.map(c => `<tr>
           <td style="font-family:'IBM Plex Mono',monospace;">${esc(c.code)}</td><td>${esc(c.title)}</td><td><span class="tag">${c.category}</span></td>
           <td>${c.L || 0}</td><td>${c.T || 0}</td><td>${c.P || 0}</td>
           <td style="font-family:'IBM Plex Mono',monospace; font-weight:700;">${c.credits}</td>
-          <td><button class="danger" data-id="${c.id}">✕</button></td></tr>`).join("")}</tbody>
+          <td style="white-space:nowrap;"><button class="ghost" data-edit-id="${c.id}">Edit</button> <button class="danger" data-id="${c.id}">✕</button></td></tr>`).join("")}</tbody>
         <tfoot><tr><td colspan="6">Semester total</td><td colspan="2">${total} Cr.</td></tr></tfoot>
       </table>`}
-      <form id="f-add-course" class="add-row">
-        <div class="field"><label>Code</label><input type="text" name="code" placeholder="PCC-301" required></div>
-        <div class="field"><label>Title</label><input type="text" name="title" placeholder="Data Structures" required></div>
-        <div class="field"><label>Category</label><select name="category" required>${categoriesForType(prog.type).map(c => `<option value="${c.code}">${c.code} — ${c.name}</option>`).join("")}</select></div>
-        <div class="field"><label>L</label><input type="number" name="L" min="0" value="0"></div>
-        <div class="field"><label>T</label><input type="number" name="T" min="0" value="0"></div>
-        <div class="field"><label>P</label><input type="number" name="P" min="0" value="0"></div>
-        <div class="field"><label>Credits</label><input type="number" step="0.5" name="credits" min="0" required></div>
-        <button class="primary" type="submit">Add</button>
-      </form>
     </div>
   `;
     }
     function bindBuilder() {
       const sel = document.getElementById("sel-builder-prog");
-      if (sel) sel.addEventListener("change", () => { ACTIVE_PROGRAM_ID = sel.value; ACTIVE_SEM = 1; render(); });
-      document.querySelectorAll(".sem-tab").forEach(b => b.addEventListener("click", () => { ACTIVE_SEM = parseInt(b.dataset.sem, 10); render(); }));
+      if (sel) sel.addEventListener("change", () => { ACTIVE_PROGRAM_ID = sel.value; ACTIVE_SEM = 1; EDIT_COURSE_ID = null; render(); });
+      document.querySelectorAll(".sem-tab").forEach(b => b.addEventListener("click", () => { ACTIVE_SEM = parseInt(b.dataset.sem, 10); EDIT_COURSE_ID = null; render(); }));
       document.querySelectorAll("main .danger").forEach(b => {
         b.addEventListener("click", async () => {
           const prog = getProgram(ACTIVE_PROGRAM_ID);
           prog.courses = prog.courses.filter(c => c.id !== b.dataset.id);
           TIMETABLE = TIMETABLE.filter(t => t.courseId !== b.dataset.id);
+          if (EDIT_COURSE_ID === b.dataset.id) { EDIT_COURSE_ID = null; clearDraftFor("course:" + ACTIVE_PROGRAM_ID); }
           await saveProject(); render();
         });
       });
+      document.querySelectorAll("main [data-edit-id]").forEach(b => {
+        b.addEventListener("click", () => {
+          EDIT_COURSE_ID = b.dataset.editId;
+          clearDraftFor("course:" + ACTIVE_PROGRAM_ID);
+          render();
+        });
+      });
+      const btnCancel = document.getElementById("btn-cancel-edit-course");
+      if (btnCancel) btnCancel.addEventListener("click", () => {
+        EDIT_COURSE_ID = null;
+        clearDraftFor("course:" + ACTIVE_PROGRAM_ID); DIRTY = false;
+        render();
+      });
+
       const f = document.getElementById("f-add-course");
+      const errEl = document.getElementById("course-form-error");
+      function showCourseError(msg) { errEl.textContent = msg; errEl.style.display = "block"; }
       if (f) f.addEventListener("submit", async e => {
         e.preventDefault();
+        errEl.style.display = "none";
         const fd = new FormData(f);
+        const code = (fd.get("code") || "").trim();
+        const title = (fd.get("title") || "").trim();
+        const credits = parseFloat(fd.get("credits"));
+        if (!code) return showCourseError("Course code is required.");
+        if (!title) return showCourseError("Course title is required.");
+        if (isNaN(credits) || credits <= 0) return showCourseError("Credits must be a positive number.");
+
         const prog = getProgram(ACTIVE_PROGRAM_ID);
-        prog.courses.push({
-          id: uid(), sem: ACTIVE_SEM, code: fd.get("code"), title: fd.get("title"), category: fd.get("category"),
+        // Course codes must be unique within a programme+semester (enforced by the
+        // database) — check here so the user gets an immediate, specific message
+        // instead of a raw save failure.
+        const dupe = prog.courses.find(c => c.sem === ACTIVE_SEM && c.id !== EDIT_COURSE_ID && (c.code || "").trim().toLowerCase() === code.toLowerCase());
+        if (dupe) return showCourseError(`Course code "${code}" is already used by "${dupe.title}" in this semester. Codes must be unique within a semester.`);
+
+        const courseData = {
+          sem: ACTIVE_SEM, code, title, category: fd.get("category"),
           L: parseFloat(fd.get("L")) || 0, T: parseFloat(fd.get("T")) || 0, P: parseFloat(fd.get("P")) || 0,
-          credits: parseFloat(fd.get("credits")) || 0, assignments: []
-        });
+          credits
+        };
+        if (EDIT_COURSE_ID) {
+          const course = prog.courses.find(c => c.id === EDIT_COURSE_ID);
+          if (!course) { showCourseError("This course no longer exists — it may have been deleted."); EDIT_COURSE_ID = null; render(); return; }
+          Object.assign(course, courseData); // assignments[] is left untouched
+          EDIT_COURSE_ID = null;
+        } else {
+          prog.courses.push({ id: uid(), ...courseData, assignments: [] });
+        }
+        clearDraftFor("course:" + ACTIVE_PROGRAM_ID); DIRTY = false;
         await saveProject(); render();
       });
+      watchFormDraft(f, "course:" + ACTIVE_PROGRAM_ID);
+      applyDraftToForm(f, "course:" + ACTIVE_PROGRAM_ID);
     }
 
     /* ============================= VALIDATION ============================= */
@@ -1429,7 +2183,7 @@
       <table><thead><tr><th>Code</th><th>Category</th><th>Designed</th><th>Target</th><th>Status</th></tr></thead>
         <tbody>${categoriesForType(prog.type).map(cat => {
         const t = categoryTotal(prog, cat.code); const st = t === 0 ? null : (t < cat.min ? "bad" : t > cat.max ? "warn" : "ok");
-        return `<tr><td><span class="tag">${cat.code}</span></td><td>${cat.name}</td><td style="font-family:'IBM Plex Mono',monospace; font-weight:700;">${t}</td><td style="font-family:'IBM Plex Mono',monospace; color:var(--ink-soft);">${cat.min === cat.max ? cat.min : cat.min + '–' + cat.max}</td><td>${st ? `<span class="status ${st}">${st === 'ok' ? '✓ OK' : st === 'bad' ? '⚠ UNDER' : '⚠ OVER'}</span>` : `<span class="status warn">— none yet</span>`}</td></tr>`;
+        return `<tr><td><span class="tag">${cat.code}</span></td><td>${cat.name}</td><td style="font-family:'IBM Plex Mono',monospace; font-weight:700;">${t}</td><td style="font-family:'IBM Plex Mono',monospace; color:var(--ink-soft);">${cat.min === cat.max ? cat.min : cat.min + '–' + cat.max}</td><td>${st ? `<span class="status ${st}">${st === 'ok' ? '✓ OK' : st === 'bad' ? '⚠ UNDER' : '⚠ OVER'}</span>` : `<span class="status warn">— empty</span>`}</td></tr>`;
       }).join("")}</tbody>
       </table>
     </div>
@@ -1445,18 +2199,27 @@
       return `
     ${pageHeader("Faculty Load · 01", "Faculty Directory", "Add every faculty member in the department, with their maximum weekly teaching-hour load.")}
     <div class="card tick">
-      <h3>Faculty <span class="tag" style="margin-left:6px;">${FACULTY.length}</span></h3>
+      ${(() => {
+        const editing = EDIT_FACULTY_ID ? FACULTY.find(f => f.id === EDIT_FACULTY_ID) : null; return `
+      <div class="faculty-sticky-form">
+        <h3 style="margin:0 0 10px;">Faculty <span class="tag" style="margin-left:6px;">${FACULTY.length}</span></h3>
+        <h4 style="margin:0 0 6px; font-size:13px; color:var(--ink-soft);">${editing ? `Editing "${esc(editing.name)}"` : 'Add faculty'}</h4>
+        <form id="f-add-faculty" class="add-row" style="grid-template-columns:1.3fr 1.1fr 1.3fr .8fr auto; margin-top:0; padding-top:0; border-top:none;">
+          <div class="field"><label>Name</label><input type="text" name="name" value="${editing ? esc(editing.name) : ''}" placeholder="Dr. A. B. Patil" required></div>
+          <div class="field"><label>Designation</label><input type="text" name="designation" value="${editing ? esc(editing.designation) : ''}" placeholder="Assistant Professor"></div>
+          <div class="field"><label>Specialisation</label><input type="text" name="specialization" value="${editing ? esc(editing.specialization) : ''}" placeholder="Data Structures, DBMS"></div>
+          <div class="field"><label>Max load (hrs/wk)</label><input type="number" name="maxLoad" value="${editing ? editing.maxLoad : 16}" min="1" max="30"></div>
+          <button class="primary" type="submit">${editing ? 'Update faculty' : 'Add faculty'}</button>
+          ${editing ? `<button class="ghost" type="button" id="btn-cancel-edit-faculty">Cancel</button>` : ''}
+        </form>
+        <p id="faculty-form-error" style="color:var(--red); font-size:12.5px; margin-top:8px; display:none;"></p>
+      </div>
+      `;
+      })()}
       ${FACULTY.length === 0 ? `<div class="empty">No faculty added yet.</div>` : `
       <table><thead><tr><th>Name</th><th>Designation</th><th>Specialisation</th><th>Max load/week</th><th></th></tr></thead>
-        <tbody>${FACULTY.map(f => `<tr><td><strong>${esc(f.name)}</strong></td><td>${esc(f.designation) || '—'}</td><td>${esc(f.specialization) || '—'}</td><td style="font-family:'IBM Plex Mono',monospace;">${f.maxLoad} hrs</td><td><button class="danger" data-id="${f.id}">Delete</button></td></tr>`).join("")}</tbody>
+        <tbody>${FACULTY.map(f => `<tr><td><strong>${esc(f.name)}</strong></td><td>${esc(f.designation) || '—'}</td><td>${esc(f.specialization) || '—'}</td><td style="font-family:'IBM Plex Mono',monospace;">${f.maxLoad} hrs</td><td style="white-space:nowrap;"><button class="ghost" data-edit-id="${f.id}">Edit</button> <button class="danger" data-id="${f.id}">Delete</button></td></tr>`).join("")}</tbody>
       </table>`}
-      <form id="f-add-faculty" class="add-row" style="grid-template-columns:1.3fr 1.1fr 1.3fr .8fr auto;">
-        <div class="field"><label>Name</label><input type="text" name="name" placeholder="Dr. A. B. Patil" required></div>
-        <div class="field"><label>Designation</label><input type="text" name="designation" placeholder="Assistant Professor"></div>
-        <div class="field"><label>Specialisation</label><input type="text" name="specialization" placeholder="Data Structures, DBMS"></div>
-        <div class="field"><label>Max load (hrs/wk)</label><input type="number" name="maxLoad" value="16" min="1" max="30"></div>
-        <button class="primary" type="submit">Add faculty</button>
-      </form>
     </div>
   `;
     }
@@ -1467,16 +2230,49 @@
           FACULTY = FACULTY.filter(f => f.id !== b.dataset.id);
           PROGRAMS.forEach(p => p.courses.forEach(c => { c.assignments = (c.assignments || []).filter(a => a.facultyId !== b.dataset.id); }));
           TIMETABLE = TIMETABLE.filter(t => t.facultyId !== b.dataset.id);
+          if (EDIT_FACULTY_ID === b.dataset.id) { EDIT_FACULTY_ID = null; clearDraftFor("faculty"); }
           await saveProject(); render();
         });
       });
+      document.querySelectorAll("main [data-edit-id]").forEach(b => {
+        b.addEventListener("click", () => {
+          EDIT_FACULTY_ID = b.dataset.editId;
+          clearDraftFor("faculty");
+          render();
+        });
+      });
+      const btnCancel = document.getElementById("btn-cancel-edit-faculty");
+      if (btnCancel) btnCancel.addEventListener("click", () => {
+        EDIT_FACULTY_ID = null;
+        clearDraftFor("faculty"); DIRTY = false;
+        render();
+      });
+
       const f = document.getElementById("f-add-faculty");
+      const errEl = document.getElementById("faculty-form-error");
+      function showFacError(msg) { errEl.textContent = msg; errEl.style.display = "block"; }
       if (f) f.addEventListener("submit", async e => {
         e.preventDefault();
+        errEl.style.display = "none";
         const fd = new FormData(f);
-        FACULTY.push({ id: uid(), name: fd.get("name"), designation: fd.get("designation"), specialization: fd.get("specialization"), maxLoad: parseFloat(fd.get("maxLoad")) || 16 });
+        const name = (fd.get("name") || "").trim();
+        const maxLoad = parseFloat(fd.get("maxLoad"));
+        if (!name) return showFacError("Faculty name is required.");
+        if (isNaN(maxLoad) || maxLoad <= 0) return showFacError("Max load must be a positive number.");
+
+        if (EDIT_FACULTY_ID) {
+          const fac = FACULTY.find(x => x.id === EDIT_FACULTY_ID);
+          if (!fac) { showFacError("This faculty member no longer exists — they may have been deleted."); EDIT_FACULTY_ID = null; render(); return; }
+          fac.name = name; fac.designation = fd.get("designation"); fac.specialization = fd.get("specialization"); fac.maxLoad = maxLoad;
+          EDIT_FACULTY_ID = null;
+        } else {
+          FACULTY.push({ id: uid(), name, designation: fd.get("designation"), specialization: fd.get("specialization"), maxLoad });
+        }
+        clearDraftFor("faculty"); DIRTY = false;
         await saveProject(); render();
       });
+      watchFormDraft(f, "faculty");
+      applyDraftToForm(f, "faculty");
     }
 
     /* ============================= LOAD DISTRIBUTION ============================= */
@@ -1654,7 +2450,7 @@
       const selS = document.getElementById("sel-tt-sem");
       if (selS) selS.addEventListener("change", () => { TT_SEM = parseInt(selS.value, 10); TT_SELECTED = null; render(); });
       const selD = document.getElementById("sel-tt-div");
-      if (selD) selD.addEventListener("change", () => { TT_DIVISION = selD.value || "A"; TT_SELECTED = null; render(); });
+      if (selD) selD.addEventListener("input", () => { TT_DIVISION = selD.value || "A"; TT_SELECTED = null; render(); });
       document.querySelectorAll(".tt-cell").forEach(td => {
         td.addEventListener("click", () => { TT_SELECTED = { day: td.dataset.day, period: parseInt(td.dataset.period, 10) }; render(); });
       });
@@ -1861,12 +2657,27 @@
     </div>
     <div class="card tick">
       <h3>Import from Excel</h3>
-      <p class="desc">Upload a workbook in the same shape (edited from a previous export, or built from the template below). This <strong>replaces</strong> everything currently in the planner — Department, Programmes, Courses, Faculty, Assignments and Timetable — so export a backup first if you're unsure.</p>
+      <p class="desc">Upload a workbook in the same shape (edited from a previous export, or built from the template below). You'll be asked whether to replace everything currently in the planner, or keep it and add the new file's rows alongside it.</p>
       <input type="file" id="inp-xl-file" accept=".xlsx,.xls" style="margin-bottom:12px;">
       <br>
-      <button class="primary" id="btn-xl-import">Import &amp; replace</button>
+      <button class="primary" id="btn-xl-import">Import file&hellip;</button>
       <button class="ghost" id="btn-xl-template" style="margin-left:8px;">Download blank template</button>
       <p id="xl-status" style="margin-top:12px; font-size:12.5px; font-weight:600; display:none;"></p>
+    </div>
+    <div class="modal-overlay" id="import-mode-overlay" style="display:none;">
+      <div class="modal-box">
+        <h3>How would you like to import this file?</h3>
+        <p class="desc">Choose how the workbook's rows should be combined with what's already in the planner.</p>
+        <button type="button" class="modal-option" id="btn-import-replace">
+          <div class="mo-title">Replace all previous data</div>
+          <div class="mo-sub">Removes the existing Department, Programmes, Courses, Faculty, Assignments and Timetable, and imports only this file.</div>
+        </button>
+        <button type="button" class="modal-option" id="btn-import-add">
+          <div class="mo-title">Add to previous data</div>
+          <div class="mo-sub">Keeps everything currently in the planner and appends this file's rows alongside it. Imported items get fresh IDs so nothing collides with existing data.</div>
+        </button>
+        <button type="button" class="ghost modal-cancel" id="btn-import-cancel">Cancel</button>
+      </div>
     </div>
     <div class="card tick">
       <h3>Sheet reference</h3>
@@ -1924,96 +2735,150 @@
       const ws = wb.Sheets[name];
       return ws ? XLSX.utils.sheet_to_json(ws, { defval: "" }) : [];
     }
-    async function importWorkbook(file) {
+    // Parses a workbook into planner-shaped objects.
+    // mode "replace": ids are taken from the sheet where present (falls back to a
+    //   fresh uid()), matching the pre-existing "trust the file" behaviour, since
+    //   the file is about to become the *entire* state anyway.
+    // mode "add": ids from the sheet are always ignored and a fresh uid() is
+    //   generated for every program/faculty/course/timetable row, so nothing an
+    //   imported row carries can collide with a primary key already sitting in
+    //   PROGRAMS/FACULTY/TIMETABLE. Course codes are also de-duplicated per
+    //   program+semester, since (programId, sem, code) is a unique constraint
+    //   in Supabase and a re-imported file will otherwise repeat old codes.
+    function parseWorkbook(wb, mode) {
+      const freshIds = mode === "add";
+      const genId = (r) => freshIds ? uid() : String(r.id || uid());
+
+      const deptRows = sheetRows(wb, "Department");
+      const newDept = { name: deptRows[0] ? String(deptRows[0].Name || "") : "" };
+
+      const progRows = sheetRows(wb, "Programs");
+      if (progRows.length === 0) throw new Error("No rows found in the 'Programs' sheet.");
+      const idMap = {}; // sheet id/name -> program object (scoped to this import only)
+      const newPrograms = progRows.map(r => {
+        const type = PROGRAM_TYPES[r.type] ? r.type : "UG4";
+        const p = {
+          id: genId(r), name: String(r.name || ""), type,
+          major: String(r.major || ""), minor: String(r.minor || ""),
+          totalTarget: parseInt(r.totalTarget, 10) || PROGRAM_TYPES[type].rangeLow,
+          semMin: parseInt(r.semMin, 10) || 20, semMax: parseInt(r.semMax, 10) || 22,
+          semesters: parseInt(r.semesters, 10) || semestersForType(type),
+          courses: []
+        };
+        idMap[r.id ? String(r.id) : p.id] = p; // lookup key: original sheet id if any, else the new id
+        if (r.name) idMap["name:" + r.name] = p; // fallback lookup by name
+        return p;
+      });
+
+      const facRows = sheetRows(wb, "Faculty");
+      const facIdMap = {};
+      const newFaculty = facRows.map(r => {
+        const f = { id: genId(r), name: String(r.name || ""), designation: String(r.designation || ""), specialization: String(r.specialization || ""), maxLoad: parseFloat(r.maxLoad) || 16 };
+        facIdMap[r.id ? String(r.id) : f.id] = f;
+        if (f.name) facIdMap["name:" + f.name] = f;
+        return f;
+      });
+      function resolveFaculty(id, name) {
+        if (id && facIdMap[String(id)]) return facIdMap[String(id)].id;
+        if (name && facIdMap["name:" + name]) return facIdMap["name:" + name].id;
+        return "";
+      }
+
+      // Tracks codes already used per program+semester so appended courses
+      // never repeat a (programId, sem, code) combination.
+      const usedCourseCodes = {}; // "programId|sem" -> Set of codes in use
+      function uniqueCode(programId, sem, code) {
+        const key = programId + "|" + sem;
+        if (!usedCourseCodes[key]) usedCourseCodes[key] = new Set();
+        const used = usedCourseCodes[key];
+        let candidate = code || "COURSE";
+        let n = 2;
+        while (used.has(candidate)) { candidate = (code || "COURSE") + "-" + n; n++; }
+        used.add(candidate);
+        return candidate;
+      }
+
+      const courseRows = sheetRows(wb, "Courses");
+      const courseIdMap = {};
+      courseRows.forEach(r => {
+        let prog = (r.programId && idMap[String(r.programId)]) || (r.programName && idMap["name:" + r.programName]);
+        if (!prog) return; // skip orphan rows
+        const sem = parseInt(r.sem, 10) || 1;
+        const code = uniqueCode(prog.id, sem, String(r.code || ""));
+        const course = {
+          id: genId(r), sem, code, title: String(r.title || ""),
+          category: String(r.category || ""), L: parseFloat(r.L) || 0, T: parseFloat(r.T) || 0, P: parseFloat(r.P) || 0,
+          credits: parseFloat(r.credits) || 0, assignments: []
+        };
+        prog.courses.push(course);
+        if (r.id) courseIdMap[String(r.id)] = course;
+        courseIdMap["key:" + prog.id + "|" + course.sem + "|" + course.code] = course;
+        // also index by the *original* sheet code so Assignments/Timetable
+        // rows (which reference the pre-dedupe code) still resolve correctly
+        courseIdMap["origkey:" + prog.id + "|" + sem + "|" + String(r.code || "")] = course;
+      });
+
+      const assignRows = sheetRows(wb, "Assignments");
+      assignRows.forEach(r => {
+        let course = r.courseId && courseIdMap[String(r.courseId)];
+        if (!course && r.programName && r.sem && r.code) {
+          const prog = idMap["name:" + r.programName];
+          if (prog) course = courseIdMap["origkey:" + prog.id + "|" + parseInt(r.sem, 10) + "|" + r.code];
+        }
+        if (!course) return;
+        const facultyId = resolveFaculty(r.facultyId, r.facultyName);
+        if (!facultyId) return;
+        course.assignments.push({ facultyId, hours: parseFloat(r.hours) || 0 });
+      });
+
+      const ttRows = sheetRows(wb, "Timetable");
+      const newTimetable = [];
+      ttRows.forEach(r => {
+        let prog = (r.programId && idMap[String(r.programId)]) || (r.programName && idMap["name:" + r.programName]);
+        if (!prog) return;
+        let course = r.courseId && courseIdMap[String(r.courseId)];
+        if (!course && r.code) course = courseIdMap["origkey:" + prog.id + "|" + parseInt(r.semester, 10) + "|" + r.code];
+        if (!course) return;
+        newTimetable.push({
+          id: genId(r), programId: prog.id, semester: parseInt(r.semester, 10) || 1, division: String(r.division || "A"),
+          day: String(r.day || "Mon"), period: parseInt(r.period, 10) || 1, courseId: course.id, code: course.code,
+          facultyId: resolveFaculty(r.facultyId, r.facultyName), room: String(r.room || "")
+        });
+      });
+
+      return { newDept, newPrograms, newFaculty, newTimetable, courseRows, assignRows };
+    }
+
+    async function importWorkbook(file, mode) {
       const status = document.getElementById("xl-status");
       const setStatus = (msg, ok) => { if (status) { status.style.display = "block"; status.style.color = ok ? "var(--green)" : "var(--red)"; status.textContent = msg; } };
       try {
         const buf = await file.arrayBuffer();
         const wb = XLSX.read(buf, { type: "array" });
+        const { newDept, newPrograms, newFaculty, newTimetable, courseRows, assignRows } = parseWorkbook(wb, mode);
 
-        const deptRows = sheetRows(wb, "Department");
-        const newDept = { name: deptRows[0] ? String(deptRows[0].Name || "") : "" };
-
-        const progRows = sheetRows(wb, "Programs");
-        if (progRows.length === 0) throw new Error("No rows found in the 'Programs' sheet.");
-        const idMap = {}; // old/sheet id -> program object
-        const newPrograms = progRows.map(r => {
-          const type = PROGRAM_TYPES[r.type] ? r.type : "UG4";
-          const p = {
-            id: String(r.id || uid()), name: String(r.name || ""), type,
-            major: String(r.major || ""), minor: String(r.minor || ""),
-            totalTarget: parseInt(r.totalTarget, 10) || PROGRAM_TYPES[type].rangeLow,
-            semMin: parseInt(r.semMin, 10) || 20, semMax: parseInt(r.semMax, 10) || 22,
-            semesters: parseInt(r.semesters, 10) || semestersForType(type),
-            courses: []
-          };
-          idMap[p.id] = p;
-          if (r.name) idMap["name:" + r.name] = p; // fallback lookup by name
-          return p;
-        });
-
-        const facRows = sheetRows(wb, "Faculty");
-        const facIdMap = {};
-        const newFaculty = facRows.map(r => {
-          const f = { id: String(r.id || uid()), name: String(r.name || ""), designation: String(r.designation || ""), specialization: String(r.specialization || ""), maxLoad: parseFloat(r.maxLoad) || 16 };
-          facIdMap[f.id] = f;
-          if (f.name) facIdMap["name:" + f.name] = f;
-          return f;
-        });
-        function resolveFaculty(id, name) {
-          if (id && facIdMap[String(id)]) return facIdMap[String(id)].id;
-          if (name && facIdMap["name:" + name]) return facIdMap["name:" + name].id;
-          return "";
+        if (mode === "add") {
+          // Keep everything already in the planner; append the new rows.
+          // Fresh ids were already assigned inside parseWorkbook(), so none of
+          // PROGRAMS/FACULTY/TIMETABLE's existing primary keys are touched.
+          if (!DEPARTMENT.name) DEPARTMENT = newDept; // only fill in dept name if it was blank
+          PROGRAMS = PROGRAMS.concat(newPrograms);
+          FACULTY = FACULTY.concat(newFaculty);
+          TIMETABLE = TIMETABLE.concat(newTimetable);
+          if (!ACTIVE_PROGRAM_ID) ACTIVE_PROGRAM_ID = PROGRAMS[0] ? PROGRAMS[0].id : null;
+          if (!LOAD_PROGRAM_ID) LOAD_PROGRAM_ID = ACTIVE_PROGRAM_ID;
+          if (!TT_PROGRAM_ID) TT_PROGRAM_ID = ACTIVE_PROGRAM_ID;
+          if (!EXPORT_PROGRAM_ID) EXPORT_PROGRAM_ID = ACTIVE_PROGRAM_ID;
+        } else {
+          // Wipe the current state arrays and load only what was just imported.
+          DEPARTMENT = newDept; PROGRAMS = newPrograms; FACULTY = newFaculty; TIMETABLE = newTimetable;
+          ACTIVE_PROGRAM_ID = PROGRAMS[0] ? PROGRAMS[0].id : null;
+          LOAD_PROGRAM_ID = ACTIVE_PROGRAM_ID; TT_PROGRAM_ID = ACTIVE_PROGRAM_ID; EXPORT_PROGRAM_ID = ACTIVE_PROGRAM_ID;
         }
 
-        const courseRows = sheetRows(wb, "Courses");
-        const courseIdMap = {};
-        courseRows.forEach(r => {
-          let prog = (r.programId && idMap[String(r.programId)]) || (r.programName && idMap["name:" + r.programName]);
-          if (!prog) return; // skip orphan rows
-          const course = {
-            id: String(r.id || uid()), sem: parseInt(r.sem, 10) || 1, code: String(r.code || ""), title: String(r.title || ""),
-            category: String(r.category || ""), L: parseFloat(r.L) || 0, T: parseFloat(r.T) || 0, P: parseFloat(r.P) || 0,
-            credits: parseFloat(r.credits) || 0, assignments: []
-          };
-          prog.courses.push(course);
-          courseIdMap[course.id] = course;
-          courseIdMap["key:" + prog.id + "|" + course.sem + "|" + course.code] = course;
-        });
-
-        const assignRows = sheetRows(wb, "Assignments");
-        assignRows.forEach(r => {
-          let course = r.courseId && courseIdMap[String(r.courseId)];
-          if (!course && r.programName && r.sem && r.code) {
-            const prog = idMap["name:" + r.programName];
-            if (prog) course = courseIdMap["key:" + prog.id + "|" + parseInt(r.sem, 10) + "|" + r.code];
-          }
-          if (!course) return;
-          const facultyId = resolveFaculty(r.facultyId, r.facultyName);
-          if (!facultyId) return;
-          course.assignments.push({ facultyId, hours: parseFloat(r.hours) || 0 });
-        });
-
-        const ttRows = sheetRows(wb, "Timetable");
-        const newTimetable = [];
-        ttRows.forEach(r => {
-          let prog = (r.programId && idMap[String(r.programId)]) || (r.programName && idMap["name:" + r.programName]);
-          if (!prog) return;
-          let course = r.courseId && courseIdMap[String(r.courseId)];
-          if (!course && r.code) course = courseIdMap["key:" + prog.id + "|" + parseInt(r.semester, 10) + "|" + r.code];
-          if (!course) return;
-          newTimetable.push({
-            id: String(r.id || uid()), programId: prog.id, semester: parseInt(r.semester, 10) || 1, division: String(r.division || "A"),
-            day: String(r.day || "Mon"), period: parseInt(r.period, 10) || 1, courseId: course.id, code: course.code,
-            facultyId: resolveFaculty(r.facultyId, r.facultyName), room: String(r.room || "")
-          });
-        });
-
-        DEPARTMENT = newDept; PROGRAMS = newPrograms; FACULTY = newFaculty; TIMETABLE = newTimetable;
-        ACTIVE_PROGRAM_ID = PROGRAMS[0] ? PROGRAMS[0].id : null;
-        LOAD_PROGRAM_ID = ACTIVE_PROGRAM_ID; TT_PROGRAM_ID = ACTIVE_PROGRAM_ID; EXPORT_PROGRAM_ID = ACTIVE_PROGRAM_ID;
         await saveProject();
-        setStatus(`✓ Imported ${newPrograms.length} programme(s), ${courseRows.length} course(s), ${newFaculty.length} faculty, ${assignRows.length} assignment(s), ${newTimetable.length} timetable slot(s).`, true);
+        const verb = mode === "add" ? "Added" : "Imported";
+        setStatus(`✓ ${verb} ${newPrograms.length} programme(s), ${courseRows.length} course(s), ${newFaculty.length} faculty, ${assignRows.length} assignment(s), ${newTimetable.length} timetable slot(s).`, true);
         render();
       } catch (err) {
         setStatus("⚠ Import failed: " + err.message, false);
@@ -2036,12 +2901,36 @@
         XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet([{ id: "", programId: "", programName: "", semester: 1, division: "A", day: "Mon", period: 1, courseId: "", code: "", facultyId: "", facultyName: "", room: "" }]), "Timetable");
         downloadWorkbook(wb, "academic_planner_template.xlsx");
       });
+
+      const overlay = document.getElementById("import-mode-overlay");
+      const openModal = () => { if (overlay) overlay.style.display = "flex"; };
+      const closeModal = () => { if (overlay) overlay.style.display = "none"; };
+
       const btnImport = document.getElementById("btn-xl-import");
       if (btnImport) btnImport.addEventListener("click", () => {
         const fileInput = document.getElementById("inp-xl-file");
         if (!fileInput.files[0]) { alert("Choose a .xlsx file first."); return; }
-        if (!confirm("This will replace everything currently in the planner with the contents of this workbook. Continue?")) return;
-        importWorkbook(fileInput.files[0]);
+        openModal(); // ask "Replace all previous data" vs "Add to previous data"
+      });
+
+      const btnCancel = document.getElementById("btn-import-cancel");
+      if (btnCancel) btnCancel.addEventListener("click", closeModal);
+      if (overlay) overlay.addEventListener("click", (e) => { if (e.target === overlay) closeModal(); });
+
+      const btnReplace = document.getElementById("btn-import-replace");
+      if (btnReplace) btnReplace.addEventListener("click", () => {
+        const fileInput = document.getElementById("inp-xl-file");
+        if (!fileInput.files[0]) { closeModal(); return; }
+        closeModal();
+        importWorkbook(fileInput.files[0], "replace");
+      });
+
+      const btnAdd = document.getElementById("btn-import-add");
+      if (btnAdd) btnAdd.addEventListener("click", () => {
+        const fileInput = document.getElementById("inp-xl-file");
+        if (!fileInput.files[0]) { closeModal(); return; }
+        closeModal();
+        importWorkbook(fileInput.files[0], "add");
       });
     }
 
@@ -2063,14 +2952,14 @@
     };
 
     async function render() {
-      if (!LOADED) await loadProject();
+      if (!LOADED && !LOAD_ATTEMPTED) await loadProject();
       renderNav();
       const page = PAGES[ROUTE] || PAGES["reference-framework"];
       const main = document.getElementById("main");
       main.innerHTML = page.render();
       if (page.bind) page.bind();
     }
-    render();
+    bootstrap();
   </script>
 </body>
 
