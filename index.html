@@ -184,7 +184,78 @@
       padding: 34px 42px 70px;
       max-width: 1220px;
       overflow-y: auto;
+    }
+
+    .content-col {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
       height: 100vh;
+    }
+
+    /* ===== ACADEMIC YEAR / CURRICULUM VERSION TOOLBAR ===== */
+    .version-toolbar {
+      flex-shrink: 0;
+    }
+
+    .version-toolbar .vt-row {
+      display: flex;
+      align-items: flex-end;
+      gap: 10px;
+      flex-wrap: wrap;
+      padding: 12px 42px;
+      background: var(--blue-pale);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .version-toolbar .vt-field {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .version-toolbar .vt-field label {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 9.5px;
+      letter-spacing: .07em;
+      text-transform: uppercase;
+      color: var(--ink-soft);
+    }
+
+    .version-toolbar .vt-field select {
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      padding: 6px 8px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--white);
+      min-width: 150px;
+    }
+
+    /* ===== SYLLABUS ATTACHMENT PANEL ===== */
+    .syllabus-panel {
+      font-size: 13px;
+    }
+
+    .syllabus-list {
+      list-style: none;
+      margin: 0 0 6px;
+      padding: 0;
+    }
+
+    .syllabus-list li {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 6px 0;
+      border-bottom: 1px solid var(--line);
+      font-size: 12.5px;
+    }
+
+    .syllabus-list li:last-child {
+      border-bottom: none;
     }
 
     /* ===== STICKY FORMS ===== */
@@ -607,6 +678,16 @@
       padding: 0 2px;
     }
 
+    button.chip-x.danger-x {
+      border: 1px solid var(--red-pale);
+      color: var(--red);
+      padding: 4px 9px;
+      border-radius: 5px;
+      font-size: 10.5px;
+      font-weight: 600;
+      margin-left: 6px;
+    }
+
     .add-row {
       display: grid;
       grid-template-columns: 1.2fr 2fr 1.3fr .5fr .5fr .5fr .7fr auto;
@@ -615,6 +696,40 @@
       margin-top: 12px;
       padding-top: 12px;
       border-top: 1px dashed var(--line);
+    }
+
+    #f-add-course.add-row {
+      grid-template-columns: 1.1fr 1.8fr 1.2fr .45fr .45fr .45fr .6fr 1.4fr auto;
+    }
+
+    input[type=file] {
+      font-size: 11.5px;
+      font-family: 'Inter';
+      color: var(--ink-soft);
+      padding: 4px 6px;
+      border: 1px dashed var(--line);
+      border-radius: 6px;
+      background: var(--white);
+      cursor: pointer;
+      width: 100%;
+    }
+
+    input[type=file]::file-selector-button {
+      background: var(--blue-pale);
+      color: var(--blue);
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      padding: 3px 7px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-right: 6px;
+      font-family: 'Inter';
+    }
+
+    input[type=file]::file-selector-button:hover {
+      background: var(--blue);
+      color: #fff;
     }
 
     .add-row .field {
@@ -1070,7 +1185,10 @@
         <button id="btn-signout" type="button">Sign out</button>
       </div>
     </aside>
-    <main id="main"></main>
+    <div class="content-col">
+      <div id="version-toolbar" class="version-toolbar"></div>
+      <main id="main"></main>
+    </div>
   </div>
   <div id="sync-toast" class="sync-toast" style="display:none;"></div>
 
@@ -1150,10 +1268,7 @@
     const SUM_MIN = CATEGORIES.reduce((s, c) => s + c.min, 0);
     const SUM_MAX = CATEGORIES.reduce((s, c) => s + c.max, 0);
 
-    /* ---- PG category tables (illustrative — Maharashtra has published overall PG credit
-       ranges and a research-project weightage, but not yet a granular per-category table
-       as detailed as the UG SPPU booklet. Confirm exact split with the affiliating
-       university's approved PG scheme before finalising.) ---- */
+    /* ---- PG category tables ---- */
     const PG2_CATEGORIES = [
       { code: "PCC_PG", name: "Programme Core Course", min: 24, max: 30, note: "Core specialization courses — Sem I–II mainly." },
       { code: "PEC_PG", name: "Programme Elective Course", min: 16, max: 20, note: "Specialization electives — Sem I–III." },
@@ -1161,7 +1276,7 @@
       { code: "RM", name: "Research Methodology & IPR", min: 4, max: 4, note: "Sem I." },
       { code: "SEM_PG", name: "Seminar", min: 2, max: 2, note: "Sem II or III." },
       { code: "MP_PG", name: "Mini Project / Audit Course", min: 4, max: 4, note: "Sem II." },
-      { code: "DISS1", name: "Dissertation Phase-I", min: 8, max: 10, note: "Sem III — proposal &amp; literature review." },
+      { code: "DISS1", name: "Dissertation Phase-I", min: 8, max: 10, note: "Sem III — proposal & literature review." },
       { code: "DISS2", name: "Dissertation Phase-II", min: 16, max: 20, note: "Sem IV — full-time research (NEP: 2nd year devoted to research)." },
     ];
     const PG1_CATEGORIES = [
@@ -1180,6 +1295,39 @@
     function categoriesForType(type) { return (PROGRAM_TYPES[type] || PROGRAM_TYPES.UG4).categories; }
     function semestersForType(type) { return (PROGRAM_TYPES[type] || PROGRAM_TYPES.UG4).semesters; }
 
+    /* ---- Elective Category Helpers ---- */
+    const OE_CATEGORY_CODES = ["OE", "OE_PG", "OE_MAIN", "OE_OPTION"];
+    const PEC_CATEGORY_CODES = ["PEC", "PEC_PG", "PEC_MAIN", "PEC_OPTION"];
+    const MDM_CATEGORY_CODES = ["MDM", "MDM_MAIN", "MDM_OPTION"];
+
+    function isOECategory(code) { return OE_CATEGORY_CODES.includes(code); }
+    function isPECCategory(code) { return PEC_CATEGORY_CODES.includes(code); }
+    function isMDMCategory(code) { return MDM_CATEGORY_CODES.includes(code); }
+
+    // Every "linked elective" category (main row in the semester table + auto-generated
+    // option rows below it) is described once here. OE, PEC and MDM all share the exact
+    // same UI, modal, validation, and CRUD logic — see generateElectiveOptions,
+    // renderElectiveSection, ensureElectiveMainRows, and the elective-count modal in bindBuilder.
+    const ELECTIVE_KINDS = {
+      OE: { label: "Open Elective", isCategory: isOECategory, defaultCategory: "OE", optionTitlePrefix: "Open Elective Option", sectionHeading: "Open Electives (OE)", optionNoun: "Option", tagClass: "purple" },
+      PEC: { label: "Program Elective", isCategory: isPECCategory, defaultCategory: "PEC", optionTitlePrefix: "Program Elective Option", sectionHeading: "Program Elective Courses (PEC)", optionNoun: "Option", tagClass: "" },
+      MDM: { label: "Multidisciplinary Minor", isCategory: isMDMCategory, defaultCategory: "MDM", optionTitlePrefix: "Multidisciplinary Minor Course", sectionHeading: "Multidisciplinary Minor (MDM)", optionNoun: "Course", tagClass: "purple" },
+    };
+    // Returns 'OE' | 'PEC' | 'MDM' | null for a raw category code (e.g. 'OE_PG' -> 'OE').
+    function electiveKindOf(categoryValue) {
+      for (const k in ELECTIVE_KINDS) { if (ELECTIVE_KINDS[k].isCategory(categoryValue)) return k; }
+      return null;
+    }
+    // Returns the elective kind if `type` is a "<KIND>_MAIN" type, else null.
+    function mainKindOfType(type) {
+      return (type && type.endsWith('_MAIN') && ELECTIVE_KINDS[type.slice(0, -5)]) ? type.slice(0, -5) : null;
+    }
+    function isMainType(type) { return !!mainKindOfType(type); }
+    // True if `type` is a "<KIND>_OPTION" type (OE_OPTION, PEC_OPTION, MDM_OPTION).
+    function isOptionType(type) {
+      return !!(type && type.endsWith('_OPTION') && ELECTIVE_KINDS[type.slice(0, -7)]);
+    }
+
     const GRADES = [["O", "Outstanding", "90–100", 10], ["A+", "Excellent", "75–89", 9], ["A", "Very Good", "60–74", 8], ["B+", "Good", "55–59", 7], ["B", "Above Average", "50–54", 6], ["C", "Average", "45–49", 5], ["D", "Pass", "40–44", 4], ["F", "Fail", "< 40", 0]];
     const LEVELS = [
       ["4.5", "UG Certificate", "1 year / Sem I–II", "40–44"], ["5.0", "UG Diploma", "2 years / Sem I–IV", "80–88"],
@@ -1197,14 +1345,33 @@
     let ROUTE = "reference-framework";
     const DEFAULT_PROGRAMME = (type) => {
       const t = PROGRAM_TYPES[type] || PROGRAM_TYPES.UG4;
-      return { id: uid(), type: t.key, name: "", major: "", minor: "", totalTarget: t.rangeLow, semMin: 20, semMax: 22, semesters: t.semesters, courses: [] };
+      return { id: uid(), type: t.key, name: "", major: "", minor: "", totalTarget: t.rangeLow, semMin: 20, semMax: 22, semesters: t.semesters, divisionsCount: 1, courses: [] };
     };
+    // Batch/Division helpers — a programme's `divisionsCount` (default 1) drives how many
+    // divisions Load Distribution generates: 1 -> ["Division A"], 2 -> ["Division A","Division B"], etc.
+    function divisionLabel(i) { return "Division " + String.fromCharCode(65 + i); }
+    function divisionsForProgram(prog) {
+      const n = Math.max(1, parseInt(prog && prog.divisionsCount, 10) || 1);
+      return Array.from({ length: n }, (_, i) => divisionLabel(i));
+    }
+    // Shorten "Division A" -> "Div A" for compact tags (e.g. Load Summary breakdown).
+    function divShort(d) { return String(d || "Division A").replace(/^Division /, "Div "); }
     let DEPARTMENT = { name: "" };
     let PROGRAMS = [];
     let FACULTY = [];
     let TIMETABLE = [];
+
+    /* ---- Curriculum Version Management state ---- */
+    let ACADEMIC_YEARS = [];        // [{id, label}]
+    let CURRICULUM_VERSIONS = [];   // [{id, academicYearId, versionLabel, status: 'Active'|'Inactive', notes, createdAt}]
+    let SYLLABUS_FILES = [];        // [{id, courseId, versionId, fileName, storagePath, fileSize, createdAt}]
+    let ACTIVE_ACADEMIC_YEAR_ID = null;
+    let ACTIVE_VERSION_ID = null;
+    let SYLLABUS_OPEN_COURSE_ID = null; // which course's "Attach Syllabus" panel is expanded in the builder
+
     let ACTIVE_PROGRAM_ID = null;
     let ACTIVE_SEM = 1;
+    let ACTIVE_BUILDER_TAB = 'SEM'; // 'SEM' | 'MINOR' | 'HONOR' — which Curriculum Builder tab is showing
     let LOAD_PROGRAM_ID = null;
     let LOAD_SEM = 1;
     let TT_PROGRAM_ID = null;
@@ -1214,23 +1381,21 @@
     let EXPORT_VIEW = "curriculum";
     let EXPORT_PROGRAM_ID = null;
 
-    // Which record (if any) each "add" form is currently editing. null = normal
-    // "add new" mode. Set when the user clicks "Edit" on a row; cleared on
-    // successful Update or Cancel.
     let EDIT_PROGRAM_ID = null;
     let EDIT_COURSE_ID = null;
+    let PENDING_ELECTIVE_CATEGORY = null; // category code ('OE'/'OE_PG'/'PEC'/'PEC_PG') awaiting an option-count answer
     let EDIT_FACULTY_ID = null;
+    let EDIT_ASSIGN_COURSE_ID = null;   // course whose L-T-P assignment form is in "edit existing row" mode
+    let EDIT_ASSIGN_FACULTY_ID = null;  // faculty row currently being edited within that course
+    let EDIT_ASSIGN_DIVISION = null;    // division of the row currently being edited within that course
+    let LOAD_DIVISION_SEL = {};         // { [courseId]: selected division label } — active division tab per course in Load Distribution
 
     let LOADED = false;          // true only after a successful load
     let LOAD_ATTEMPTED = false;   // prevents infinite retry loops on persistent errors
 
-    /* ============================= DRAFT AUTOSAVE / UNSAVED-CHANGES GUARD ============================= */
-    // Keeps whatever the user is typing in an add/edit form safe against an accidental
-    // tab close, refresh, or (now-fixed) unexpected re-render: every keystroke is
-    // mirrored into localStorage, and is restored automatically the next time that
-    // form is rendered — until the record is saved or the user explicitly cancels.
+    /* ============================= DRAFT AUTOSAVE ============================= */
     const DRAFT_STORE_KEY = "dap_form_drafts_v1";
-    let DIRTY = false; // true whenever a watched form has unsaved input
+    let DIRTY = false;
 
     function loadAllDrafts() {
       try { return JSON.parse(localStorage.getItem(DRAFT_STORE_KEY) || "{}"); }
@@ -1240,7 +1405,7 @@
       const all = loadAllDrafts();
       all[formKey] = values;
       try { localStorage.setItem(DRAFT_STORE_KEY, JSON.stringify(all)); }
-      catch (e) { /* localStorage unavailable/full — draft just won't persist */ }
+      catch (e) { }
     }
     function getDraftFor(formKey) {
       return loadAllDrafts()[formKey] || null;
@@ -1252,9 +1417,6 @@
         try { localStorage.setItem(DRAFT_STORE_KEY, JSON.stringify(all)); } catch (e) { }
       }
     }
-    // Wires a form so every keystroke is saved as a draft and marks the app dirty.
-    // formKey should be stable per logical form (e.g. "program", "course:<progId>",
-    // "faculty") so a draft doesn't leak into the wrong form.
     function watchFormDraft(form, formKey) {
       if (!form) return;
       form.addEventListener("input", () => {
@@ -1265,7 +1427,6 @@
         DIRTY = true;
       });
     }
-    // Restores a previously-saved draft's values into the freshly-rendered form.
     function applyDraftToForm(form, formKey) {
       const draft = getDraftFor(formKey);
       if (!draft || !form) return;
@@ -1273,10 +1434,8 @@
         const el = form.elements[name];
         if (el) el.value = draft[name];
       });
-      DIRTY = true; // a restored draft is, by definition, unsaved
+      DIRTY = true;
     }
-    // Native "are you sure you want to leave" prompt — browsers show their own generic
-    // wording regardless of e.returnValue's text, so we just need to set it.
     window.addEventListener("beforeunload", (e) => {
       if (!DIRTY) return;
       e.preventDefault();
@@ -1284,16 +1443,11 @@
     });
 
     /* ============================= API CONFIG ============================= */
-    // SUPABASE_KEY is the public anon key — safe to expose in client-side code ONLY when
-    // Row-Level Security (RLS) is enabled on every table (department, programs, faculty,
-    // courses, assignments, timetable). Verify RLS policies in the Supabase dashboard
-    // before deploying to production.
     const APP_CONFIG = {
       SUPABASE_URL: "https://ujmmwimxesbuikbqmtpz.supabase.co",
       SUPABASE_KEY: "sb_publishable_5nbhnOjTwIw06JTVcDw5eg_a49JGvJY"
     };
 
-    // Initialise Supabase client
     if (!window.supabase || !window.supabase.createClient) {
       document.getElementById('main').innerHTML =
         '<div style="padding:40px;color:#b23a3a;font-family:monospace;font-size:14px;">'
@@ -1301,21 +1455,13 @@
         + '</div>';
       throw new Error('Supabase CDN bundle not loaded — window.supabase is undefined.');
     }
-    // NOTE: intentionally named `supabaseClient`, NOT `supabase`. The UMD bundle above already
-    // attaches a global named `supabase` (window.supabase, the library namespace with .createClient
-    // on it). Classic <script> tags on a page share one global scope for let/const, so declaring
-    // `const supabase = ...` here would collide with that existing global and throw
-    // "SyntaxError: Identifier 'supabase' has already been declared". Every DB call below must use
-    // this `supabaseClient` instance — never redeclare a local named `supabase`.
     const supabaseClient = window.supabase.createClient(APP_CONFIG.SUPABASE_URL, APP_CONFIG.SUPABASE_KEY);
 
     /* ============================= AUTH: CORE FUNCTIONS ============================= */
-    // These five functions are the only ones that talk to Supabase Auth directly.
-    // Everything else (the gate UI, the router) calls these.
     async function signUp(email, password) {
       const { data, error } = await supabaseClient.auth.signUp({ email, password });
       if (error) throw error;
-      return data; // data.session is null if email confirmation is required
+      return data;
     }
     async function signIn(email, password) {
       const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
@@ -1327,8 +1473,6 @@
       if (error) throw error;
     }
     async function resetPassword(email) {
-      // redirectTo must be added to Supabase Dashboard → Authentication → URL Configuration
-      // → Redirect URLs, otherwise Supabase will reject/ignore the redirect.
       const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
         redirectTo: window.location.origin + window.location.pathname
       });
@@ -1342,7 +1486,7 @@
 
     /* ============================= AUTH: GATE UI ============================= */
     let CURRENT_USER = null;
-    let AUTH_RECOVERY_MODE = false; // true when the user arrived via a password-reset email link
+    let AUTH_RECOVERY_MODE = false;
 
     function showApp(show) {
       document.getElementById('root').style.display = show ? 'flex' : 'none';
@@ -1355,7 +1499,6 @@
       el.textContent = text;
     }
     function showAuthForm(which) {
-      // which: "signin" | "signup" | "reset" | "newpass"
       ['signin', 'signup', 'reset', 'newpass'].forEach(f => {
         document.getElementById('f-' + f).style.display = (f === which) ? 'block' : 'none';
       });
@@ -1378,7 +1521,6 @@
         authMsg('', null);
         try {
           await signIn(fd.get('email').trim(), fd.get('password'));
-          // onAuthStateChange (SIGNED_IN) picks up from here and loads the app.
         } catch (err) {
           authMsg(err.message || 'Could not sign in.', 'error');
         }
@@ -1394,7 +1536,6 @@
         try {
           const data = await signUp(email, password);
           if (data.session) {
-            // Email confirmation is disabled on this project — user is signed in immediately.
           } else {
             authMsg('✓ Account created. Check your inbox to confirm your email, then sign in.', 'ok');
             showAuthForm('signin');
@@ -1439,6 +1580,8 @@
 
     function resetAppState() {
       DEPARTMENT = { name: "" }; PROGRAMS = []; FACULTY = []; TIMETABLE = [];
+      ACADEMIC_YEARS = []; CURRICULUM_VERSIONS = []; SYLLABUS_FILES = [];
+      ACTIVE_ACADEMIC_YEAR_ID = null; ACTIVE_VERSION_ID = null; SYLLABUS_OPEN_COURSE_ID = null;
       ACTIVE_PROGRAM_ID = null; LOAD_PROGRAM_ID = null; TT_PROGRAM_ID = null; EXPORT_PROGRAM_ID = null;
       LOADED = false; LOAD_ATTEMPTED = false;
       ROUTE = "reference-framework";
@@ -1447,8 +1590,6 @@
     async function bootstrap() {
       bindAuthGate();
 
-      // Supabase redirects password-reset links back here with type=recovery in the URL hash.
-      // Detect that up front so we show the "set new password" form instead of the normal gate.
       if (window.location.hash.includes('type=recovery')) {
         AUTH_RECOVERY_MODE = true;
       }
@@ -1469,18 +1610,6 @@
       }
 
       supabaseClient.auth.onAuthStateChange((event, session) => {
-        // ROOT CAUSE OF THE "AUTO-REFRESH" / DATA-LOSS BUG:
-        // Supabase's client re-fires the 'SIGNED_IN' event any time it silently
-        // re-validates an already-active session — most commonly when the browser tab
-        // regains focus/visibility, not just on an actual new login. The old code below
-        // unconditionally ran resetAppState() + render() on *every* 'SIGNED_IN' event,
-        // which wiped DEPARTMENT/PROGRAMS/FACULTY/TIMETABLE from memory, snapped ROUTE
-        // back to page 1, and re-fetched everything from Supabase. Any typing in an
-        // open form (which lives only in the DOM, not in these arrays, until submit)
-        // was destroyed in the process. To the user this looked exactly like the page
-        // reloading on its own. FIX: only reset in-memory state for a genuinely *new*
-        // sign-in (a different user, or the first sign-in of this page load) — repeat
-        // 'SIGNED_IN' events for the same already-loaded user are now a no-op.
         if (event === 'SIGNED_IN' && !AUTH_RECOVERY_MODE) {
           const isNewSignIn = !CURRENT_USER || CURRENT_USER.id !== session.user.id || !LOADED;
           CURRENT_USER = session.user;
@@ -1490,8 +1619,6 @@
             renderUserBar();
             render();
           } else {
-            // Same user, session was just silently re-validated — leave app state,
-            // current route, and any in-progress form/draft completely untouched.
             renderUserBar();
           }
         } else if (event === 'PASSWORD_RECOVERY') {
@@ -1510,7 +1637,6 @@
     /* ============================= SYNC STATUS TOAST ============================= */
     let toastTimer = null;
     function syncStatus(msg, kind) {
-      // kind: "loading" | "saving" | "ok" | "error"
       const el = document.getElementById("sync-toast");
       if (!el) return;
       clearTimeout(toastTimer);
@@ -1524,62 +1650,51 @@
     }
 
     /* ============================= SUPABASE LOAD / SAVE ============================= */
-
     async function apiLoadAll() {
-      const [dept, progs, fac, crs, asg, tt] = await Promise.all([
+      const [dept, years, versions, progs, fac, crs, asg, tt, syl] = await Promise.all([
         supabaseClient.from('department').select('*'),
+        supabaseClient.from('academic_years').select('*'),
+        supabaseClient.from('curriculum_versions').select('*'),
         supabaseClient.from('programs').select('*'),
         supabaseClient.from('faculty').select('*'),
         supabaseClient.from('courses').select('*'),
         supabaseClient.from('assignments').select('*'),
-        supabaseClient.from('timetable').select('*')
+        supabaseClient.from('timetable').select('*'),
+        supabaseClient.from('syllabus_files').select('*')
       ]);
 
-      // Check every query for errors — a failure in any table returns incomplete data.
       const failed = [
-        { name: 'department', r: dept }, { name: 'programs', r: progs },
-        { name: 'faculty', r: fac }, { name: 'courses', r: crs },
-        { name: 'assignments', r: asg }, { name: 'timetable', r: tt }
+        { name: 'department', r: dept }, { name: 'academic_years', r: years }, { name: 'curriculum_versions', r: versions },
+        { name: 'programs', r: progs }, { name: 'faculty', r: fac }, { name: 'courses', r: crs },
+        { name: 'assignments', r: asg }, { name: 'timetable', r: tt }, { name: 'syllabus_files', r: syl }
       ].find(t => t.r.error);
       if (failed) throw new Error(`Failed to load '${failed.name}': ${failed.r.error.message}`);
 
       return {
         department: dept.data || [],
+        academicYears: years.data || [],
+        curriculumVersions: versions.data || [],
         programs: progs.data || [],
         faculty: fac.data || [],
         courses: crs.data || [],
         assignments: asg.data || [],
-        timetable: tt.data || []
+        timetable: tt.data || [],
+        syllabusFiles: syl.data || []
       };
     }
 
     async function apiSave(fullState, opts = {}) {
-      // opts.wipeFirst: used by the "Replace all previous data" import path.
-      // Clearing the in-memory arrays and re-upserting is NOT enough to remove
-      // old rows from Supabase — upsert only inserts/updates rows that are
-      // present in the payload, it never deletes rows that are simply absent
-      // from it. Anything left over from before the import stays in the
-      // database forever and reappears on the next page load. So when
-      // wipeFirst is set we explicitly DELETE every existing row for this
-      // user before inserting the freshly imported ones.
       if (opts.wipeFirst) await wipeRemoteUserData();
-
-      // Upserts must respect foreign-key dependency order: courses reference
-      // programs, and assignments/timetable reference courses+faculty+programs.
-      // Firing all 6 tables at once via Promise.all lets a child row's INSERT
-      // reach Postgres before its parent row has committed — e.g. a freshly
-      // imported program and its courses land in the same save, and the
-      // courses upsert can race ahead of the programs upsert, tripping
-      // "courses_programId_fkey" (or the equivalent constraints on
-      // assignments/timetable). Independent tables at the same level are
-      // still batched together for speed; only dependent levels are awaited
-      // in sequence.
-      // onConflict:'id' ensures existing rows are updated rather than duplicated.
 
       const dept = await supabaseClient.from('department').upsert(fullState.department, { onConflict: 'user_id' });
       if (dept.error) throw dept.error;
 
-      // programs and faculty have no dependency on each other — safe in parallel.
+      const years = await supabaseClient.from('academic_years').upsert(fullState.academicYears, { onConflict: 'id' });
+      if (years.error) throw years.error;
+
+      const versions = await supabaseClient.from('curriculum_versions').upsert(fullState.curriculumVersions, { onConflict: 'id' });
+      if (versions.error) throw versions.error;
+
       const [progs, fac] = await Promise.all([
         supabaseClient.from('programs').upsert(fullState.programs, { onConflict: 'id' }),
         supabaseClient.from('faculty').upsert(fullState.faculty, { onConflict: 'id' })
@@ -1587,70 +1702,72 @@
       if (progs.error) throw progs.error;
       if (fac.error) throw fac.error;
 
-      // courses depends on programs, so it must wait for the upsert above to commit.
       const crs = await supabaseClient.from('courses').upsert(fullState.courses, { onConflict: 'id' });
       if (crs.error) throw crs.error;
 
-      // assignments (courses+faculty) and timetable (programs+courses+faculty)
-      // both depend only on tables already committed above — safe in parallel.
-      const [asg, tt] = await Promise.all([
+      const [asg, tt, syl] = await Promise.all([
         supabaseClient.from('assignments').upsert(fullState.assignments, { onConflict: 'id' }),
-        supabaseClient.from('timetable').upsert(fullState.timetable, { onConflict: 'id' })
+        supabaseClient.from('timetable').upsert(fullState.timetable, { onConflict: 'id' }),
+        supabaseClient.from('syllabus_files').upsert(fullState.syllabusFiles, { onConflict: 'id' })
       ]);
       if (asg.error) throw asg.error;
       if (tt.error) throw tt.error;
+      if (syl.error) throw syl.error;
 
       return { ok: true };
     }
 
-    // Deletes every existing programs/faculty/courses/assignments/timetable row
-    // belonging to the signed-in user. RLS ("delete own <table>" policies, see
-    // supabase_setup.sql) already scopes every one of these deletes to
-    // `user_id = auth.uid()`, so this can never touch another user's data —
-    // the `.neq('id', NIL_UUID)` filter is just there because supabase-js
-    // requires *some* filter on a bulk delete, and no real row will ever have
-    // that all-zero id. Deleted child-tables-first (timetable/assignments
-    // before courses, courses before programs/faculty) so this is correct
-    // even if the on-delete-cascade rules in the schema were ever changed.
-    // The `department` row is intentionally left alone — it's a 1-per-user
-    // settings row, not part of what "replace all previous data" means.
     async function wipeRemoteUserData() {
       const NIL_UUID = '00000000-0000-0000-0000-000000000000';
       const tt = await supabaseClient.from('timetable').delete().neq('id', NIL_UUID);
       if (tt.error) throw tt.error;
       const asg = await supabaseClient.from('assignments').delete().neq('id', NIL_UUID);
       if (asg.error) throw asg.error;
+      const syl = await supabaseClient.from('syllabus_files').delete().neq('id', NIL_UUID);
+      if (syl.error) throw syl.error;
       const crs = await supabaseClient.from('courses').delete().neq('id', NIL_UUID);
       if (crs.error) throw crs.error;
       const fac = await supabaseClient.from('faculty').delete().neq('id', NIL_UUID);
       if (fac.error) throw fac.error;
       const progs = await supabaseClient.from('programs').delete().neq('id', NIL_UUID);
       if (progs.error) throw progs.error;
+      const versions = await supabaseClient.from('curriculum_versions').delete().neq('id', NIL_UUID);
+      if (versions.error) throw versions.error;
+      const years = await supabaseClient.from('academic_years').delete().neq('id', NIL_UUID);
+      if (years.error) throw years.error;
+    }
+
+    async function wipeRemoteVersionCurriculum(versionId) {
+      const { error } = await supabaseClient.from('programs').delete().eq('versionId', versionId);
+      if (error) throw error;
     }
 
     /* ============================= FLATTEN / INFLATE ============================= */
-    /**
-     * The planner's in-memory model nests courses inside programs and
-     * assignments inside courses. Supabase stores flat rows, so every
-     * load/save flattens to six row-arrays and inflates back to the nested
-     * shape the UI expects. The same shape is used for Excel import/export.
-     */
     function flattenState() {
-      // department.user_id is the primary key (one row per signed-in user) and is filled
-      // in automatically by a database trigger reading auth.uid() — no id/user_id sent here.
       const departmentRows = [{ name: DEPARTMENT.name || "" }];
+      const academicYearRows = ACADEMIC_YEARS.map(y => ({ id: y.id, label: y.label }));
+      const curriculumVersionRows = CURRICULUM_VERSIONS.map(v => ({
+        id: v.id, academicYearId: v.academicYearId, versionLabel: v.versionLabel, status: v.status, notes: v.notes || ""
+      }));
 
       const programRows = PROGRAMS.map(p => ({
-        id: p.id, name: p.name, type: p.type, major: p.major, minor: p.minor,
-        totalTarget: p.totalTarget, semMin: p.semMin, semMax: p.semMax, semesters: p.semesters
+        id: p.id, versionId: p.versionId, name: p.name, type: p.type, major: p.major, minor: p.minor,
+        totalTarget: p.totalTarget, semMin: p.semMin, semMax: p.semMax, semesters: p.semesters, divisionsCount: p.divisionsCount || 1
       }));
 
       const courseRows = [];
       const assignRows = [];
       PROGRAMS.forEach(p => (p.courses || []).forEach(c => {
-        courseRows.push({ id: c.id, programId: p.id, programName: p.name, sem: c.sem, code: c.code, title: c.title, category: c.category, L: c.L, T: c.T, P: c.P, credits: c.credits });
+        // Persist type distinction in category field for database compatibility
+        const dbCategory = (c.type && (isMainType(c.type) || isOptionType(c.type))) ? c.type : (c.category || '');
+        courseRows.push({ id: c.id, programId: p.id, programName: p.name, sem: c.sem, code: c.code, title: c.title, category: dbCategory, kind: c.kind || 'Regular', L: c.L, T: c.T, P: c.P, credits: c.credits });
         (c.assignments || []).forEach(a => {
-          assignRows.push({ id: a.id || uid(), courseId: c.id, programName: p.name, sem: c.sem, code: c.code, facultyId: a.facultyId, facultyName: facultyName(a.facultyId), hours: a.hours });
+          assignRows.push({
+            id: a.id || uid(), courseId: c.id, programName: p.name, sem: c.sem, code: c.code,
+            facultyId: a.facultyId, facultyName: facultyName(a.facultyId), division: a.division || "Division A",
+            assignedL: parseFloat(a.assignedL) || 0, assignedT: parseFloat(a.assignedT) || 0, assignedP: parseFloat(a.assignedP) || 0,
+            hours: parseFloat(a.hours) || 0
+          });
         });
       }));
 
@@ -1661,18 +1778,39 @@
         return { id: t.id, programId: t.programId, programName: p ? p.name : "", semester: t.semester, division: t.division, day: t.day, period: t.period, courseId: t.courseId, code: t.code, facultyId: t.facultyId, facultyName: facultyName(t.facultyId), room: t.room };
       });
 
-      return { department: departmentRows, programs: programRows, courses: courseRows, faculty: facultyRows, assignments: assignRows, timetable: ttRows };
+      const syllabusRows = SYLLABUS_FILES.map(s => ({
+        id: s.id, courseId: s.courseId, versionId: s.versionId, fileName: s.fileName, storagePath: s.storagePath, fileSize: s.fileSize || 0
+      }));
+
+      return {
+        department: departmentRows, academicYears: academicYearRows, curriculumVersions: curriculumVersionRows,
+        programs: programRows, courses: courseRows, faculty: facultyRows, assignments: assignRows, timetable: ttRows,
+        syllabusFiles: syllabusRows
+      };
     }
 
     function inflateState(data) {
       const deptRow = (data.department || [])[0];
       const newDept = { name: deptRow ? String(deptRow.name || "") : "" };
 
+      const newAcademicYears = (data.academicYears || []).map(r => ({ id: String(r.id || uid()), label: String(r.label || "") }));
+      const newCurriculumVersions = (data.curriculumVersions || []).map(r => ({
+        id: String(r.id || uid()), academicYearId: String(r.academicYearId || ""),
+        versionLabel: String(r.versionLabel || "1.0"), status: r.status === "Active" ? "Active" : "Inactive",
+        notes: String(r.notes || ""), createdAt: r.created_at || new Date().toISOString()
+      }));
+      const newSyllabusFiles = (data.syllabusFiles || []).map(r => ({
+        id: String(r.id || uid()), courseId: String(r.courseId || ""), versionId: String(r.versionId || ""),
+        fileName: String(r.fileName || ""), storagePath: String(r.storagePath || ""), fileSize: parseFloat(r.fileSize) || 0
+      }));
+
       const newPrograms = (data.programs || []).map(r => ({
-        id: String(r.id || uid()), name: String(r.name || ""), type: r.type || "UG4",
+        id: String(r.id || uid()), versionId: String(r.versionId || ""), name: String(r.name || ""), type: r.type || "UG4",
         major: String(r.major || ""), minor: String(r.minor || ""),
         totalTarget: parseFloat(r.totalTarget) || 0, semMin: parseFloat(r.semMin) || 20, semMax: parseFloat(r.semMax) || 22,
-        semesters: parseInt(r.semesters, 10) || semestersForType(r.type || "UG4"), courses: []
+        semesters: parseInt(r.semesters, 10) || semestersForType(r.type || "UG4"),
+        divisionsCount: Math.max(1, parseInt(r.divisionsCount, 10) || 1), // missing/null on old rows -> defaults to 1
+        courses: []
       }));
       const idMap = {};
       newPrograms.forEach(p => { idMap[p.id] = p; idMap["name:" + p.name] = p; });
@@ -1692,27 +1830,51 @@
       const courseIdMap = {};
       (data.courses || []).forEach(r => {
         const prog = (r.programId && idMap[String(r.programId)]) || (r.programName && idMap["name:" + r.programName]);
-        if (!prog) return; // skip orphan rows
+        if (!prog) return;
+
+        let rawCategory = String(r.category || "");
+        let type = r.type || "REGULAR";
+        let category = rawCategory;
+
+        if (rawCategory === "OE_MAIN") { category = "OE"; type = "OE_MAIN"; }
+        else if (rawCategory === "OE_OPTION") { category = "OE"; type = "OE_OPTION"; }
+        else if (rawCategory === "PEC_MAIN") { category = "PEC"; type = "PEC_MAIN"; }
+        else if (rawCategory === "PEC_OPTION") { category = "PEC"; type = "PEC_OPTION"; }
+        else if (rawCategory === "MDM_MAIN") { category = "MDM"; type = "MDM_MAIN"; }
+        else if (rawCategory === "MDM_OPTION") { category = "MDM"; type = "MDM_OPTION"; }
+        else if (isOECategory(rawCategory) && type === "REGULAR") { type = "OE_OPTION"; }
+        else if (isPECCategory(rawCategory) && type === "REGULAR") { type = "PEC_OPTION"; }
+        else if (isMDMCategory(rawCategory) && type === "REGULAR") { type = "MDM_OPTION"; }
+
+        const kind = (r.kind === 'Minor' || r.kind === 'Honors') ? r.kind : 'Regular';
+        const parsedSem = parseInt(r.sem, 10);
+        const sem = isNaN(parsedSem) ? (kind === 'Regular' ? 1 : 0) : parsedSem;
+
         const course = {
-          id: String(r.id || uid()), sem: parseInt(r.sem, 10) || 1, code: String(r.code || ""), title: String(r.title || ""),
-          category: String(r.category || ""), L: parseFloat(r.L) || 0, T: parseFloat(r.T) || 0, P: parseFloat(r.P) || 0,
+          id: String(r.id || uid()), sem, code: String(r.code || ""), title: String(r.title || ""),
+          category, type, kind, L: parseFloat(r.L) || 0, T: parseFloat(r.T) || 0, P: parseFloat(r.P) || 0,
           credits: parseFloat(r.credits) || 0, assignments: []
         };
         prog.courses.push(course);
         courseIdMap[course.id] = course;
-        courseIdMap["key:" + prog.id + "|" + course.sem + "|" + course.code] = course;
+        courseIdMap["key:" + prog.id + "|" + course.sem + "|" + course.kind + "|" + course.code] = course;
       });
 
       (data.assignments || []).forEach(r => {
         let course = r.courseId && courseIdMap[String(r.courseId)];
         if (!course && r.programName && r.sem && r.code) {
           const prog = idMap["name:" + r.programName];
-          if (prog) course = courseIdMap["key:" + prog.id + "|" + parseInt(r.sem, 10) + "|" + r.code];
+          if (prog) course = courseIdMap["key:" + prog.id + "|" + parseInt(r.sem, 10) + "|Regular|" + r.code];
         }
         if (!course) return;
         const facultyId = resolveFaculty(r.facultyId, r.facultyName);
         if (!facultyId) return;
-        course.assignments.push({ id: String(r.id || uid()), facultyId, hours: parseFloat(r.hours) || 0 });
+        const aL = parseFloat(r.assignedL) || 0, aT = parseFloat(r.assignedT) || 0, aP = parseFloat(r.assignedP) || 0;
+        course.assignments.push({
+          id: String(r.id || uid()), facultyId, division: String(r.division || "Division A"),
+          assignedL: aL, assignedT: aT, assignedP: aP,
+          hours: parseFloat(r.hours) || (aL + aT + aP)
+        });
       });
 
       const newTimetable = [];
@@ -1720,7 +1882,7 @@
         const prog = (r.programId && idMap[String(r.programId)]) || (r.programName && idMap["name:" + r.programName]);
         if (!prog) return;
         let course = r.courseId && courseIdMap[String(r.courseId)];
-        if (!course && r.code) course = courseIdMap["key:" + prog.id + "|" + parseInt(r.semester, 10) + "|" + r.code];
+        if (!course && r.code) course = courseIdMap["key:" + prog.id + "|" + parseInt(r.semester, 10) + "|Regular|" + r.code];
         if (!course) return;
         newTimetable.push({
           id: String(r.id || uid()), programId: prog.id, semester: parseInt(r.semester, 10) || 1, division: String(r.division || "A"),
@@ -1729,30 +1891,24 @@
         });
       });
 
-      return { department: newDept, programs: newPrograms, faculty: newFaculty, timetable: newTimetable };
+      return {
+        department: newDept, programs: newPrograms, faculty: newFaculty, timetable: newTimetable,
+        academicYears: newAcademicYears, curriculumVersions: newCurriculumVersions, syllabusFiles: newSyllabusFiles
+      };
     }
 
     /* ============================= COURSE-CODE DE-DUPLICATION ============================= */
-    // The Supabase 'courses' table has a UNIQUE(programId, sem, code) constraint.
-    // Rows with a blank code (common from older Excel imports, where the Code
-    // cell was left empty) all collide on code="" the moment more than one such
-    // course exists in the same programme+semester — and because apiSave()
-    // upserts the *entire* courses array in a single batch, that collision fails
-    // the whole save, not just the offending row (this is what produces the
-    // "duplicate key value violates unique constraint courses_program_sem_code_unique"
-    // error). This scans for blank/duplicate codes within each programme+semester
-    // and auto-assigns a unique fallback code so the save can go through. Returns
-    // the number of rows it had to fix, so the caller can tell the user.
     function dedupeCourseCodes() {
       let fixedCount = 0;
       PROGRAMS.forEach(p => {
-        const seen = {}; // key: `${sem}::${code lowercase}` -> true, scoped to this programme
+        const seen = {};
         (p.courses || []).forEach(c => {
           let code = (c.code || "").trim();
-          let key = c.sem + "::" + code.toLowerCase();
+          const kindKey = c.kind || 'Regular';
+          let key = kindKey + "::" + c.sem + "::" + code.toLowerCase();
           if (code === "" || seen[key]) {
             code = (code || "NC") + "-" + c.id.slice(0, 5).toUpperCase();
-            key = c.sem + "::" + code.toLowerCase();
+            key = kindKey + "::" + c.sem + "::" + code.toLowerCase();
             c.code = code;
             fixedCount++;
           }
@@ -1762,7 +1918,7 @@
       return fixedCount;
     }
 
-    /* ============================= LOAD / SAVE (Supabase backend) ============================= */
+    /* ============================= LOAD / SAVE ============================= */
     async function loadProject() {
       LOAD_ATTEMPTED = true;
       try {
@@ -1773,36 +1929,33 @@
         PROGRAMS = inflated.programs;
         FACULTY = inflated.faculty;
         TIMETABLE = inflated.timetable;
-        PROGRAMS.forEach(p => { if (!p.type) p.type = "UG4"; if (!p.semesters) p.semesters = semestersForType(p.type); });
-        if (PROGRAMS.length) { ACTIVE_PROGRAM_ID = PROGRAMS[0].id; LOAD_PROGRAM_ID = PROGRAMS[0].id; TT_PROGRAM_ID = PROGRAMS[0].id; EXPORT_PROGRAM_ID = PROGRAMS[0].id; }
-        LOADED = true; // Only set on full success
+        ACADEMIC_YEARS = inflated.academicYears;
+        CURRICULUM_VERSIONS = inflated.curriculumVersions;
+        SYLLABUS_FILES = inflated.syllabusFiles;
+        PROGRAMS.forEach(p => { if (!p.type) p.type = "UG4"; if (!p.semesters) p.semesters = semestersForType(p.type); if (!p.divisionsCount || p.divisionsCount < 1) p.divisionsCount = 1; });
+        ensureDefaultYearAndVersion();
+        const vp = visiblePrograms();
+        if (vp.length) { ACTIVE_PROGRAM_ID = vp[0].id; LOAD_PROGRAM_ID = vp[0].id; TT_PROGRAM_ID = vp[0].id; EXPORT_PROGRAM_ID = vp[0].id; }
+        LOADED = true;
         syncStatus("✓ Loaded from Supabase", "ok");
       } catch (e) {
         console.error("load error", e);
         syncStatus("⚠ " + (e.message || "Failed to load data"), "error");
-        // LOADED stays false; LOAD_ATTEMPTED prevents an infinite retry loop.
-        // Refresh the page to try again.
       }
     }
     async function saveProject(options = {}) {
       try {
         syncStatus(options.wipeFirst ? "Deleting old data…" : "Saving…", "saving");
-        // Repair any blank/duplicate course codes first — otherwise a single bad
-        // row (often left over from an Excel import) blocks this and every future
-        // save with a raw database error.
         const fixed = dedupeCourseCodes();
         await apiSave(flattenState(), { wipeFirst: !!options.wipeFirst });
         if (fixed > 0) {
           syncStatus(`✓ Saved (auto-assigned a unique code to ${fixed} course${fixed > 1 ? 's' : ''} that had a missing/duplicate code)`, "ok");
-          render(); // the fixed codes are now visible in the course tables
+          render();
         } else {
           syncStatus("✓ Saved successfully", "ok");
         }
       } catch (e) {
         console.error("save error", e);
-        // Postgres unique_violation (error code 23505) on this specific constraint
-        // means two courses still ended up with the same programme+semester+code —
-        // give an actionable message instead of the raw database text.
         const raw = (e && e.message) || "";
         if (e && e.code === "23505" || /courses_program_sem_code_unique/i.test(raw)) {
           syncStatus("⚠ Two courses in the same semester have the same code — please make course codes unique within a semester and try again.", "error");
@@ -1812,13 +1965,74 @@
       }
     }
     function esc(s) { return (s || "").toString().replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
-    // crypto.randomUUID() is supported in all modern browsers (Chrome 92+, Firefox 95+,
-    // Safari 15.4+) and produces standard, collision-resistant UUIDs.
     function uid() { return crypto.randomUUID(); }
     function toRoman(n) { return (["I", "II", "III", "IV", "V", "VI", "VII", "VIII"][n - 1]) || String(n); }
     function semRange(n) { return Array.from({ length: n || 8 }, (_, i) => i + 1); }
     function getProgram(id) { return PROGRAMS.find(p => p.id === id) || null; }
     function facultyName(id) { const f = FACULTY.find(f => f.id === id); return f ? f.name : "—"; }
+
+    /* ============================= CURRICULUM VERSIONING HELPERS ============================= */
+    function visiblePrograms() { return PROGRAMS.filter(p => p.versionId === ACTIVE_VERSION_ID); }
+    function currentYear() { return ACADEMIC_YEARS.find(y => y.id === ACTIVE_ACADEMIC_YEAR_ID) || null; }
+    function currentVersion() { return CURRICULUM_VERSIONS.find(v => v.id === ACTIVE_VERSION_ID) || null; }
+    function versionsForYear(yearId) { return CURRICULUM_VERSIONS.filter(v => v.academicYearId === yearId); }
+    function syllabusForCourse(courseId) { return SYLLABUS_FILES.filter(s => s.courseId === courseId && s.versionId === ACTIVE_VERSION_ID); }
+
+    function suggestNextVersionLabel(yearId) {
+      const versions = versionsForYear(yearId);
+      if (versions.length === 0) return "1.0";
+      let best = 0;
+      versions.forEach(v => { const n = parseFloat(v.versionLabel); if (!isNaN(n) && n > best) best = n; });
+      if (best === 0) return "1.0";
+      return (Math.round((best + 0.1) * 10) / 10).toFixed(1);
+    }
+
+    function ensureDefaultYearAndVersion() {
+      if (ACADEMIC_YEARS.length === 0) {
+        const now = new Date();
+        const startYear = now.getMonth() >= 5 ? now.getFullYear() : now.getFullYear() - 1;
+        const year = { id: uid(), label: `${startYear}-${startYear + 1}` };
+        ACADEMIC_YEARS.push(year);
+      }
+      if (!ACTIVE_ACADEMIC_YEAR_ID || !ACADEMIC_YEARS.find(y => y.id === ACTIVE_ACADEMIC_YEAR_ID)) {
+        ACTIVE_ACADEMIC_YEAR_ID = ACADEMIC_YEARS[0].id;
+      }
+      if (versionsForYear(ACTIVE_ACADEMIC_YEAR_ID).length === 0) {
+        CURRICULUM_VERSIONS.push({ id: uid(), academicYearId: ACTIVE_ACADEMIC_YEAR_ID, versionLabel: "1.0", status: "Active", notes: "", createdAt: new Date().toISOString() });
+      }
+      if (!ACTIVE_VERSION_ID || !CURRICULUM_VERSIONS.find(v => v.id === ACTIVE_VERSION_ID && v.academicYearId === ACTIVE_ACADEMIC_YEAR_ID)) {
+        const versions = versionsForYear(ACTIVE_ACADEMIC_YEAR_ID);
+        ACTIVE_VERSION_ID = (versions.find(v => v.status === "Active") || versions[0]).id;
+      }
+    }
+
+    function createNewCurriculumVersion(label, makeActive) {
+      const sourceVersionId = ACTIVE_VERSION_ID;
+      const newVersion = {
+        id: uid(), academicYearId: ACTIVE_ACADEMIC_YEAR_ID, versionLabel: label,
+        status: makeActive ? "Active" : "Inactive", notes: "", createdAt: new Date().toISOString()
+      };
+      if (makeActive) {
+        CURRICULUM_VERSIONS.forEach(v => { if (v.academicYearId === ACTIVE_ACADEMIC_YEAR_ID) v.status = "Inactive"; });
+      }
+      CURRICULUM_VERSIONS.push(newVersion);
+
+      const sourcePrograms = PROGRAMS.filter(p => p.versionId === sourceVersionId);
+      const copiedPrograms = sourcePrograms.map(p => ({
+        ...p, id: uid(), versionId: newVersion.id,
+        courses: (p.courses || []).map(c => ({
+          ...c, id: uid(),
+          assignments: (c.assignments || []).map(a => ({ ...a, id: uid() }))
+        }))
+      }));
+      PROGRAMS = PROGRAMS.concat(copiedPrograms);
+
+      if (makeActive) {
+        ACTIVE_VERSION_ID = newVersion.id;
+        ACTIVE_PROGRAM_ID = copiedPrograms[0] ? copiedPrograms[0].id : null;
+      }
+      return newVersion;
+    }
 
     /* ============================= NAV ============================= */
     const NAV_REF = [["reference-framework", "UG Credit Framework"], ["reference-pg", "PG Credit Framework"], ["reference-grading", "Grading & Progression"]];
@@ -1926,11 +2140,12 @@
     </div>
     <div class="card tick">
       ${(() => {
-          const editing = EDIT_PROGRAM_ID ? PROGRAMS.find(p => p.id === EDIT_PROGRAM_ID) : null; return `
+          const editing = EDIT_PROGRAM_ID ? PROGRAMS.find(p => p.id === EDIT_PROGRAM_ID) : null;
+          const vp = visiblePrograms(); return `
       <div class="prog-sticky-form">
-        <h3 style="margin:0 0 10px;">Programmes <span class="tag" style="margin-left:6px;">${PROGRAMS.length}</span></h3>
+        <h3 style="margin:0 0 10px;">Programmes <span class="tag" style="margin-left:6px;">${vp.length}</span> <span class="tag" style="margin-left:4px; color:var(--ink-soft);">${currentYear() ? esc(currentYear().label) : ''} · v${currentVersion() ? esc(currentVersion().versionLabel) : ''}</span></h3>
         <h4 style="margin:0 0 6px; font-size:13px; color:var(--ink-soft);">${editing ? `Editing “${esc(editing.name) || '(untitled)'}”` : 'Add a new programme'}</h4>
-        <form id="f-add-program" class="add-row" style="grid-template-columns:1.5fr 1.3fr 1.1fr 1.1fr .6fr .6fr .6fr auto; margin-top:0; padding-top:0; border-top:none;">
+        <form id="f-add-program" class="add-row" style="grid-template-columns:1.5fr 1.3fr 1.1fr 1.1fr .6fr .6fr .6fr .8fr auto; margin-top:0; padding-top:0; border-top:none;">
           <div class="field"><label>Programme title</label><input type="text" name="name" value="${editing ? esc(editing.name) : ''}" placeholder="e.g. B.E. Computer Engineering / M.Tech Computer Engineering" required></div>
           <div class="field"><label>Programme type</label>
             <select name="type" id="sel-new-prog-type">${Object.values(PROGRAM_TYPES).map(t => `<option value="${t.key}" ${editing && editing.type === t.key ? 'selected' : ''}>${t.label}</option>`).join("")}</select>
@@ -1940,6 +2155,7 @@
           <div class="field"><label>Target Cr.</label><input type="number" name="totalTarget" id="inp-new-prog-target" value="${editing ? editing.totalTarget : 160}"></div>
           <div class="field"><label>Sem min</label><input type="number" name="semMin" value="${editing ? editing.semMin : 20}"></div>
           <div class="field"><label>Sem max</label><input type="number" name="semMax" value="${editing ? editing.semMax : 22}"></div>
+          <div class="field"><label>Batches / Divisions</label><input type="number" min="1" step="1" name="divisionsCount" id="progDivisions" value="${editing ? (editing.divisionsCount || 1) : 1}" title="Number of parallel batches/divisions this programme is split into (e.g. 2 for Division A + Division B)."></div>
           <button class="primary" type="submit">${editing ? 'Update programme' : 'Add programme'}</button>
           ${editing ? `<button class="ghost" type="button" id="btn-cancel-edit-program">Cancel</button>` : ''}
         </form>
@@ -1947,16 +2163,17 @@
       </div>
       `;
         })()}
-      ${PROGRAMS.length === 0 ? `<div class="empty">No programmes yet — add the first one above.</div>` : `
+      ${visiblePrograms().length === 0 ? `<div class="empty">No programmes yet in this curriculum version — add the first one above.</div>` : `
       <table>
-        <thead><tr><th>Programme</th><th>Type</th><th>Major</th><th>Minor</th><th>Target Cr.</th><th>Sems</th><th>Courses</th><th></th></tr></thead>
+        <thead><tr><th>Programme</th><th>Type</th><th>Major</th><th>Minor</th><th>Target Cr.</th><th>Sems</th><th>Divisions</th><th>Courses</th><th></th></tr></thead>
         <tbody>
-          ${PROGRAMS.map(p => `<tr>
+          ${visiblePrograms().map(p => `<tr>
             <td><strong>${esc(p.name) || '(untitled)'}</strong></td>
             <td><span class="tag ${p.type !== 'UG4' ? 'purple' : ''}">${p.type}</span></td>
             <td>${esc(p.major) || '—'}</td><td>${esc(p.minor) || '—'}</td>
             <td style="font-family:'IBM Plex Mono',monospace;">${p.totalTarget}</td>
             <td style="font-family:'IBM Plex Mono',monospace;">${p.semesters}</td>
+            <td style="font-family:'IBM Plex Mono',monospace;">${p.divisionsCount || 1}</td>
             <td>${p.courses.length}</td>
             <td style="white-space:nowrap;"><button class="ghost" data-edit-id="${p.id}">Edit</button> <button class="danger" data-id="${p.id}">Delete</button></td>
           </tr>`).join("")}
@@ -1990,7 +2207,7 @@
       document.querySelectorAll("main [data-edit-id]").forEach(b => {
         b.addEventListener("click", () => {
           EDIT_PROGRAM_ID = b.dataset.editId;
-          clearDraftFor("program"); // start the edit from the record's current saved values
+          clearDraftFor("program");
           render();
         });
       });
@@ -2006,7 +2223,7 @@
       const lblMinor = document.getElementById("lbl-new-prog-minor");
       function syncTypeUI() {
         const t = PROGRAM_TYPES[selType.value] || PROGRAM_TYPES.UG4;
-        if (!EDIT_PROGRAM_ID) inpTarget.value = t.rangeLow; // don't clobber an edited value
+        if (!EDIT_PROGRAM_ID) inpTarget.value = t.rangeLow;
         lblMinor.textContent = t.hasMinor ? "Minor" : "Minor (n/a for PG)";
       }
       if (selType) { selType.addEventListener("change", syncTypeUI); if (!EDIT_PROGRAM_ID) syncTypeUI(); }
@@ -2022,7 +2239,9 @@
         const semMin = parseInt(fd.get("semMin"), 10);
         const semMax = parseInt(fd.get("semMax"), 10);
         const totalTarget = parseInt(fd.get("totalTarget"), 10);
-        // Validation: catch bad input before it ever reaches saved state.
+        let divisionsCount = parseInt(fd.get("divisionsCount"), 10);
+        if (isNaN(divisionsCount) || divisionsCount < 1) divisionsCount = 1; // default & backward-compat: blank/invalid input -> 1
+
         if (!name) return showProgError("Programme title is required.");
         if (!totalTarget || totalTarget <= 0) return showProgError("Target credits must be a positive number.");
         if (!semMin || !semMax || semMin <= 0 || semMax <= 0) return showProgError("Sem min/max must be positive numbers.");
@@ -2035,11 +2254,14 @@
           prog.name = name; prog.type = type; prog.major = fd.get("major"); prog.minor = fd.get("minor");
           prog.totalTarget = totalTarget; prog.semMin = semMin; prog.semMax = semMax;
           prog.semesters = semestersForType(type) || prog.semesters;
+          prog.divisionsCount = divisionsCount;
           EDIT_PROGRAM_ID = null;
         } else {
           const prog = DEFAULT_PROGRAMME(type);
           prog.name = name; prog.major = fd.get("major"); prog.minor = fd.get("minor");
           prog.totalTarget = totalTarget; prog.semMin = semMin; prog.semMax = semMax;
+          prog.divisionsCount = divisionsCount;
+          prog.versionId = ACTIVE_VERSION_ID;
           PROGRAMS.push(prog);
           if (!ACTIVE_PROGRAM_ID) { ACTIVE_PROGRAM_ID = prog.id; LOAD_PROGRAM_ID = prog.id; TT_PROGRAM_ID = prog.id; EXPORT_PROGRAM_ID = prog.id; }
         }
@@ -2051,39 +2273,139 @@
       applyDraftToForm(f2, "program");
     }
 
-    /* ============================= PROGRAM SELECTOR (shared widget) ============================= */
-    function programSelector(selectedId, onChangeAttr) {
-      if (PROGRAMS.length === 0) return "";
+    /* ============================= PROGRAM SELECTOR ============================= */
+    function programSelector(selectedId, onChangeAttr, list) {
+      const progs = list || visiblePrograms();
+      if (progs.length === 0) return "";
       return `<div class="field"><label>Programme</label>
-    <select id="${onChangeAttr}">${PROGRAMS.map(p => `<option value="${p.id}" ${p.id === selectedId ? 'selected' : ''}>${esc(p.name) || '(untitled)'}</option>`).join("")}</select>
+    <select id="${onChangeAttr}">${progs.map(p => `<option value="${p.id}" ${p.id === selectedId ? 'selected' : ''}>${esc(p.name) || '(untitled)'}</option>`).join("")}</select>
   </div>`;
     }
 
     /* ============================= CURRICULUM BUILDER ============================= */
-    function semesterCourses(prog, sem) { return prog.courses.filter(c => c.sem === sem); }
-    function semesterTotal(prog, sem) { return semesterCourses(prog, sem).reduce((s, c) => s + (parseFloat(c.credits) || 0), 0); }
+    // Regular Semester I–VIII courses only — Minor/Honors courses live in kindCourses() below
+    // and are never mixed into these semester-scoped lists or totals.
+    function semesterCourses(prog, sem) { return prog.courses.filter(c => c.sem === sem && (c.kind || 'Regular') === 'Regular'); }
+    function semesterTotal(prog, sem) {
+      return semesterCourses(prog, sem)
+        .filter(c => !isOptionType(c.type))
+        .reduce((s, c) => s + (parseFloat(c.credits) || 0), 0);
+    }
+
+    /* ---- Minors / Honors — separate flat course lists per programme (not semester-scoped) ---- */
+    function kindCourses(prog, kind) { return prog.courses.filter(c => (c.kind || 'Regular') === kind); }
+    function kindTotal(prog, kind) {
+      return kindCourses(prog, kind)
+        .filter(c => !isOptionType(c.type))
+        .reduce((s, c) => s + (parseFloat(c.credits) || 0), 0);
+    }
+
+    function generateElectiveOptions(prog, kind, count, categoryValue) {
+      const info = ELECTIVE_KINDS[kind];
+      const cat = categoryValue || info.defaultCategory;
+      const perCredit = 3;
+      for (let i = 1; i <= count; i++) {
+        let n = i;
+        let code = `${kind}-${ACTIVE_SEM}.${n}`;
+        while (prog.courses.some(c => c.sem === ACTIVE_SEM && (c.code || "").toLowerCase() === code.toLowerCase())) {
+          n++; code = `${kind}-${ACTIVE_SEM}.${n}`;
+        }
+        prog.courses.push({
+          id: uid(), sem: ACTIVE_SEM, code, title: `${info.optionTitlePrefix} ${i}`,
+          category: cat, type: kind + '_OPTION', L: 3, T: 0, P: 0, credits: perCredit, assignments: []
+        });
+      }
+    }
+
+    // Suffix number of an elective option code, e.g. "OE-3.2" -> 2. Used to find the
+    // highest-numbered option(s) to remove when an elective's option count is reduced.
+    function optionSuffixNum(code) {
+      const m = /\.(\d+)$/.exec(code || "");
+      return m ? parseInt(m[1], 10) : 0;
+    }
+
+    // Data migration / consistency guard: every semester that has an OE/PEC/MDM _OPTION
+    // row must have exactly one corresponding _MAIN row in the main semester table (this
+    // keeps older projects, created before the linked-elective workflow existed, consistent
+    // with the new model). Returns true if it changed anything.
+    function ensureElectiveMainRows(prog) {
+      const sems = new Set(prog.courses.map(c => c.sem));
+      let changed = false;
+      sems.forEach(sem => {
+        Object.keys(ELECTIVE_KINDS).forEach(kind => {
+          const info = ELECTIVE_KINDS[kind];
+          const hasMain = prog.courses.some(c => c.sem === sem && c.type === kind + '_MAIN');
+          const options = prog.courses.filter(c => c.sem === sem && c.type === kind + '_OPTION');
+          if (!hasMain && options.length > 0) {
+            const ref = options[0];
+            let code = `${kind}-${sem}`, n = 0;
+            while (prog.courses.some(c => c.sem === sem && (c.code || "").toLowerCase() === code.toLowerCase())) {
+              n++; code = `${kind}-${sem}-${n}`;
+            }
+            prog.courses.push({
+              id: uid(), sem, code, title: info.label, category: ref.category || kind, type: kind + '_MAIN',
+              L: ref.L || 3, T: ref.T || 0, P: ref.P || 0, credits: ref.credits || 3, assignments: []
+            });
+            changed = true;
+          }
+        });
+      });
+      return changed;
+    }
+
+    // Shared tab strip: SEM I…VIII (unchanged) plus Minors / Honors appended at the end,
+    // in the exact same "sem-tab" style/size/spacing/hover/active states.
+    function builderTabsHtml(prog) {
+      const semTabs = semRange(prog.semesters).map(s => {
+        const t = semesterTotal(prog, s);
+        return `<button class="sem-tab ${ACTIVE_BUILDER_TAB === 'SEM' && ACTIVE_SEM === s ? 'active' : ''}" data-sem="${s}">SEM ${toRoman(s)}<span class="c">${t || 0} Cr.</span></button>`;
+      }).join("");
+      const minorTotal = kindTotal(prog, 'Minor');
+      const honorTotal = kindTotal(prog, 'Honors');
+      return `
+    <div class="sem-tabs">
+      ${semTabs}
+      <button class="sem-tab ${ACTIVE_BUILDER_TAB === 'MINOR' ? 'active' : ''}" data-kindtab="Minor">Minors<span class="c">${minorTotal || 0} Cr.</span></button>
+      <button class="sem-tab ${ACTIVE_BUILDER_TAB === 'HONOR' ? 'active' : ''}" data-kindtab="Honors">Honors<span class="c">${honorTotal || 0} Cr.</span></button>
+    </div>`;
+    }
 
     function pageBuilder() {
-      if (PROGRAMS.length === 0) return pageHeader("Curriculum · 01", "Curriculum Builder", "") + noProgramsEmpty();
-      const prog = getProgram(ACTIVE_PROGRAM_ID) || PROGRAMS[0];
+      const vp = visiblePrograms();
+      if (vp.length === 0) return pageHeader("Curriculum · 01", "Curriculum Builder", "") + noProgramsEmpty();
+      let prog = getProgram(ACTIVE_PROGRAM_ID);
+      if (!prog || prog.versionId !== ACTIVE_VERSION_ID) prog = vp[0];
       ACTIVE_PROGRAM_ID = prog.id;
-      if (ACTIVE_SEM > prog.semesters) ACTIVE_SEM = 1;
-      const sc = semesterCourses(prog, ACTIVE_SEM);
+      if (ACTIVE_BUILDER_TAB === 'SEM' && ACTIVE_SEM > prog.semesters) ACTIVE_SEM = 1;
+
+      if (ensureElectiveMainRows(prog)) saveProject();
+
+      const headerHtml = pageHeader("Curriculum · 01", "Curriculum Builder", "Add courses to each semester of the selected programme, tagged by NEP category.");
+      const selectbarHtml = `<div class="selectbar">${programSelector(prog.id, "sel-builder-prog")}<span class="tag ${prog.type !== 'UG4' ? 'purple' : ''}" style="align-self:center;">${PROGRAM_TYPES[prog.type].label}</span></div>`;
+      const tabsHtml = builderTabsHtml(prog);
+
+      // Minors / Honors tabs: dedicated section with the same Add-Course-form / Course-table /
+      // Category / L-T-P-Credit / Syllabus / Edit-Delete components as the Semester page, but
+      // courses here are stored with kind:'Minor'|'Honors' (sem: 0) so they're never mixed into
+      // the Semester I–VIII lists, totals, or Validation Dashboard.
+      if (ACTIVE_BUILDER_TAB === 'MINOR') return headerHtml + selectbarHtml + tabsHtml + renderKindSection(prog, 'Minor', 'Minor Programme');
+      if (ACTIVE_BUILDER_TAB === 'HONOR') return headerHtml + selectbarHtml + tabsHtml + renderKindSection(prog, 'Honors', 'Honors Programme');
+
+      // Filter main semester courses (excluding OE/PEC child option choices)
+      const sc = semesterCourses(prog, ACTIVE_SEM).filter(c => !isOptionType(c.type));
       const total = semesterTotal(prog, ACTIVE_SEM);
       const status = total === 0 ? null : (total < prog.semMin || total > prog.semMax ? "warn" : "ok");
       return `
-    ${pageHeader("Curriculum · 01", "Curriculum Builder", "Add courses to each semester of the selected programme, tagged by NEP category.")}
-    <div class="selectbar">${programSelector(prog.id, "sel-builder-prog")}<span class="tag ${prog.type !== 'UG4' ? 'purple' : ''}" style="align-self:center;">${PROGRAM_TYPES[prog.type].label}</span></div>
-    <div class="sem-tabs">
-      ${semRange(prog.semesters).map(s => { const t = semesterTotal(prog, s); return `<button class="sem-tab ${ACTIVE_SEM === s ? 'active' : ''}" data-sem="${s}">SEM ${toRoman(s)}<span class="c">${t || 0} Cr.</span></button>`; }).join("")}
-    </div>
+    ${headerHtml}
+    ${selectbarHtml}
+    ${tabsHtml}
     <div class="card tick">
       ${(() => {
-          const editing = EDIT_COURSE_ID ? sc.find(c => c.id === EDIT_COURSE_ID) : null; return `
+          const editing = EDIT_COURSE_ID ? prog.courses.find(c => c.id === EDIT_COURSE_ID) : null; return `
       <div class="course-sticky-form">
         <h3 style="margin:0 0 4px;">Semester ${toRoman(ACTIVE_SEM)} ${status ? `<span class="status ${status}" style="margin-left:8px;">${status === 'ok' ? '✓ IN RANGE' : '⚠ CHECK RANGE'}</span>` : ''}</h3>
         <p class="desc" style="margin:0 0 10px;">Target ${prog.semMin}–${prog.semMax} credits per semester.</p>
-        <h4 style="margin:0 0 6px; font-size:13px; color:var(--ink-soft);">${editing ? `Editing “${esc(editing.code)} — ${esc(editing.title)}”` : 'Add a course'}</h4>
+        <h4 style="margin:0 0 6px; font-size:13px; color:var(--ink-soft);">${editing ? `Editing “${esc(editing.code)} — ${esc(editing.title)}”` : 'Add a course to main table'}</h4>
         <form id="f-add-course" class="add-row" style="margin-top:0; padding-top:0; border-top:none;">
           <div class="field"><label>Code</label><input type="text" name="code" value="${editing ? esc(editing.code) : ''}" placeholder="PCC-301" required></div>
           <div class="field"><label>Title</label><input type="text" name="title" value="${editing ? esc(editing.title) : ''}" placeholder="Data Structures" required></div>
@@ -2092,46 +2414,327 @@
           <div class="field"><label>T</label><input type="number" name="T" min="0" value="${editing ? editing.T || 0 : 0}"></div>
           <div class="field"><label>P</label><input type="number" name="P" min="0" value="${editing ? editing.P || 0 : 0}"></div>
           <div class="field"><label>Credits</label><input type="number" step="0.5" name="credits" min="0" value="${editing ? editing.credits : ''}" required></div>
-          <button class="primary" type="submit">${editing ? 'Update' : 'Add'}</button>
-          ${editing ? `<button class="ghost" type="button" id="btn-cancel-edit-course">Cancel</button>` : ''}
+          <div class="field">
+            <label>Syllabus (PDF/Docx)</label>
+            <input type="file" name="syllabusFile" accept=".pdf,.doc,.docx">
+            ${editing && syllabusForCourse(editing.id).length ? `<div style="font-size:10.5px; color:var(--blue-deep); margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:140px;" title="${esc(syllabusForCourse(editing.id)[0].fileName)}">📎 ${esc(syllabusForCourse(editing.id)[0].fileName)}</div>` : ''}
+          </div>
+          ${editing && isMainType(editing.type) ? (() => {
+              const kind = mainKindOfType(editing.type);
+              const optCount = prog.courses.filter(c => c.sem === ACTIVE_SEM && c.type === kind + '_OPTION').length;
+              return `<div class="field"><label># of ${kind} options</label><input type="number" name="electiveCount" min="1" max="20" value="${optCount}"></div>`;
+            })() : ''}
+          <div style="display:flex; gap:6px; align-items:flex-end;">
+            <button class="primary" type="submit">${editing ? 'Update' : 'Add'}</button>
+            ${editing ? `<button class="ghost" type="button" id="btn-cancel-edit-course">Cancel</button>` : ''}
+          </div>
         </form>
+        ${editing && isMainType(editing.type) ? `<p class="desc" style="margin:6px 0 0;">Raise the option count to add new option rows below, or lower it to remove the highest-numbered ones (you'll be asked to confirm if they contain edited data).</p>` : ''}
         <p id="course-form-error" style="color:var(--red); font-size:12.5px; margin-top:8px; display:none;"></p>
       </div>
       `;
         })()}
       ${sc.length === 0 ? `<div class="empty">No courses added yet for this semester.</div>` : `
       <table>
-        <thead><tr><th style="width:13%">Code</th><th>Title</th><th style="width:15%">Category</th><th style="width:7%">L</th><th style="width:7%">T</th><th style="width:7%">P</th><th style="width:9%">Credits</th><th style="width:9%"></th></tr></thead>
-        <tbody>${sc.map(c => `<tr>
-          <td style="font-family:'IBM Plex Mono',monospace;">${esc(c.code)}</td><td>${esc(c.title)}</td><td><span class="tag">${c.category}</span></td>
-          <td>${c.L || 0}</td><td>${c.T || 0}</td><td>${c.P || 0}</td>
-          <td style="font-family:'IBM Plex Mono',monospace; font-weight:700;">${c.credits}</td>
-          <td style="white-space:nowrap;"><button class="ghost" data-edit-id="${c.id}">Edit</button> <button class="danger" data-id="${c.id}">✕</button></td></tr>`).join("")}</tbody>
+        <thead><tr><th style="width:12%">Code</th><th>Title</th><th style="width:14%">Category</th><th style="width:6%">L</th><th style="width:6%">T</th><th style="width:6%">P</th><th style="width:8%">Credits</th><th style="width:20%">Action</th></tr></thead>
+        <tbody>${sc.map(c => {
+          const sylFiles = syllabusForCourse(c.id);
+          const syl = sylFiles.length ? sylFiles[0] : null;
+          return `<tr>
+            <td style="font-family:'IBM Plex Mono',monospace;">${esc(c.code)}</td><td>${esc(c.title)}</td><td><span class="tag ${isMainType(c.type) ? 'purple' : ''}">${c.category}</span></td>
+            <td>${c.L || 0}</td><td>${c.T || 0}</td><td>${c.P || 0}</td>
+            <td style="font-family:'IBM Plex Mono',monospace; font-weight:700;">${c.credits}</td>
+            <td style="white-space:nowrap;">
+              <button class="ghost" data-edit-id="${c.id}">Edit</button>
+              ${syl ? `<button class="ghost active" style="color:var(--blue); border-color:var(--blue);" data-syllabus-view="${syl.id}" title="View ${esc(syl.fileName)}">View Syllabus</button>` : `<button class="ghost" disabled style="opacity:0.45; cursor:not-allowed; border-color:var(--line);" title="No syllabus attached">No Syllabus</button>`}
+              <button class="danger" data-id="${c.id}">✕</button>
+            </td>
+          </tr>`;
+        }).join("")}</tbody>
         <tfoot><tr><td colspan="6">Semester total</td><td colspan="2">${total} Cr.</td></tr></tfoot>
       </table>`}
     </div>
+    ${renderElectiveSection(prog, 'OE')}
+    ${renderElectiveSection(prog, 'PEC')}
+    ${renderElectiveSection(prog, 'MDM')}
+    <div class="modal-overlay" id="elective-count-overlay" style="display:none;">
+      <div class="modal-box">
+        <h3 id="elective-count-title">How many elective options do you want to create?</h3>
+        <p class="desc" id="elective-count-desc"></p>
+        <form id="f-elective-count">
+          <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px;">
+            ${[2, 3, 4, 5, 6].map(n => `<button type="button" class="ghost elective-count-preset" data-n="${n}" style="min-width:42px;">${n}</button>`).join("")}
+          </div>
+          <div class="field"><label>Number of options</label><input type="number" min="1" max="20" name="count" id="inp-elective-count" value="3" required></div>
+          <div style="display:flex; gap:6px; margin-top:6px;">
+            <button class="primary" type="submit">Create</button>
+            <button class="ghost" type="button" id="btn-elective-count-cancel">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
   `;
     }
+
+    /* ---- Open Electives (OE) Management Section ---- */
+    /* ---- Linked Elective (OE / PEC / MDM) Section — shared by all three kinds ---- */
+    function renderElectiveSection(prog, kind) {
+      const info = ELECTIVE_KINDS[kind];
+      const idPrefix = kind.toLowerCase();
+      const mainCourse = prog.courses.find(c => c.sem === ACTIVE_SEM && c.type === kind + '_MAIN');
+      if (!mainCourse) return '';
+      const options = prog.courses.filter(c => c.sem === ACTIVE_SEM && (c.type === kind + '_OPTION' || (info.isCategory(c.category) && c.type !== kind + '_MAIN')));
+      const total = options.reduce((s, c) => s + (parseFloat(c.credits) || 0), 0);
+      const editingOption = EDIT_COURSE_ID ? options.find(c => c.id === EDIT_COURSE_ID) : null;
+
+      return `
+    <div class="card tick" style="margin-top:20px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:10px;">
+        <div>
+          <h3 style="margin:0;">${info.sectionHeading} — Sem ${toRoman(ACTIVE_SEM)}</h3>
+          <p class="desc" style="margin:2px 0 0;">Auto-generated from “${esc(mainCourse.code)} — ${esc(mainCourse.title)}” in the table above. Edit that row to change how many ${info.optionNoun.toLowerCase()}s exist, or fine-tune individual ${info.optionNoun.toLowerCase()}s below.</p>
+        </div>
+      </div>
+
+      <form id="f-add-${idPrefix}-option" class="add-row" style="margin-bottom:14px; padding-top:10px; border-top:1px dashed var(--line);">
+        <div class="field"><label>Code</label><input type="text" name="code" value="${editingOption ? esc(editingOption.code) : ''}" placeholder="${kind}-${ACTIVE_SEM}.1" required></div>
+        <div class="field"><label>Title / ${info.optionNoun} Name</label><input type="text" name="title" value="${editingOption ? esc(editingOption.title) : ''}" placeholder="e.g. ${kind === 'MDM' ? 'Digital Humanities' : kind === 'PEC' ? 'Advanced Machine Learning' : 'Renewable Energy Systems'}" required></div>
+        <div class="field"><label>Category</label><input type="text" name="category" value="${esc(mainCourse.category || info.defaultCategory)}" readonly style="background:var(--blue-pale); font-weight:600;"></div>
+        <div class="field"><label>L</label><input type="number" name="L" min="0" value="${editingOption ? editingOption.L || 0 : 3}"></div>
+        <div class="field"><label>T</label><input type="number" name="T" min="0" value="${editingOption ? editingOption.T || 0 : 0}"></div>
+        <div class="field"><label>P</label><input type="number" name="P" min="0" value="${editingOption ? editingOption.P || 0 : 0}"></div>
+        <div class="field"><label>Credits</label><input type="number" step="0.5" name="credits" min="0" value="${editingOption ? editingOption.credits : 3}" required></div>
+        <div class="field">
+          <label>Syllabus</label>
+          <input type="file" name="syllabusFile" accept=".pdf,.doc,.docx">
+        </div>
+        <div style="display:flex; gap:6px; align-items:flex-end;">
+          <button class="primary" type="submit">${editingOption ? `Update ${info.optionNoun}` : `+ Add ${kind} ${info.optionNoun}`}</button>
+          ${editingOption ? `<button class="ghost" type="button" id="btn-cancel-edit-${idPrefix}-option">Cancel</button>` : ''}
+        </div>
+      </form>
+      <p id="${idPrefix}-option-error" style="color:var(--red); font-size:12.5px; margin-top:-6px; margin-bottom:10px; display:none;"></p>
+
+      ${options.length === 0 ? `<div class="empty">No ${info.label} ${info.optionNoun.toLowerCase()}s for Semester ${toRoman(ACTIVE_SEM)} yet. Add one above.</div>` : `
+      <table>
+        <thead><tr><th style="width:12%">Code</th><th>${info.optionNoun} Title</th><th style="width:10%">Category</th><th style="width:6%">L</th><th style="width:6%">T</th><th style="width:6%">P</th><th style="width:8%">Credits</th><th style="width:24%">Action</th></tr></thead>
+        <tbody>${options.slice().sort((a, b) => optionSuffixNum(a.code) - optionSuffixNum(b.code) || (a.code || "").localeCompare(b.code || "")).map(c => {
+        const sylFiles = syllabusForCourse(c.id);
+        const syl = sylFiles.length ? sylFiles[0] : null;
+        return `<tr>
+            <td style="font-family:'IBM Plex Mono',monospace; font-weight:600;">${esc(c.code)}</td>
+            <td>${esc(c.title)}</td>
+            <td><span class="tag ${info.tagClass}">${c.category || info.defaultCategory}</span></td>
+            <td>${c.L || 0}</td><td>${c.T || 0}</td><td>${c.P || 0}</td>
+            <td style="font-family:'IBM Plex Mono',monospace; font-weight:700;">${c.credits}</td>
+            <td style="white-space:nowrap;">
+              <button class="ghost" data-edit-id="${c.id}">Edit</button>
+              ${syl ? `<button class="ghost active" style="color:var(--blue); border-color:var(--blue);" data-syllabus-view="${syl.id}" title="View ${esc(syl.fileName)}">View Syllabus</button>` : `<button class="ghost" disabled style="opacity:0.45; cursor:not-allowed; border-color:var(--line);" title="No syllabus attached">No Syllabus</button>`}
+              <button class="danger" data-id="${c.id}">✕</button>
+            </td>
+          </tr>`;
+      }).join("")}</tbody>
+        <tfoot><tr><td colspan="6">${info.label} ${info.optionNoun}s Total (Sem ${toRoman(ACTIVE_SEM)})</td><td colspan="2">${total} Cr.</td></tr></tfoot>
+      </table>`}
+    </div>`;
+    }
+
+    /* ---- Minors / Honors Programme section — same components as the Semester page ---- */
+    // No semester sub-tabs and no OE/PEC/MDM linked-elective workflow here (that machinery
+    // is specific to the Semester I–VIII table); Minor/Honors category options also exclude
+    // OE/PEC/MDM so the elective option-count modal never triggers on this tab.
+    function categoriesForKindSection(prog) {
+      return categoriesForType(prog.type).filter(c => !electiveKindOf(c.code));
+    }
+
+    function renderKindSection(prog, kind, label) {
+      const list = kindCourses(prog, kind).filter(c => !isOptionType(c.type));
+      const total = kindTotal(prog, kind);
+      const editing = EDIT_COURSE_ID ? prog.courses.find(c => c.id === EDIT_COURSE_ID && (c.kind || 'Regular') === kind) : null;
+      const cats = categoriesForKindSection(prog);
+      return `
+    <div class="card tick">
+      <div class="course-sticky-form">
+        <h3 style="margin:0 0 4px;">${label}</h3>
+        <p class="desc" style="margin:0 0 10px;">Courses configured here are stored separately from the regular Semester I–VIII curriculum and do not count toward Sem I–VIII credit totals.</p>
+        <h4 style="margin:0 0 6px; font-size:13px; color:var(--ink-soft);">${editing ? `Editing “${esc(editing.code)} — ${esc(editing.title)}”` : `Add a course to ${label}`}</h4>
+        <form id="f-add-kind-course" data-kind="${kind}" class="add-row" style="margin-top:0; padding-top:0; border-top:none;">
+          <div class="field"><label>Code</label><input type="text" name="code" value="${editing ? esc(editing.code) : ''}" placeholder="${kind === 'Minor' ? 'MIN-101' : 'HON-101'}" required></div>
+          <div class="field"><label>Title</label><input type="text" name="title" value="${editing ? esc(editing.title) : ''}" placeholder="Course title" required></div>
+          <div class="field"><label>Category</label><select name="category" required>${cats.map(c => `<option value="${c.code}" ${editing && editing.category === c.code ? 'selected' : ''}>${c.code} — ${c.name}</option>`).join("")}</select></div>
+          <div class="field"><label>L</label><input type="number" name="L" min="0" value="${editing ? editing.L || 0 : 0}"></div>
+          <div class="field"><label>T</label><input type="number" name="T" min="0" value="${editing ? editing.T || 0 : 0}"></div>
+          <div class="field"><label>P</label><input type="number" name="P" min="0" value="${editing ? editing.P || 0 : 0}"></div>
+          <div class="field"><label>Credits</label><input type="number" step="0.5" name="credits" min="0" value="${editing ? editing.credits : ''}" required></div>
+          <div class="field">
+            <label>Syllabus (PDF/Docx)</label>
+            <input type="file" name="syllabusFile" accept=".pdf,.doc,.docx">
+            ${editing && syllabusForCourse(editing.id).length ? `<div style="font-size:10.5px; color:var(--blue-deep); margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:140px;" title="${esc(syllabusForCourse(editing.id)[0].fileName)}">📎 ${esc(syllabusForCourse(editing.id)[0].fileName)}</div>` : ''}
+          </div>
+          <div style="display:flex; gap:6px; align-items:flex-end;">
+            <button class="primary" type="submit">${editing ? 'Update' : 'Add'}</button>
+            ${editing ? `<button class="ghost" type="button" id="btn-cancel-edit-kind-course">Cancel</button>` : ''}
+          </div>
+        </form>
+        <p id="kind-course-form-error" style="color:var(--red); font-size:12.5px; margin-top:8px; display:none;"></p>
+      </div>
+      ${list.length === 0 ? `<div class="empty">No courses added yet for ${label}.</div>` : `
+      <table>
+        <thead><tr><th style="width:12%">Code</th><th>Title</th><th style="width:14%">Category</th><th style="width:6%">L</th><th style="width:6%">T</th><th style="width:6%">P</th><th style="width:8%">Credits</th><th style="width:20%">Action</th></tr></thead>
+        <tbody>${list.map(c => {
+          const sylFiles = syllabusForCourse(c.id);
+          const syl = sylFiles.length ? sylFiles[0] : null;
+          return `<tr>
+            <td style="font-family:'IBM Plex Mono',monospace;">${esc(c.code)}</td><td>${esc(c.title)}</td><td><span class="tag">${c.category}</span></td>
+            <td>${c.L || 0}</td><td>${c.T || 0}</td><td>${c.P || 0}</td>
+            <td style="font-family:'IBM Plex Mono',monospace; font-weight:700;">${c.credits}</td>
+            <td style="white-space:nowrap;">
+              <button class="ghost" data-edit-id="${c.id}">Edit</button>
+              ${syl ? `<button class="ghost active" style="color:var(--blue); border-color:var(--blue);" data-syllabus-view="${syl.id}" title="View ${esc(syl.fileName)}">View Syllabus</button>` : `<button class="ghost" disabled style="opacity:0.45; cursor:not-allowed; border-color:var(--line);" title="No syllabus attached">No Syllabus</button>`}
+              <button class="danger" data-id="${c.id}">✕</button>
+            </td>
+          </tr>`;
+        }).join("")}</tbody>
+        <tfoot><tr><td colspan="6">${label} total</td><td colspan="2">${total} Cr.</td></tr></tfoot>
+      </table>`}
+    </div>`;
+    }
+
+    async function uploadSyllabus(course, file) {
+      try {
+        syncStatus("Uploading syllabus…", "saving");
+        const existing = syllabusForCourse(course.id);
+        for (const old of existing) {
+          try { await supabaseClient.storage.from('syllabi').remove([old.storagePath]); } catch (e) { console.warn(e); }
+          const { error: delErr } = await supabaseClient.from('syllabus_files').delete().eq('id', old.id);
+          if (delErr) console.warn(delErr);
+        }
+        SYLLABUS_FILES = SYLLABUS_FILES.filter(s => !(s.courseId === course.id && s.versionId === ACTIVE_VERSION_ID));
+
+        const userId = (CURRENT_USER && CURRENT_USER.id) ? CURRENT_USER.id : 'anon';
+        const path = `${userId}/${course.id}/${uid()}-${file.name}`;
+        const { error: upErr } = await supabaseClient.storage.from('syllabi').upload(path, file);
+        if (upErr) throw upErr;
+        const row = { id: uid(), courseId: course.id, versionId: ACTIVE_VERSION_ID, fileName: file.name, storagePath: path, fileSize: file.size };
+        const { error: dbErr } = await supabaseClient.from('syllabus_files').insert(row);
+        if (dbErr) throw dbErr;
+        SYLLABUS_FILES.push(row);
+        syncStatus("✓ Syllabus uploaded", "ok");
+      } catch (err) {
+        console.error("syllabus upload error", err);
+        syncStatus("⚠ Syllabus upload warning: " + (err.message || "Failed to upload file"), "error");
+      }
+    }
+    async function viewSyllabus(file) {
+      try {
+        if (!file || !file.storagePath) return;
+        if (file.storagePath.startsWith("blob:") || file.storagePath.startsWith("data:")) {
+          window.open(file.storagePath, "_blank");
+          return;
+        }
+        const { data, error } = await supabaseClient.storage.from('syllabi').createSignedUrl(file.storagePath, 3600);
+        if (!error && data && data.signedUrl) {
+          window.open(data.signedUrl, "_blank");
+          return;
+        }
+        const { data: pubData } = supabaseClient.storage.from('syllabi').getPublicUrl(file.storagePath);
+        if (pubData && pubData.publicUrl) {
+          window.open(pubData.publicUrl, "_blank");
+          return;
+        }
+        if (error) throw error;
+      } catch (err) {
+        alert("Could not open syllabus file: " + (err.message || "unknown error"));
+      }
+    }
+    async function deleteSyllabus(file) {
+      if (!confirm(`Delete "${file.fileName}"? This cannot be undone.`)) return;
+      try {
+        await supabaseClient.storage.from('syllabi').remove([file.storagePath]);
+        const { error } = await supabaseClient.from('syllabus_files').delete().eq('id', file.id);
+        if (error) throw error;
+        SYLLABUS_FILES = SYLLABUS_FILES.filter(s => s.id !== file.id);
+        render();
+      } catch (err) {
+        alert("Could not delete file: " + (err.message || "unknown error"));
+      }
+    }
+
     function bindBuilder() {
       const sel = document.getElementById("sel-builder-prog");
-      if (sel) sel.addEventListener("change", () => { ACTIVE_PROGRAM_ID = sel.value; ACTIVE_SEM = 1; EDIT_COURSE_ID = null; render(); });
-      document.querySelectorAll(".sem-tab").forEach(b => b.addEventListener("click", () => { ACTIVE_SEM = parseInt(b.dataset.sem, 10); EDIT_COURSE_ID = null; render(); }));
-      document.querySelectorAll("main .danger").forEach(b => {
+      if (sel) sel.addEventListener("change", () => { ACTIVE_PROGRAM_ID = sel.value; ACTIVE_SEM = 1; ACTIVE_BUILDER_TAB = 'SEM'; EDIT_COURSE_ID = null; render(); });
+      document.querySelectorAll(".sem-tab[data-sem]").forEach(b => b.addEventListener("click", () => { ACTIVE_BUILDER_TAB = 'SEM'; ACTIVE_SEM = parseInt(b.dataset.sem, 10); EDIT_COURSE_ID = null; render(); }));
+      document.querySelectorAll(".sem-tab[data-kindtab]").forEach(b => b.addEventListener("click", () => {
+        ACTIVE_BUILDER_TAB = b.dataset.kindtab === 'Minor' ? 'MINOR' : 'HONOR';
+        EDIT_COURSE_ID = null;
+        render();
+      }));
+      document.querySelectorAll("main .danger[data-id]").forEach(b => {
         b.addEventListener("click", async () => {
           const prog = getProgram(ACTIVE_PROGRAM_ID);
-          prog.courses = prog.courses.filter(c => c.id !== b.dataset.id);
-          TIMETABLE = TIMETABLE.filter(t => t.courseId !== b.dataset.id);
-          if (EDIT_COURSE_ID === b.dataset.id) { EDIT_COURSE_ID = null; clearDraftFor("course:" + ACTIVE_PROGRAM_ID); }
+          const course = prog.courses.find(c => c.id === b.dataset.id);
+          if (!course) return;
+          let idsToRemove = [course.id];
+          let label = `${course.code} — ${course.title}`;
+          if (isMainType(course.type)) {
+            const kind = mainKindOfType(course.type);
+            const linked = prog.courses.filter(c => c.sem === course.sem && c.type === kind + '_OPTION');
+            idsToRemove = idsToRemove.concat(linked.map(c => c.id));
+            if (linked.length) label += ` and its ${linked.length} option row${linked.length === 1 ? '' : 's'} below`;
+          }
+          if (!confirm(`Are you sure you want to delete ${label}? This action cannot be undone.`)) return;
+          const removeSet = new Set(idsToRemove);
+          prog.courses = prog.courses.filter(c => !removeSet.has(c.id));
+          TIMETABLE = TIMETABLE.filter(t => !removeSet.has(t.courseId));
+          if (removeSet.has(EDIT_COURSE_ID)) { EDIT_COURSE_ID = null; clearDraftFor("course:" + ACTIVE_PROGRAM_ID); }
           await saveProject(); render();
         });
       });
       document.querySelectorAll("main [data-edit-id]").forEach(b => {
         b.addEventListener("click", () => {
           EDIT_COURSE_ID = b.dataset.editId;
+          const prog = getProgram(ACTIVE_PROGRAM_ID);
+          const course = prog && prog.courses.find(c => c.id === EDIT_COURSE_ID);
+          if (course) {
+            const k = course.kind || 'Regular';
+            if (k === 'Minor') ACTIVE_BUILDER_TAB = 'MINOR';
+            else if (k === 'Honors') ACTIVE_BUILDER_TAB = 'HONOR';
+            else { ACTIVE_BUILDER_TAB = 'SEM'; ACTIVE_SEM = course.sem; }
+          }
           clearDraftFor("course:" + ACTIVE_PROGRAM_ID);
           render();
         });
       });
+
+      document.querySelectorAll("main [data-syllabus-toggle]").forEach(b => {
+        b.addEventListener("click", () => {
+          const id = b.dataset.syllabusToggle;
+          SYLLABUS_OPEN_COURSE_ID = SYLLABUS_OPEN_COURSE_ID === id ? null : id;
+          render();
+        });
+      });
+      document.querySelectorAll("main [data-syllabus-upload]").forEach(inp => {
+        inp.addEventListener("change", () => {
+          const file = inp.files[0];
+          if (!file) return;
+          const prog = getProgram(ACTIVE_PROGRAM_ID);
+          const course = (prog.courses || []).find(c => c.id === inp.dataset.syllabusUpload);
+          if (course) uploadSyllabus(course, file);
+        });
+      });
+      document.querySelectorAll("main [data-syllabus-view]").forEach(b => {
+        b.addEventListener("click", () => {
+          const file = SYLLABUS_FILES.find(s => s.id === b.dataset.syllabusView);
+          if (file) viewSyllabus(file);
+        });
+      });
+      document.querySelectorAll("main [data-syllabus-delete]").forEach(b => {
+        b.addEventListener("click", () => {
+          const file = SYLLABUS_FILES.find(s => s.id === b.dataset.syllabusDelete);
+          if (file) deleteSyllabus(file);
+        });
+      });
+
       const btnCancel = document.getElementById("btn-cancel-edit-course");
       if (btnCancel) btnCancel.addEventListener("click", () => {
         EDIT_COURSE_ID = null;
@@ -2139,9 +2742,118 @@
         render();
       });
 
+      Object.keys(ELECTIVE_KINDS).forEach(kind => {
+        const btnCancelOpt = document.getElementById(`btn-cancel-edit-${kind.toLowerCase()}-option`);
+        if (btnCancelOpt) btnCancelOpt.addEventListener("click", () => { EDIT_COURSE_ID = null; render(); });
+      });
+
+      /* ---- Linked elective (OE/PEC/MDM) option-count modal: triggered from the Category dropdown ---- */
+      const electiveOverlay = document.getElementById("elective-count-overlay");
+      function openElectiveCountModal(categoryValue) {
+        PENDING_ELECTIVE_CATEGORY = categoryValue;
+        const kind = electiveKindOf(categoryValue);
+        const label = ELECTIVE_KINDS[kind].label;
+        const titleEl = document.getElementById("elective-count-title");
+        const descEl = document.getElementById("elective-count-desc");
+        if (titleEl) titleEl.textContent = `How many ${label} ${ELECTIVE_KINDS[kind].optionNoun.toLowerCase()}s do you want to create?`;
+        if (descEl) descEl.textContent = `This adds one ${label} row to Semester ${toRoman(ACTIVE_SEM)}'s course table above, and automatically generates the matching ${ELECTIVE_KINDS[kind].optionNoun.toLowerCase()} rows (e.g. ${kind}-${ACTIVE_SEM}.1, ${kind}-${ACTIVE_SEM}.2 …) below it.`;
+        const inp = document.getElementById("inp-elective-count");
+        if (inp) inp.value = 3;
+        if (electiveOverlay) { electiveOverlay.style.display = "flex"; if (inp) inp.focus(); }
+      }
+      function closeElectiveCountModal() {
+        PENDING_ELECTIVE_CATEGORY = null;
+        if (electiveOverlay) electiveOverlay.style.display = "none";
+      }
+      async function confirmElectiveCount(count) {
+        const categoryValue = PENDING_ELECTIVE_CATEGORY;
+        if (!categoryValue || !count || count <= 0) return;
+        const kind = electiveKindOf(categoryValue);
+        if (!kind) return;
+        const prog = getProgram(ACTIVE_PROGRAM_ID);
+        if (prog.courses.some(c => c.sem === ACTIVE_SEM && c.type === kind + '_MAIN')) {
+          // A slot was created (e.g. in another tab) since the modal opened — just refresh.
+          closeElectiveCountModal(); render(); return;
+        }
+        const label = ELECTIVE_KINDS[kind].label;
+        let code = `${kind}-${ACTIVE_SEM}`, n = 0;
+        while (prog.courses.some(c => c.sem === ACTIVE_SEM && (c.code || "").toLowerCase() === code.toLowerCase())) {
+          n++; code = `${kind}-${ACTIVE_SEM}-${n}`;
+        }
+        prog.courses.push({ id: uid(), sem: ACTIVE_SEM, code, title: label, category: categoryValue, type: kind + '_MAIN', L: 3, T: 0, P: 0, credits: 3, assignments: [] });
+        generateElectiveOptions(prog, kind, count, categoryValue);
+        closeElectiveCountModal();
+        clearDraftFor("course:" + ACTIVE_PROGRAM_ID); DIRTY = false;
+        await saveProject();
+        render();
+      }
+      document.querySelectorAll(".elective-count-preset").forEach(b => {
+        b.addEventListener("click", () => confirmElectiveCount(parseInt(b.dataset.n, 10)));
+      });
+      const btnElectiveCancel = document.getElementById("btn-elective-count-cancel");
+      if (btnElectiveCancel) btnElectiveCancel.addEventListener("click", () => { closeElectiveCountModal(); render(); });
+      if (electiveOverlay) electiveOverlay.addEventListener("click", (e) => { if (e.target === electiveOverlay) { closeElectiveCountModal(); render(); } });
+      const fElectiveCount = document.getElementById("f-elective-count");
+      if (fElectiveCount) fElectiveCount.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const fd = new FormData(fElectiveCount);
+        const n = parseInt(fd.get("count"), 10);
+        if (!n || n <= 0) { alert("Please enter a valid positive number."); return; }
+        confirmElectiveCount(n);
+      });
+
+      // Adjusts the number of option rows linked to a <KIND>_MAIN row that's being
+      // edited. Adding options is silent; removing options that appear to hold edited data
+      // asks for confirmation first. Returns true if the count is now what was asked for.
+      async function adjustElectiveOptionCount(prog, kind, newCount, categoryValue) {
+        const optType = kind + '_OPTION';
+        const options = prog.courses.filter(c => c.sem === ACTIVE_SEM && c.type === optType)
+          .sort((a, b) => optionSuffixNum(a.code) - optionSuffixNum(b.code));
+        const currentCount = options.length;
+        if (!newCount || newCount === currentCount) return true;
+        if (newCount > currentCount) {
+          const toAdd = newCount - currentCount;
+          generateElectiveOptions(prog, kind, toAdd, categoryValue);
+          return true;
+        }
+        const removeCount = currentCount - newCount;
+        const toRemove = options.slice(options.length - removeCount);
+        const defaultTitleRe = new RegExp(`^${ELECTIVE_KINDS[kind].optionTitlePrefix} \\d+$`);
+        const hasData = toRemove.some(c => !defaultTitleRe.test(c.title || "") || (parseFloat(c.credits) || 0) !== 3 || (parseFloat(c.L) || 0) !== 3 || (parseFloat(c.T) || 0) !== 0 || (parseFloat(c.P) || 0) !== 0 || syllabusForCourse(c.id).length > 0);
+        const names = toRemove.map(c => c.code).join(", ");
+        const msg = hasData
+          ? `Reducing to ${newCount} option(s) will permanently delete ${removeCount} option row(s) that contain edited data (${names}). Continue?`
+          : `This will remove ${removeCount} option row(s) (${names}). Continue?`;
+        if (!confirm(msg)) return false;
+        const removeIds = new Set(toRemove.map(c => c.id));
+        prog.courses = prog.courses.filter(c => !removeIds.has(c.id));
+        TIMETABLE = TIMETABLE.filter(t => !removeIds.has(t.courseId));
+        return true;
+      }
+
       const f = document.getElementById("f-add-course");
       const errEl = document.getElementById("course-form-error");
       function showCourseError(msg) { errEl.textContent = msg; errEl.style.display = "block"; }
+
+      // Selecting OE/PEC/MDM in the main "Add a course" form (while adding a brand-new
+      // course, not editing one) hands off to the option-count modal instead of adding a
+      // plain row.
+      const categorySelect = f ? f.querySelector('select[name="category"]') : null;
+      if (categorySelect) categorySelect.addEventListener("change", () => {
+        if (EDIT_COURSE_ID) return;
+        const val = categorySelect.value;
+        const kind = electiveKindOf(val);
+        if (!kind) return;
+        const prog = getProgram(ACTIVE_PROGRAM_ID);
+        const existingMain = prog.courses.find(c => c.sem === ACTIVE_SEM && c.type === kind + '_MAIN');
+        if (existingMain) {
+          alert(`A ${ELECTIVE_KINDS[kind].label} slot already exists for Semester ${toRoman(ACTIVE_SEM)} (${existingMain.code}). Edit that row instead to change its number of options.`);
+          categorySelect.selectedIndex = 0;
+          return;
+        }
+        openElectiveCountModal(val);
+      });
+
       if (f) f.addEventListener("submit", async e => {
         e.preventDefault();
         errEl.style.display = "none";
@@ -2149,44 +2861,186 @@
         const code = (fd.get("code") || "").trim();
         const title = (fd.get("title") || "").trim();
         const credits = parseFloat(fd.get("credits"));
+        const category = fd.get("category");
+
+        // Defensive guard: creating a brand-new course with an OE/PEC/MDM category always
+        // goes through the option-count modal rather than adding a single manual row.
+        if (!EDIT_COURSE_ID && electiveKindOf(category)) {
+          const kind = electiveKindOf(category);
+          const prog = getProgram(ACTIVE_PROGRAM_ID);
+          const existingMain = prog.courses.find(c => c.sem === ACTIVE_SEM && c.type === kind + '_MAIN');
+          if (existingMain) return showCourseError(`A ${kind} slot already exists for this semester (${existingMain.code}). Edit that row instead to change its number of options.`);
+          openElectiveCountModal(category);
+          return;
+        }
+
         if (!code) return showCourseError("Course code is required.");
         if (!title) return showCourseError("Course title is required.");
         if (isNaN(credits) || credits <= 0) return showCourseError("Credits must be a positive number.");
 
         const prog = getProgram(ACTIVE_PROGRAM_ID);
-        // Course codes must be unique within a programme+semester (enforced by the
-        // database) — check here so the user gets an immediate, specific message
-        // instead of a raw save failure.
         const dupe = prog.courses.find(c => c.sem === ACTIVE_SEM && c.id !== EDIT_COURSE_ID && (c.code || "").trim().toLowerCase() === code.toLowerCase());
         if (dupe) return showCourseError(`Course code "${code}" is already used by "${dupe.title}" in this semester. Codes must be unique within a semester.`);
 
-        const courseData = {
-          sem: ACTIVE_SEM, code, title, category: fd.get("category"),
-          L: parseFloat(fd.get("L")) || 0, T: parseFloat(fd.get("T")) || 0, P: parseFloat(fd.get("P")) || 0,
-          credits
-        };
+        let type = 'REGULAR';
+        const newCourseKind = electiveKindOf(category);
+        if (newCourseKind) type = newCourseKind + '_MAIN';
+
+        let targetCourse = null;
+        let electiveAdjustOk = true;
         if (EDIT_COURSE_ID) {
-          const course = prog.courses.find(c => c.id === EDIT_COURSE_ID);
-          if (!course) { showCourseError("This course no longer exists — it may have been deleted."); EDIT_COURSE_ID = null; render(); return; }
-          Object.assign(course, courseData); // assignments[] is left untouched
+          targetCourse = prog.courses.find(c => c.id === EDIT_COURSE_ID);
+          if (!targetCourse) { showCourseError("This course no longer exists — it may have been deleted."); EDIT_COURSE_ID = null; render(); return; }
+          if (isOptionType(targetCourse.type)) {
+            type = targetCourse.type;
+          }
+          const wasMainKind = mainKindOfType(targetCourse.type);
+          Object.assign(targetCourse, { sem: ACTIVE_SEM, code, title, category, type, kind: 'Regular', L: parseFloat(fd.get("L")) || 0, T: parseFloat(fd.get("T")) || 0, P: parseFloat(fd.get("P")) || 0, credits });
           EDIT_COURSE_ID = null;
+          if (wasMainKind) {
+            const newCount = parseInt(fd.get("electiveCount"), 10);
+            electiveAdjustOk = await adjustElectiveOptionCount(prog, wasMainKind, newCount, category);
+          }
         } else {
-          prog.courses.push({ id: uid(), ...courseData, assignments: [] });
+          targetCourse = { id: uid(), sem: ACTIVE_SEM, code, title, category, type, kind: 'Regular', L: parseFloat(fd.get("L")) || 0, T: parseFloat(fd.get("T")) || 0, P: parseFloat(fd.get("P")) || 0, credits, assignments: [] };
+          prog.courses.push(targetCourse);
         }
+
+        const fileInput = f.querySelector('input[name="syllabusFile"]');
+        const file = fileInput && fileInput.files && fileInput.files[0];
+        if (file && targetCourse) {
+          await uploadSyllabus(targetCourse, file);
+        }
+
         clearDraftFor("course:" + ACTIVE_PROGRAM_ID); DIRTY = false;
         await saveProject(); render();
       });
       watchFormDraft(f, "course:" + ACTIVE_PROGRAM_ID);
       applyDraftToForm(f, "course:" + ACTIVE_PROGRAM_ID);
+
+      /* ---- Minors / Honors "Add course" form — mirrors f-add-course above, minus the
+         OE/PEC/MDM linked-elective machinery, and scoped by kind instead of ACTIVE_SEM. ---- */
+      const fKind = document.getElementById("f-add-kind-course");
+      if (fKind) {
+        const kindKey = fKind.dataset.kind; // 'Minor' | 'Honors'
+        const errElKind = document.getElementById("kind-course-form-error");
+        const showKindError = (msg) => { errElKind.textContent = msg; errElKind.style.display = "block"; };
+        const draftKey = "course:kind:" + kindKey.toLowerCase() + ":" + ACTIVE_PROGRAM_ID;
+
+        fKind.addEventListener("submit", async e => {
+          e.preventDefault();
+          errElKind.style.display = "none";
+          const fd = new FormData(fKind);
+          const code = (fd.get("code") || "").trim();
+          const title = (fd.get("title") || "").trim();
+          const credits = parseFloat(fd.get("credits"));
+          const category = fd.get("category");
+
+          if (!code) return showKindError("Course code is required.");
+          if (!title) return showKindError("Course title is required.");
+          if (isNaN(credits) || credits <= 0) return showKindError("Credits must be a positive number.");
+
+          const prog = getProgram(ACTIVE_PROGRAM_ID);
+          const dupe = prog.courses.find(c => (c.kind || 'Regular') === kindKey && c.id !== EDIT_COURSE_ID && (c.code || "").trim().toLowerCase() === code.toLowerCase());
+          if (dupe) return showKindError(`Course code "${code}" is already used by "${dupe.title}" in ${kindKey === 'Minor' ? 'Minors' : 'Honors'}. Codes must be unique within this section.`);
+
+          let targetCourse = null;
+          if (EDIT_COURSE_ID) {
+            targetCourse = prog.courses.find(c => c.id === EDIT_COURSE_ID && (c.kind || 'Regular') === kindKey);
+            if (!targetCourse) { showKindError("This course no longer exists — it may have been deleted."); EDIT_COURSE_ID = null; render(); return; }
+            Object.assign(targetCourse, { sem: 0, code, title, category, type: 'REGULAR', kind: kindKey, L: parseFloat(fd.get("L")) || 0, T: parseFloat(fd.get("T")) || 0, P: parseFloat(fd.get("P")) || 0, credits });
+            EDIT_COURSE_ID = null;
+          } else {
+            targetCourse = { id: uid(), sem: 0, code, title, category, type: 'REGULAR', kind: kindKey, L: parseFloat(fd.get("L")) || 0, T: parseFloat(fd.get("T")) || 0, P: parseFloat(fd.get("P")) || 0, credits, assignments: [] };
+            prog.courses.push(targetCourse);
+          }
+
+          const fileInput = fKind.querySelector('input[name="syllabusFile"]');
+          const file = fileInput && fileInput.files && fileInput.files[0];
+          if (file && targetCourse) {
+            await uploadSyllabus(targetCourse, file);
+          }
+
+          clearDraftFor(draftKey); DIRTY = false;
+          await saveProject(); render();
+        });
+        watchFormDraft(fKind, draftKey);
+        applyDraftToForm(fKind, draftKey);
+      }
+      const btnCancelKind = document.getElementById("btn-cancel-edit-kind-course");
+      if (btnCancelKind) btnCancelKind.addEventListener("click", () => {
+        EDIT_COURSE_ID = null;
+        DIRTY = false;
+        render();
+      });
+
+      // Single shared submit handler for the OE / PEC / MDM "add one option" mini-forms
+      // rendered by renderElectiveSection — bound once per kind below.
+      function bindElectiveOptionForm(kind) {
+        const idPrefix = kind.toLowerCase();
+        const form = document.getElementById(`f-add-${idPrefix}-option`);
+        const errEl2 = document.getElementById(`${idPrefix}-option-error`);
+        if (!form) return;
+        form.addEventListener("submit", async e => {
+          e.preventDefault();
+          if (errEl2) errEl2.style.display = "none";
+          const fd = new FormData(form);
+          const code = (fd.get("code") || "").trim();
+          const title = (fd.get("title") || "").trim();
+          const credits = parseFloat(fd.get("credits"));
+          if (!code) { if (errEl2) { errEl2.textContent = "Option code is required."; errEl2.style.display = "block"; } return; }
+          if (!title) { if (errEl2) { errEl2.textContent = "Option title is required."; errEl2.style.display = "block"; } return; }
+          if (isNaN(credits) || credits <= 0) { if (errEl2) { errEl2.textContent = "Credits must be positive."; errEl2.style.display = "block"; } return; }
+
+          const prog = getProgram(ACTIVE_PROGRAM_ID);
+          const dupe = prog.courses.find(c => c.sem === ACTIVE_SEM && c.id !== EDIT_COURSE_ID && (c.code || "").trim().toLowerCase() === code.toLowerCase());
+          if (dupe) { if (errEl2) { errEl2.textContent = `Course code "${code}" is already used in this semester.`; errEl2.style.display = "block"; } return; }
+
+          const categoryValue = (fd.get("category") || ELECTIVE_KINDS[kind].defaultCategory).trim() || ELECTIVE_KINDS[kind].defaultCategory;
+          let targetCourse = null;
+          if (EDIT_COURSE_ID) {
+            targetCourse = prog.courses.find(c => c.id === EDIT_COURSE_ID);
+            if (targetCourse) {
+              Object.assign(targetCourse, { sem: ACTIVE_SEM, code, title, category: categoryValue, type: kind + '_OPTION', L: parseFloat(fd.get("L")) || 0, T: parseFloat(fd.get("T")) || 0, P: parseFloat(fd.get("P")) || 0, credits });
+            }
+            EDIT_COURSE_ID = null;
+          } else {
+            targetCourse = { id: uid(), sem: ACTIVE_SEM, code, title, category: categoryValue, type: kind + '_OPTION', L: parseFloat(fd.get("L")) || 0, T: parseFloat(fd.get("T")) || 0, P: parseFloat(fd.get("P")) || 0, credits, assignments: [] };
+            prog.courses.push(targetCourse);
+          }
+
+          const fileInput = form.querySelector('input[name="syllabusFile"]');
+          const file = fileInput && fileInput.files && fileInput.files[0];
+          if (file && targetCourse) {
+            await uploadSyllabus(targetCourse, file);
+          }
+
+          await saveProject(); render();
+        });
+      }
+      Object.keys(ELECTIVE_KINDS).forEach(bindElectiveOptionForm);
     }
 
     /* ============================= VALIDATION ============================= */
-    function categoryTotal(prog, code) { return prog.courses.filter(c => c.category === code).reduce((s, c) => s + (parseFloat(c.credits) || 0), 0); }
-    function grandTotal(prog) { return prog.courses.reduce((s, c) => s + (parseFloat(c.credits) || 0), 0); }
+    // Validation Dashboard is scoped to the regular Semester I–VIII curriculum only —
+    // Minor/Honors courses (kind !== 'Regular') are excluded so they never skew the
+    // NEP credit-range checks below, per the "store separately" requirement.
+    function categoryTotal(prog, code) {
+      return prog.courses
+        .filter(c => (c.kind || 'Regular') === 'Regular' && (c.category === code || c.type === code + '_MAIN') && !isOptionType(c.type))
+        .reduce((s, c) => s + (parseFloat(c.credits) || 0), 0);
+    }
+    function grandTotal(prog) {
+      return prog.courses
+        .filter(c => (c.kind || 'Regular') === 'Regular' && !isOptionType(c.type))
+        .reduce((s, c) => s + (parseFloat(c.credits) || 0), 0);
+    }
 
     function pageValidation() {
-      if (PROGRAMS.length === 0) return pageHeader("Curriculum · 02", "Validation Dashboard", "") + noProgramsEmpty();
-      const prog = getProgram(ACTIVE_PROGRAM_ID) || PROGRAMS[0];
+      const vp = visiblePrograms();
+      if (vp.length === 0) return pageHeader("Curriculum · 02", "Validation Dashboard", "") + noProgramsEmpty();
+      let prog = getProgram(ACTIVE_PROGRAM_ID);
+      if (!prog || prog.versionId !== ACTIVE_VERSION_ID) prog = vp[0];
       ACTIVE_PROGRAM_ID = prog.id;
       const gt = grandTotal(prog);
       const typeMeta = PROGRAM_TYPES[prog.type];
@@ -2197,6 +3051,8 @@
       const elecCode = prog.type === "UG4" ? "PEC" : "PEC_PG";
       const majorCredits = categoryTotal(prog, coreCode) + categoryTotal(prog, elecCode);
       const majorPct = gt > 0 ? Math.round(majorCredits / gt * 100) : 0;
+      const mainCoursesCount = prog.courses.filter(c => (c.kind || 'Regular') === 'Regular' && !isOptionType(c.type)).length;
+
       return `
     ${pageHeader("Curriculum · 02", "Validation Dashboard", "Live comparison of the selected programme against the Maharashtra NEP 2020 credit framework.")}
     <div class="selectbar">${programSelector(prog.id, "sel-val-prog")}<span class="tag ${prog.type !== 'UG4' ? 'purple' : ''}" style="align-self:center;">${typeMeta.label}</span></div>
@@ -2204,7 +3060,7 @@
       <div class="stat"><div class="n">${gt}</div><div class="l">Total credits designed</div><div class="meter ${overallStatus === 'bad' ? 'bad' : overallStatus === 'warn' ? 'warn' : ''}"><div style="width:${Math.min(100, gt / targetHigh * 100)}%"></div></div></div>
       <div class="stat"><div class="n">${targetLow}–${targetHigh}</div><div class="l">Target range (Cr.)</div></div>
       <div class="stat"><div class="n">${majorPct}%</div><div class="l">Major-discipline share</div><div class="meter ${majorPct < 50 ? 'bad' : ''}"><div style="width:${Math.min(100, majorPct)}%"></div></div></div>
-      <div class="stat"><div class="n">${prog.courses.length}</div><div class="l">Courses entered</div></div>
+      <div class="stat"><div class="n">${mainCoursesCount}</div><div class="l">Main courses entered</div></div>
     </div>
     <div class="card tick"><h3>Per-semester credit load</h3>
       <table><thead><tr><th>Semester</th><th>Credits</th><th>Target</th><th>Status</th></tr></thead>
@@ -2235,7 +3091,7 @@
     ${pageHeader("Faculty Load · 01", "Faculty Directory", "Add every faculty member in the department, with their maximum weekly teaching-hour load.")}
     <div class="card tick">
       ${(() => {
-        const editing = EDIT_FACULTY_ID ? FACULTY.find(f => f.id === EDIT_FACULTY_ID) : null; return `
+          const editing = EDIT_FACULTY_ID ? FACULTY.find(f => f.id === EDIT_FACULTY_ID) : null; return `
       <div class="faculty-sticky-form">
         <h3 style="margin:0 0 10px;">Faculty <span class="tag" style="margin-left:6px;">${FACULTY.length}</span></h3>
         <h4 style="margin:0 0 6px; font-size:13px; color:var(--ink-soft);">${editing ? `Editing "${esc(editing.name)}"` : 'Add faculty'}</h4>
@@ -2250,7 +3106,7 @@
         <p id="faculty-form-error" style="color:var(--red); font-size:12.5px; margin-top:8px; display:none;"></p>
       </div>
       `;
-      })()}
+        })()}
       ${FACULTY.length === 0 ? `<div class="empty">No faculty added yet.</div>` : `
       <table><thead><tr><th>Name</th><th>Designation</th><th>Specialisation</th><th>Max load/week</th><th></th></tr></thead>
         <tbody>${FACULTY.map(f => `<tr><td><strong>${esc(f.name)}</strong></td><td>${esc(f.designation) || '—'}</td><td>${esc(f.specialization) || '—'}</td><td style="font-family:'IBM Plex Mono',monospace;">${f.maxLoad} hrs</td><td style="white-space:nowrap;"><button class="ghost" data-edit-id="${f.id}">Edit</button> <button class="danger" data-id="${f.id}">Delete</button></td></tr>`).join("")}</tbody>
@@ -2313,33 +3169,117 @@
     /* ============================= LOAD DISTRIBUTION ============================= */
     function courseHours(c) { return (parseFloat(c.L) || 0) + (parseFloat(c.T) || 0) + (parseFloat(c.P) || 0); }
     function assignedHours(c) { return (c.assignments || []).reduce((s, a) => s + (parseFloat(a.hours) || 0), 0); }
+    // Component-wise sums across every faculty currently assigned to a course, across ALL divisions/batches.
+    function assignedL(c) { return (c.assignments || []).reduce((s, a) => s + (parseFloat(a.assignedL) || 0), 0); }
+    function assignedT(c) { return (c.assignments || []).reduce((s, a) => s + (parseFloat(a.assignedT) || 0), 0); }
+    function assignedP(c) { return (c.assignments || []).reduce((s, a) => s + (parseFloat(a.assignedP) || 0), 0); }
+    // Same, but scoped to a single division/batch — used to check a division's own L/T/P quota.
+    function assignedLFor(c, division) { return (c.assignments || []).reduce((s, a) => (a.division || "Division A") === division ? s + (parseFloat(a.assignedL) || 0) : s, 0); }
+    function assignedTFor(c, division) { return (c.assignments || []).reduce((s, a) => (a.division || "Division A") === division ? s + (parseFloat(a.assignedT) || 0) : s, 0); }
+    function assignedPFor(c, division) { return (c.assignments || []).reduce((s, a) => (a.division || "Division A") === division ? s + (parseFloat(a.assignedP) || 0) : s, 0); }
+    // Remaining L/T/P capacity on a course WITHIN one division, optionally excluding one faculty's existing row in that division (used while editing that row).
+    // Each division needs its own full L/T/P quota — e.g. Division A and Division B of the same course each need the course's full Theory hours taught to them separately.
+    function remainingLTP(c, division, excludeFacultyId) {
+      let usedL = 0, usedT = 0, usedP = 0;
+      (c.assignments || []).forEach(a => {
+        if ((a.division || "Division A") !== division) return;
+        if (excludeFacultyId && a.facultyId === excludeFacultyId) return;
+        usedL += parseFloat(a.assignedL) || 0; usedT += parseFloat(a.assignedT) || 0; usedP += parseFloat(a.assignedP) || 0;
+      });
+      return {
+        remL: Math.max(0, (parseFloat(c.L) || 0) - usedL),
+        remT: Math.max(0, (parseFloat(c.T) || 0) - usedT),
+        remP: Math.max(0, (parseFloat(c.P) || 0) - usedP)
+      };
+    }
+    // Overall status for a course card: required L/T/P scale with the number of divisions
+    // (divisionsCount=1 leaves this identical to the pre-batch behaviour), assigned sums across all divisions.
+    function loadBadgeStatus(c, divisionsCount) {
+      const n = divisionsCount || 1;
+      const reqL = (parseFloat(c.L) || 0) * n, reqT = (parseFloat(c.T) || 0) * n, reqP = (parseFloat(c.P) || 0) * n;
+      const aL = assignedL(c), aT = assignedT(c), aP = assignedP(c);
+      const total = courseHours(c) * n; const assigned = assignedHours(c);
+      if (aL > reqL || aT > reqT || aP > reqP) return "bad";
+      if (assigned === 0) return "bad";
+      if (assigned < total) return "warn";
+      return "ok";
+    }
+    function loadBadgeHtml(c, divisionsCount) {
+      const n = divisionsCount || 1;
+      const st = loadBadgeStatus(c, n);
+      const reqL = (parseFloat(c.L) || 0) * n, reqT = (parseFloat(c.T) || 0) * n, reqP = (parseFloat(c.P) || 0) * n;
+      const total = courseHours(c) * n;
+      return `<span class="status ${st}" style="margin-left:8px; font-size:10.5px; white-space:normal;">L: ${assignedL(c)}/${reqL} &nbsp;|&nbsp; T: ${assignedT(c)}/${reqT} &nbsp;|&nbsp; P: ${assignedP(c)}/${reqP} &nbsp;|&nbsp; Total: ${assignedHours(c)}/${total} hrs ${st === 'ok' ? '✓' : st === 'warn' ? '⚠' : '⚠'}</span>`;
+    }
 
     function pageLoadDist() {
-      if (PROGRAMS.length === 0) return pageHeader("Faculty Load · 02", "Load Distribution", "") + noProgramsEmpty();
+      const vp = visiblePrograms();
+      if (vp.length === 0) return pageHeader("Faculty Load · 02", "Load Distribution", "") + noProgramsEmpty();
       if (FACULTY.length === 0) return pageHeader("Faculty Load · 02", "Load Distribution", "") + `<div class="empty">Add faculty in the Faculty Directory first.</div>`;
-      const prog = getProgram(LOAD_PROGRAM_ID) || PROGRAMS[0];
+      let prog = getProgram(LOAD_PROGRAM_ID);
+      if (!prog || prog.versionId !== ACTIVE_VERSION_ID) prog = vp[0];
       LOAD_PROGRAM_ID = prog.id;
       if (LOAD_SEM > prog.semesters) LOAD_SEM = 1;
       const sc = semesterCourses(prog, LOAD_SEM);
       return `
-    ${pageHeader("Faculty Load · 02", "Load Distribution", "Assign faculty to each course. Weekly hours default to the course's L+T+P; split across two teachers for lab batches if needed.")}
+    ${pageHeader("Faculty Load · 02", "Load Distribution", "Assign faculty to each course by splitting its Theory (L), Tutorial (T) and Practical (P) hours. Co-teach a course by giving each faculty member a slice of L/T/P — the sum of any component across all faculty can never exceed the course's required value.")}
     <div class="selectbar">
       ${programSelector(prog.id, "sel-load-prog")}
       <div class="field"><label>Semester</label><select id="sel-load-sem">${semRange(prog.semesters).map(s => `<option value="${s}" ${s === LOAD_SEM ? 'selected' : ''}>Sem ${toRoman(s)}</option>`).join("")}</select></div>
     </div>
     ${sc.length === 0 ? `<div class="empty">No courses in Sem ${toRoman(LOAD_SEM)} of this programme yet.</div>` : sc.map(c => {
-        const total = courseHours(c); const assigned = assignedHours(c);
-        const st = assigned === 0 ? "bad" : assigned < total ? "warn" : assigned > total ? "warn" : "ok";
+        const divisions = divisionsForProgram(prog);
+        const multiDiv = divisions.length > 1;
+        const selDiv = multiDiv ? (divisions.includes(LOAD_DIVISION_SEL[c.id]) ? LOAD_DIVISION_SEL[c.id] : divisions[0]) : divisions[0];
+        const allAssignments = c.assignments || [];
+        const assignments = allAssignments.filter(a => (a.division || "Division A") === selDiv);
+        const editingHere = (EDIT_ASSIGN_COURSE_ID === c.id && EDIT_ASSIGN_DIVISION === selDiv) ? EDIT_ASSIGN_FACULTY_ID : null;
+        const editingRow = editingHere ? assignments.find(a => a.facultyId === editingHere) : null;
+        const { remL, remT, remP } = remainingLTP(c, selDiv, editingHere);
+        const assignedFacIds = assignments.map(a => a.facultyId); // scoped to this division only — same faculty can teach another division
         return `
       <div class="card tick" data-course="${c.id}">
-        <h3>${esc(c.code)} — ${esc(c.title)} <span class="tag" style="margin-left:6px;">${c.category}</span>
-          <span class="status ${st}" style="margin-left:8px;">${assigned}/${total} hrs ${st === 'ok' ? '✓' : '⚠'}</span>
-        </h3>
-        <div>${(c.assignments || []).map(a => `<span class="chip">${esc(facultyName(a.facultyId))} — ${a.hours} hrs<button class="chip-x" data-course="${c.id}" data-fac="${a.facultyId}">✕</button></span>`).join("") || `<span style="color:var(--ink-soft); font-size:12.5px;">No faculty assigned yet.</span>`}</div>
-        <form class="f-assign add-row" data-course="${c.id}" style="grid-template-columns:2fr 1fr auto;">
-          <div class="field"><label>Faculty</label><select name="facultyId" required>${FACULTY.map(f => `<option value="${f.id}">${esc(f.name)}</option>`).join("")}</select></div>
-          <div class="field"><label>Hours/week</label><input type="number" step="0.5" name="hours" value="${Math.max(0, total - assigned) || total}" min="0"></div>
-          <button class="primary" type="submit">Assign</button>
+        <h3>${esc(c.code)} — ${esc(c.title)} <span class="tag" style="margin-left:6px;">${c.category}</span></h3>
+        <div style="margin:4px 0 10px;">${loadBadgeHtml(c, divisions.length)}</div>
+        ${multiDiv ? `
+        <div class="sem-tabs">
+          ${divisions.map(d => `<button type="button" class="sem-tab div-tab ${d === selDiv ? 'active' : ''}" data-course="${c.id}" data-div="${esc(d)}">${esc(d)}</button>`).join("")}
+        </div>` : ''}
+        ${assignments.length === 0 ? `<div style="color:var(--ink-soft); font-size:12.5px; margin-bottom:8px;">No faculty assigned yet${multiDiv ? ` for ${esc(selDiv)}` : ''}.</div>` : `
+        <table style="margin-bottom:10px;">
+          <thead><tr><th>Faculty</th><th>Theory (L)</th><th>Tutorial (T)</th><th>Practical (P)</th><th>Total Load</th><th>Action</th></tr></thead>
+          <tbody>${assignments.map(a => `
+            <tr>
+              <td>${esc(facultyName(a.facultyId))}</td>
+              <td style="font-family:'IBM Plex Mono',monospace;">${parseFloat(a.assignedL) || 0}</td>
+              <td style="font-family:'IBM Plex Mono',monospace;">${parseFloat(a.assignedT) || 0}</td>
+              <td style="font-family:'IBM Plex Mono',monospace;">${parseFloat(a.assignedP) || 0}</td>
+              <td style="font-family:'IBM Plex Mono',monospace; font-weight:700;">${parseFloat(a.hours) || 0} hrs</td>
+              <td style="white-space:nowrap;">
+                <button type="button" class="ghost edit-assign" data-course="${c.id}" data-fac="${a.facultyId}" data-div="${esc(selDiv)}">Edit</button>
+                <button type="button" class="chip-x danger-x" data-course="${c.id}" data-fac="${a.facultyId}" data-div="${esc(selDiv)}" title="Remove">Remove</button>
+              </td>
+            </tr>`).join("")}</tbody>
+        </table>`}
+        <form class="f-assign" data-course="${c.id}" data-division="${esc(selDiv)}" data-editing="${editingHere || ''}" style="display:grid; grid-template-columns:1.6fr .8fr .8fr .8fr .8fr auto; gap:8px; align-items:end; margin-top:8px; padding-top:10px; border-top:1px dashed var(--line);">
+          <div class="field"><label>Faculty${multiDiv ? ` <span style="font-weight:400; color:var(--ink-soft);">(${esc(selDiv)})</span>` : ''}</label>
+            <select name="facultyId" required ${editingRow ? 'disabled' : ''}>
+              ${FACULTY.map(f => `<option value="${f.id}" ${(editingRow && f.id === editingHere) ? 'selected' : ''} ${(!editingRow && assignedFacIds.includes(f.id)) ? 'disabled' : ''}>${esc(f.name)}${(!editingRow && assignedFacIds.includes(f.id)) ? ' (already assigned — use Edit)' : ''}</option>`).join("")}
+            </select>
+            ${editingRow ? `<input type="hidden" name="facultyId" value="${editingHere}">` : ''}
+          </div>
+          <div class="field"><label>Theory (L)<br><small style="font-weight:400; color:var(--ink-soft);">max ${remL}</small></label>
+            <input type="number" class="ltp-input" data-comp="L" step="0.5" min="0" max="${remL}" name="assignedL" value="${editingRow ? (parseFloat(editingRow.assignedL) || 0) : 0}"></div>
+          <div class="field"><label>Tutorial (T)<br><small style="font-weight:400; color:var(--ink-soft);">max ${remT}</small></label>
+            <input type="number" class="ltp-input" data-comp="T" step="0.5" min="0" max="${remT}" name="assignedT" value="${editingRow ? (parseFloat(editingRow.assignedT) || 0) : 0}"></div>
+          <div class="field"><label>Practical (P)<br><small style="font-weight:400; color:var(--ink-soft);">max ${remP}</small></label>
+            <input type="number" class="ltp-input" data-comp="P" step="0.5" min="0" max="${remP}" name="assignedP" value="${editingRow ? (parseFloat(editingRow.assignedP) || 0) : 0}"></div>
+          <div class="field"><label>Total</label><input type="text" class="ltp-total" value="0 hrs" disabled style="font-family:'IBM Plex Mono',monospace; font-weight:700;"></div>
+          <div style="display:flex; gap:6px;">
+            <button class="primary" type="submit">${editingRow ? 'Update' : 'Assign'}</button>
+            ${editingRow ? `<button type="button" class="ghost cancel-edit-assign">Cancel</button>` : ''}
+          </div>
+          <div class="ltp-error" style="grid-column:1 / -1; color:var(--red); font-size:11.5px; display:none;"></div>
         </form>
       </div>`;
       }).join("")}
@@ -2347,28 +3287,95 @@
     }
     function bindLoadDist() {
       const selP = document.getElementById("sel-load-prog");
-      if (selP) selP.addEventListener("change", () => { LOAD_PROGRAM_ID = selP.value; LOAD_SEM = 1; render(); });
+      if (selP) selP.addEventListener("change", () => { LOAD_PROGRAM_ID = selP.value; LOAD_SEM = 1; EDIT_ASSIGN_COURSE_ID = null; EDIT_ASSIGN_FACULTY_ID = null; EDIT_ASSIGN_DIVISION = null; render(); });
       const selS = document.getElementById("sel-load-sem");
-      if (selS) selS.addEventListener("change", () => { LOAD_SEM = parseInt(selS.value, 10); render(); });
+      if (selS) selS.addEventListener("change", () => { LOAD_SEM = parseInt(selS.value, 10); EDIT_ASSIGN_COURSE_ID = null; EDIT_ASSIGN_FACULTY_ID = null; EDIT_ASSIGN_DIVISION = null; render(); });
+      document.querySelectorAll(".div-tab").forEach(b => {
+        b.addEventListener("click", () => {
+          LOAD_DIVISION_SEL[b.dataset.course] = b.dataset.div;
+          if (EDIT_ASSIGN_COURSE_ID === b.dataset.course) { EDIT_ASSIGN_COURSE_ID = null; EDIT_ASSIGN_FACULTY_ID = null; EDIT_ASSIGN_DIVISION = null; }
+          render();
+        });
+      });
       document.querySelectorAll(".chip-x").forEach(b => {
         b.addEventListener("click", async () => {
           const prog = getProgram(LOAD_PROGRAM_ID);
           const c = prog.courses.find(c => c.id === b.dataset.course);
-          c.assignments = (c.assignments || []).filter(a => a.facultyId !== b.dataset.fac);
+          c.assignments = (c.assignments || []).filter(a => !(a.facultyId === b.dataset.fac && (a.division || "Division A") === b.dataset.div));
+          if (EDIT_ASSIGN_COURSE_ID === b.dataset.course && EDIT_ASSIGN_FACULTY_ID === b.dataset.fac && EDIT_ASSIGN_DIVISION === b.dataset.div) {
+            EDIT_ASSIGN_COURSE_ID = null; EDIT_ASSIGN_FACULTY_ID = null; EDIT_ASSIGN_DIVISION = null;
+          }
           await saveProject(); render();
         });
       });
+      document.querySelectorAll(".edit-assign").forEach(b => {
+        b.addEventListener("click", () => {
+          EDIT_ASSIGN_COURSE_ID = b.dataset.course;
+          EDIT_ASSIGN_FACULTY_ID = b.dataset.fac;
+          EDIT_ASSIGN_DIVISION = b.dataset.div;
+          LOAD_DIVISION_SEL[b.dataset.course] = b.dataset.div;
+          render();
+        });
+      });
+      document.querySelectorAll(".cancel-edit-assign").forEach(b => {
+        b.addEventListener("click", () => {
+          EDIT_ASSIGN_COURSE_ID = null; EDIT_ASSIGN_FACULTY_ID = null; EDIT_ASSIGN_DIVISION = null;
+          render();
+        });
+      });
+      // Real-time validation: recompute total, flag/disable on over-allocation of any component.
       document.querySelectorAll(".f-assign").forEach(f => {
+        const lIn = f.querySelector('input[name="assignedL"]');
+        const tIn = f.querySelector('input[name="assignedT"]');
+        const pIn = f.querySelector('input[name="assignedP"]');
+        const totalOut = f.querySelector(".ltp-total");
+        const errOut = f.querySelector(".ltp-error");
+        const submitBtn = f.querySelector('button[type="submit"]');
+        function validate() {
+          const l = parseFloat(lIn.value) || 0, t = parseFloat(tIn.value) || 0, p = parseFloat(pIn.value) || 0;
+          const maxL = parseFloat(lIn.max), maxT = parseFloat(tIn.max), maxP = parseFloat(pIn.max);
+          const errors = [];
+          if (l < 0 || t < 0 || p < 0) errors.push("Values cannot be negative.");
+          if (l > maxL) errors.push(`Theory (L) exceeds the remaining ${maxL} hr(s) available on this course.`);
+          if (t > maxT) errors.push(`Tutorial (T) exceeds the remaining ${maxT} hr(s) available on this course.`);
+          if (p > maxP) errors.push(`Practical (P) exceeds the remaining ${maxP} hr(s) available on this course.`);
+          if (l === 0 && t === 0 && p === 0) errors.push("Assign at least one hour to Theory, Tutorial, or Practical.");
+          totalOut.value = (l + t + p) + " hrs";
+          [lIn, tIn, pIn].forEach(inp => inp.style.borderColor = "");
+          if (l > maxL) lIn.style.borderColor = "var(--red)";
+          if (t > maxT) tIn.style.borderColor = "var(--red)";
+          if (p > maxP) pIn.style.borderColor = "var(--red)";
+          if (errors.length) {
+            errOut.style.display = "block";
+            errOut.textContent = errors[0];
+            submitBtn.disabled = true;
+            submitBtn.style.opacity = "0.5"; submitBtn.style.cursor = "not-allowed";
+          } else {
+            errOut.style.display = "none";
+            submitBtn.disabled = false;
+            submitBtn.style.opacity = ""; submitBtn.style.cursor = "";
+          }
+        }
+        [lIn, tIn, pIn].forEach(inp => inp.addEventListener("input", validate));
+        validate();
         f.addEventListener("submit", async e => {
           e.preventDefault();
-          const fd = new FormData(f);
           const prog = getProgram(LOAD_PROGRAM_ID);
           const c = prog.courses.find(c => c.id === f.dataset.course);
           c.assignments = c.assignments || [];
-          const facultyId = fd.get("facultyId");
-          const existing = c.assignments.find(a => a.facultyId === facultyId);
-          if (existing) existing.hours = parseFloat(fd.get("hours")) || 0;
-          else c.assignments.push({ id: uid(), facultyId, hours: parseFloat(fd.get("hours")) || 0 });
+          const division = f.dataset.division || "Division A";
+          const editingFac = f.dataset.editing || "";
+          const fd = new FormData(f);
+          const facultyId = editingFac || fd.get("facultyId");
+          const l = parseFloat(fd.get("assignedL")) || 0, t = parseFloat(fd.get("assignedT")) || 0, p = parseFloat(fd.get("assignedP")) || 0;
+          const { remL, remT, remP } = remainingLTP(c, division, editingFac || null);
+          // Hard guard mirroring the real-time validation, in case of stale DOM state.
+          if (l > remL || t > remT || p > remP || (l === 0 && t === 0 && p === 0)) { return; }
+          const existing = c.assignments.find(a => a.facultyId === facultyId && (a.division || "Division A") === division);
+          const total = l + t + p;
+          if (existing) Object.assign(existing, { assignedL: l, assignedT: t, assignedP: p, hours: total });
+          else c.assignments.push({ id: uid(), facultyId, division, assignedL: l, assignedT: t, assignedP: p, hours: total });
+          EDIT_ASSIGN_COURSE_ID = null; EDIT_ASSIGN_FACULTY_ID = null; EDIT_ASSIGN_DIVISION = null;
           await saveProject(); render();
         });
       });
@@ -2376,20 +3383,44 @@
 
     /* ============================= LOAD SUMMARY ============================= */
     function facultyTotalLoad(facId) {
-      let total = 0; const courses = [];
-      PROGRAMS.forEach(p => p.courses.forEach(c => {
-        (c.assignments || []).forEach(a => {
-          if (a.facultyId === facId) { total += parseFloat(a.hours) || 0; courses.push({ prog: p.name, sem: c.sem, code: c.code, title: c.title, hours: a.hours }); }
+      let total = 0, l = 0, t = 0, p = 0; const courses = [];
+      visiblePrograms().forEach(prog => {
+        const showDiv = divisionsForProgram(prog).length > 1; // only tag divisions when the programme actually has more than one
+        prog.courses.forEach(c => {
+          (c.assignments || []).forEach(a => {
+            if (a.facultyId === facId) {
+              const al = parseFloat(a.assignedL) || 0, at = parseFloat(a.assignedT) || 0, ap = parseFloat(a.assignedP) || 0;
+              const hrs = parseFloat(a.hours) || (al + at + ap);
+              total += hrs; l += al; t += at; p += ap;
+              courses.push({ prog: prog.name, sem: c.sem, code: c.code, title: c.title, division: a.division || "Division A", showDiv, l: al, t: at, p: ap, hours: hrs });
+            }
+          });
         });
-      }));
-      return { total, courses };
+      });
+      return { total, l, t, p, courses };
     }
     function pageLoadSummary() {
       if (FACULTY.length === 0) return pageHeader("Faculty Load · 03", "Load Summary", "") + `<div class="empty">Add faculty in the Faculty Directory first.</div>`;
+      const rows = FACULTY.map(f => ({ f, ...facultyTotalLoad(f.id) }));
       return `
-    ${pageHeader("Faculty Load · 03", "Load Summary", "Total weekly teaching hours per faculty member, across every programme and semester.")}
-    ${FACULTY.map(f => {
-        const { total, courses } = facultyTotalLoad(f.id);
+    ${pageHeader("Faculty Load · 03", "Load Summary", "Total weekly teaching hours per faculty member, across every programme and semester, broken down by Theory (L), Tutorial (T) and Practical (P).")}
+    <div class="card tick">
+      <h3>Weekly workload breakdown</h3>
+      <table style="margin-top:10px;">
+        <thead><tr><th>Faculty Name</th><th>Theory (L)</th><th>Tutorial (T)</th><th>Practical (P)</th><th>Total Teaching Load (Hours/Week)</th></tr></thead>
+        <tbody>${rows.map(({ f, total, l, t, p }) => {
+        const st = total === 0 ? null : total > f.maxLoad ? "bad" : total === f.maxLoad ? "ok" : "warn";
+        return `<tr>
+            <td><strong>${esc(f.name)}</strong></td>
+            <td style="font-family:'IBM Plex Mono',monospace;">${l}</td>
+            <td style="font-family:'IBM Plex Mono',monospace;">${t}</td>
+            <td style="font-family:'IBM Plex Mono',monospace;">${p}</td>
+            <td style="font-family:'IBM Plex Mono',monospace; font-weight:700;">${total}/${f.maxLoad} hrs ${st ? `<span class="status ${st}" style="margin-left:6px;">${st === 'bad' ? '⚠ OVERLOADED' : st === 'ok' ? '✓ AT CAPACITY' : '· under capacity'}</span>` : `<span class="status warn" style="margin-left:6px;">— unassigned</span>`}</td>
+          </tr>`;
+      }).join("")}</tbody>
+      </table>
+    </div>
+    ${rows.map(({ f, total, courses }) => {
         const st = total === 0 ? null : total > f.maxLoad ? "bad" : total === f.maxLoad ? "ok" : "warn";
         return `
       <div class="card tick">
@@ -2398,8 +3429,8 @@
         </h3>
         <div class="meter ${st === 'bad' ? 'bad' : st === 'warn' ? 'warn' : ''}"><div style="width:${Math.min(100, total / f.maxLoad * 100)}%"></div></div>
         ${courses.length === 0 ? `<p class="desc" style="margin-top:10px;">No courses assigned.</p>` : `
-        <table style="margin-top:12px;"><thead><tr><th>Programme</th><th>Sem</th><th>Course</th><th>Hrs/wk</th></tr></thead>
-          <tbody>${courses.map(c => `<tr><td>${esc(c.prog)}</td><td>${toRoman(c.sem)}</td><td>${esc(c.code)} — ${esc(c.title)}</td><td style="font-family:'IBM Plex Mono',monospace;">${c.hours}</td></tr>`).join("")}</tbody>
+        <table style="margin-top:12px;"><thead><tr><th>Programme</th><th>Sem</th><th>Course</th><th>L</th><th>T</th><th>P</th><th>Total</th></tr></thead>
+          <tbody>${courses.map(c => `<tr><td>${esc(c.prog)}</td><td>${toRoman(c.sem)}</td><td>${esc(c.code)} — ${esc(c.title)}${c.showDiv ? ` <span style="color:var(--ink-soft); font-weight:600;">(${esc(divShort(c.division))})</span>` : ''}</td><td style="font-family:'IBM Plex Mono',monospace;">${c.l}</td><td style="font-family:'IBM Plex Mono',monospace;">${c.t}</td><td style="font-family:'IBM Plex Mono',monospace;">${c.p}</td><td style="font-family:'IBM Plex Mono',monospace; font-weight:700;">${c.hours}</td></tr>`).join("")}</tbody>
         </table>`}
       </div>`;
       }).join("")}
@@ -2416,8 +3447,10 @@
     }
 
     function pageTimetable() {
-      if (PROGRAMS.length === 0) return pageHeader("Timetable · 01", "Timetable Builder", "") + noProgramsEmpty();
-      const prog = getProgram(TT_PROGRAM_ID) || PROGRAMS[0];
+      const vp = visiblePrograms();
+      if (vp.length === 0) return pageHeader("Timetable · 01", "Timetable Builder", "") + noProgramsEmpty();
+      let prog = getProgram(TT_PROGRAM_ID);
+      if (!prog || prog.versionId !== ACTIVE_VERSION_ID) prog = vp[0];
       TT_PROGRAM_ID = prog.id;
       if (TT_SEM > prog.semesters) TT_SEM = 1;
       const courses = semesterCourses(prog, TT_SEM);
@@ -2551,7 +3584,8 @@
 
     /* ============================= EXPORT ============================= */
     function pageExport() {
-      const prog = getProgram(EXPORT_PROGRAM_ID) || PROGRAMS[0];
+      let prog = getProgram(EXPORT_PROGRAM_ID);
+      if (!prog || prog.versionId !== ACTIVE_VERSION_ID) prog = visiblePrograms()[0];
       if (prog) EXPORT_PROGRAM_ID = prog.id;
       const today = new Date().toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' });
       return `
@@ -2572,18 +3606,41 @@
     ${EXPORT_VIEW === 'timetable' ? exportTimetable(prog, today) : ''}
   `;
     }
+
     function exportCurriculum(prog, today) {
       if (!prog) return noProgramsEmpty();
       const gt = grandTotal(prog);
-      return `
-    <div class="selectbar no-print">${programSelector(prog.id, "sel-export-prog")}<span class="tag ${prog.type !== 'UG4' ? 'purple' : ''}" style="align-self:center;">${PROGRAM_TYPES[prog.type].label}</span></div>
-    ${semRange(prog.semesters).map(s => {
-        const sc = semesterCourses(prog, s); if (sc.length === 0) return "";
+      const electiveOptionsByKind = {};
+      Object.keys(ELECTIVE_KINDS).forEach(kind => {
+        electiveOptionsByKind[kind] = prog.courses.filter(c => c.type === kind + '_OPTION' || (ELECTIVE_KINDS[kind].isCategory(c.category) && c.type !== kind + '_MAIN'));
+      });
+      const anyElectiveOptions = Object.values(electiveOptionsByKind).some(arr => arr.length > 0);
+
+      const semesterBlocks = semRange(prog.semesters).map(s => {
+        const sc = semesterCourses(prog, s).filter(c => !isOptionType(c.type));
+        if (sc.length === 0) return "";
         return `<div class="card tick"><h3>Semester ${toRoman(s)}</h3>
         <table><thead><tr><th style="width:13%">Code</th><th>Title</th><th style="width:15%">Category</th><th style="width:7%">L</th><th style="width:7%">T</th><th style="width:7%">P</th><th style="width:9%">Credits</th></tr></thead>
-        <tbody>${sc.map(c => `<tr><td style="font-family:'IBM Plex Mono',monospace;">${esc(c.code)}</td><td>${esc(c.title)}</td><td><span class="tag">${c.category}</span></td><td>${c.L || 0}</td><td>${c.T || 0}</td><td>${c.P || 0}</td><td style="font-family:'IBM Plex Mono',monospace; font-weight:700;">${c.credits}</td></tr>`).join("")}</tbody>
+        <tbody>${sc.map(c => `<tr><td style="font-family:'IBM Plex Mono',monospace;">${esc(c.code)}</td><td>${esc(c.title)}</td><td><span class="tag ${isMainType(c.type) ? 'purple' : ''}">${c.category}</span></td><td>${c.L || 0}</td><td>${c.T || 0}</td><td>${c.P || 0}</td><td style="font-family:'IBM Plex Mono',monospace; font-weight:700;">${c.credits}</td></tr>`).join("")}</tbody>
         <tfoot><tr><td colspan="6">Semester total</td><td>${semesterTotal(prog, s)} Cr.</td></tr></tfoot></table></div>`;
-      }).join("") || `<div class="empty">No courses added yet for this programme.</div>`}
+      }).join("");
+
+      const electiveBlocks = Object.keys(ELECTIVE_KINDS).map(kind => {
+        const info = ELECTIVE_KINDS[kind];
+        const opts = electiveOptionsByKind[kind];
+        if (opts.length === 0) return "";
+        return `
+    <div class="card tick"><h3>${info.label} ${info.optionNoun} Courses</h3>
+      <table><thead><tr><th style="width:9%">Sem</th><th style="width:13%">Code</th><th>Title</th><th style="width:14%">Category</th><th style="width:7%">L</th><th style="width:7%">T</th><th style="width:7%">P</th><th style="width:9%">Credits</th></tr></thead>
+      <tbody>${opts.slice().sort((a, b) => a.sem - b.sem || optionSuffixNum(a.code) - optionSuffixNum(b.code) || (a.code || "").localeCompare(b.code || "")).map(c => `<tr><td>${toRoman(c.sem)}</td><td style="font-family:'IBM Plex Mono',monospace;">${esc(c.code)}</td><td>${esc(c.title)}</td><td><span class="tag ${info.tagClass}">${c.category || info.defaultCategory}</span></td><td>${c.L || 0}</td><td>${c.T || 0}</td><td>${c.P || 0}</td><td style="font-family:'IBM Plex Mono',monospace; font-weight:700;">${c.credits}</td></tr>`).join("")}</tbody>
+      <tfoot><tr><td colspan="7">${info.label} ${info.optionNoun.toLowerCase()}s total</td><td>${opts.reduce((s, c) => s + (parseFloat(c.credits) || 0), 0)} Cr.</td></tr></tfoot></table>
+    </div>`;
+      }).join("");
+
+      return `
+    <div class="selectbar no-print">${programSelector(prog.id, "sel-export-prog")}<span class="tag ${prog.type !== 'UG4' ? 'purple' : ''}" style="align-self:center;">${PROGRAM_TYPES[prog.type].label}</span></div>
+    ${semesterBlocks || (!anyElectiveOptions ? `<div class="empty">No courses added yet for this programme.</div>` : "")}
+    ${electiveBlocks}
     <div class="titleblock">
       <div><span class="l">Programme</span><span class="v">${esc(prog.name)}</span></div>
       <div><span class="l">Major</span><span class="v">${esc(prog.major) || '—'}</span></div>
@@ -2677,9 +3734,10 @@
       const courseCount = allCourses().length;
       const assignCount = allCourses().reduce((s, { course }) => s + (course.assignments || []).length, 0);
       return `
-    ${pageHeader("Data Exchange", "Excel Import / Export", "Every table in this planner — Programmes, Courses, Faculty, Load Assignments, and the Timetable — lives in one workbook with matching sheet names, so Excel can be your working copy or backup.")}
+    ${pageHeader("Data Exchange", "Excel Import / Export", "Every table in this planner — Programmes, Courses, Faculty, Load Assignments, and the Timetable, across every Academic Year and Curriculum Version — lives in one workbook with matching sheet names, so Excel can be your working copy or backup.")}
+    <p class="desc" style="margin-top:-6px;">Export covers <strong>every</strong> curriculum version on record (full audit history). Import always lands in whichever Academic Year + Version is currently selected in the toolbar above — switch it first if you meant a different one. "Replace" only clears that one version's programmes/courses/timetable, never other versions' history.</p>
     <div class="grid4">
-      <div class="stat"><div class="n">${PROGRAMS.length}</div><div class="l">Programmes</div></div>
+      <div class="stat"><div class="n">${PROGRAMS.length}</div><div class="l">Programmes (all versions)</div></div>
       <div class="stat"><div class="n">${courseCount}</div><div class="l">Courses</div></div>
       <div class="stat"><div class="n">${FACULTY.length}</div><div class="l">Faculty</div></div>
       <div class="stat"><div class="n">${assignCount}</div><div class="l">Load assignments</div></div>
@@ -2705,7 +3763,7 @@
         <p class="desc">Choose how the workbook's rows should be combined with what's already in the planner.</p>
         <button type="button" class="modal-option" id="btn-import-replace">
           <div class="mo-title">Replace all previous data</div>
-          <div class="mo-sub">Removes the existing Department, Programmes, Courses, Faculty, Assignments and Timetable, and imports only this file.</div>
+          <div class="mo-sub">Removes the existing Programmes, Courses, and Timetable in the currently selected Curriculum Version only (Faculty Directory is replaced department-wide), and imports this file into that version. Other Academic Years/Versions are untouched.</div>
         </button>
         <button type="button" class="modal-option" id="btn-import-add">
           <div class="mo-title">Add to previous data</div>
@@ -2720,10 +3778,11 @@
         <thead><tr><th>Sheet</th><th>Columns</th><th>Notes</th></tr></thead>
         <tbody>
           <tr><td><span class="tag">Department</span></td><td style="font-family:'IBM Plex Mono',monospace; font-size:11px;">Name</td><td>Single row.</td></tr>
-          <tr><td><span class="tag">Programs</span></td><td style="font-family:'IBM Plex Mono',monospace; font-size:11px;">id, name, type, major, minor, totalTarget, semMin, semMax, semesters</td><td>type is UG4, PG2, or PG1.</td></tr>
-          <tr><td><span class="tag">Courses</span></td><td style="font-family:'IBM Plex Mono',monospace; font-size:11px;">id, programId, programName, sem, code, title, category, L, T, P, credits</td><td>programId links back to Programs; programName is for readability only.</td></tr>
+          <tr><td><span class="tag">Programs</span></td><td style="font-family:'IBM Plex Mono',monospace; font-size:11px;">id, versionId, academicYear, versionLabel, name, type, major, minor, totalTarget, semMin, semMax, semesters, divisionsCount</td><td>type is UG4, PG2, or PG1. academicYear/versionLabel are read-only context columns — import always uses the toolbar's current selection, not these. divisionsCount defaults to 1 when blank.</td></tr>
+          <tr><td><span class="tag">CurriculumVersions</span></td><td style="font-family:'IBM Plex Mono',monospace; font-size:11px;">id, academicYear, versionLabel, status</td><td>Read-only reference sheet — not re-imported.</td></tr>
+          <tr><td><span class="tag">Courses</span></td><td style="font-family:'IBM Plex Mono',monospace; font-size:11px;">id, programId, programName, sem, code, title, category, kind, L, T, P, credits</td><td>programId links back to Programs; programName is for readability only. Supports regular courses as well as OE/PEC main slots & options. kind is Regular, Minor, or Honors (blank = Regular); Minor/Honors rows carry sem = 0.</td></tr>
           <tr><td><span class="tag">Faculty</span></td><td style="font-family:'IBM Plex Mono',monospace; font-size:11px;">id, name, designation, specialization, maxLoad</td><td></td></tr>
-          <tr><td><span class="tag">Assignments</span></td><td style="font-family:'IBM Plex Mono',monospace; font-size:11px;">courseId, programName, sem, code, facultyId, facultyName, hours</td><td>Links Faculty to Courses (Load Distribution).</td></tr>
+          <tr><td><span class="tag">Assignments</span></td><td style="font-family:'IBM Plex Mono',monospace; font-size:11px;">courseId, programName, sem, code, facultyId, facultyName, division, assignedL, assignedT, assignedP, hours</td><td>Links Faculty to Courses (Load Distribution), scoped per Division/Batch. division defaults to "Division A" when blank. assignedL/T/P are the faculty member's slice of that division's Theory/Tutorial/Practical hours; hours is their total (assignedL+assignedT+assignedP).</td></tr>
           <tr><td><span class="tag">Timetable</span></td><td style="font-family:'IBM Plex Mono',monospace; font-size:11px;">id, programId, programName, semester, division, day, period, courseId, code, facultyId, facultyName, room</td><td>day is Mon–Sat; period is 1–7.</td></tr>
         </tbody>
       </table>
@@ -2734,18 +3793,35 @@
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet([{ Name: DEPARTMENT.name || "" }]), "Department");
 
-      const programRows = PROGRAMS.map(p => ({
-        id: p.id, name: p.name, type: p.type, major: p.major, minor: p.minor,
-        totalTarget: p.totalTarget, semMin: p.semMin, semMax: p.semMax, semesters: p.semesters
-      }));
+      const programRows = PROGRAMS.map(p => {
+        const v = CURRICULUM_VERSIONS.find(cv => cv.id === p.versionId);
+        const y = v ? ACADEMIC_YEARS.find(ay => ay.id === v.academicYearId) : null;
+        return {
+          id: p.id, versionId: p.versionId || "", academicYear: y ? y.label : "", versionLabel: v ? v.versionLabel : "",
+          name: p.name, type: p.type, major: p.major, minor: p.minor,
+          totalTarget: p.totalTarget, semMin: p.semMin, semMax: p.semMax, semesters: p.semesters, divisionsCount: p.divisionsCount || 1
+        };
+      });
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(programRows), "Programs");
+
+      const versionRows = CURRICULUM_VERSIONS.map(v => {
+        const y = ACADEMIC_YEARS.find(ay => ay.id === v.academicYearId);
+        return { id: v.id, academicYear: y ? y.label : "", versionLabel: v.versionLabel, status: v.status };
+      });
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(versionRows), "CurriculumVersions");
 
       const courseRows = [];
       const assignRows = [];
       PROGRAMS.forEach(p => p.courses.forEach(c => {
-        courseRows.push({ id: c.id, programId: p.id, programName: p.name, sem: c.sem, code: c.code, title: c.title, category: c.category, L: c.L, T: c.T, P: c.P, credits: c.credits });
+        const dbCategory = (c.type && (isMainType(c.type) || isOptionType(c.type))) ? c.type : (c.category || '');
+        courseRows.push({ id: c.id, programId: p.id, programName: p.name, sem: c.sem, code: c.code, title: c.title, category: dbCategory, kind: c.kind || 'Regular', L: c.L, T: c.T, P: c.P, credits: c.credits });
         (c.assignments || []).forEach(a => {
-          assignRows.push({ courseId: c.id, programName: p.name, sem: c.sem, code: c.code, facultyId: a.facultyId, facultyName: facultyName(a.facultyId), hours: a.hours });
+          assignRows.push({
+            courseId: c.id, programName: p.name, sem: c.sem, code: c.code,
+            facultyId: a.facultyId, facultyName: facultyName(a.facultyId), division: a.division || "Division A",
+            assignedL: parseFloat(a.assignedL) || 0, assignedT: parseFloat(a.assignedT) || 0, assignedP: parseFloat(a.assignedP) || 0,
+            hours: parseFloat(a.hours) || 0
+          });
         });
       }));
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(courseRows), "Courses");
@@ -2770,16 +3846,7 @@
       const ws = wb.Sheets[name];
       return ws ? XLSX.utils.sheet_to_json(ws, { defval: "" }) : [];
     }
-    // Parses a workbook into planner-shaped objects.
-    // mode "replace": ids are taken from the sheet where present (falls back to a
-    //   fresh uid()), matching the pre-existing "trust the file" behaviour, since
-    //   the file is about to become the *entire* state anyway.
-    // mode "add": ids from the sheet are always ignored and a fresh uid() is
-    //   generated for every program/faculty/course/timetable row, so nothing an
-    //   imported row carries can collide with a primary key already sitting in
-    //   PROGRAMS/FACULTY/TIMETABLE. Course codes are also de-duplicated per
-    //   program+semester, since (programId, sem, code) is a unique constraint
-    //   in Supabase and a re-imported file will otherwise repeat old codes.
+
     function parseWorkbook(wb, mode) {
       const freshIds = mode === "add";
       const genId = (r) => freshIds ? uid() : String(r.id || uid());
@@ -2789,7 +3856,7 @@
 
       const progRows = sheetRows(wb, "Programs");
       if (progRows.length === 0) throw new Error("No rows found in the 'Programs' sheet.");
-      const idMap = {}; // sheet id/name -> program object (scoped to this import only)
+      const idMap = {};
       const newPrograms = progRows.map(r => {
         const type = PROGRAM_TYPES[r.type] ? r.type : "UG4";
         const p = {
@@ -2798,10 +3865,11 @@
           totalTarget: parseInt(r.totalTarget, 10) || PROGRAM_TYPES[type].rangeLow,
           semMin: parseInt(r.semMin, 10) || 20, semMax: parseInt(r.semMax, 10) || 22,
           semesters: parseInt(r.semesters, 10) || semestersForType(type),
+          divisionsCount: Math.max(1, parseInt(r.divisionsCount, 10) || 1),
           courses: []
         };
-        idMap[r.id ? String(r.id) : p.id] = p; // lookup key: original sheet id if any, else the new id
-        if (r.name) idMap["name:" + r.name] = p; // fallback lookup by name
+        idMap[r.id ? String(r.id) : p.id] = p;
+        if (r.name) idMap["name:" + r.name] = p;
         return p;
       });
 
@@ -2819,11 +3887,9 @@
         return "";
       }
 
-      // Tracks codes already used per program+semester so appended courses
-      // never repeat a (programId, sem, code) combination.
-      const usedCourseCodes = {}; // "programId|sem" -> Set of codes in use
-      function uniqueCode(programId, sem, code) {
-        const key = programId + "|" + sem;
+      const usedCourseCodes = {};
+      function uniqueCode(programId, sem, kind, code) {
+        const key = programId + "|" + sem + "|" + kind;
         if (!usedCourseCodes[key]) usedCourseCodes[key] = new Set();
         const used = usedCourseCodes[key];
         let candidate = code || "COURSE";
@@ -2837,20 +3903,35 @@
       const courseIdMap = {};
       courseRows.forEach(r => {
         let prog = (r.programId && idMap[String(r.programId)]) || (r.programName && idMap["name:" + r.programName]);
-        if (!prog) return; // skip orphan rows
-        const sem = parseInt(r.sem, 10) || 1;
-        const code = uniqueCode(prog.id, sem, String(r.code || ""));
+        if (!prog) return;
+        const kind = (r.kind === 'Minor' || r.kind === 'Honors') ? r.kind : 'Regular';
+        const parsedSem = parseInt(r.sem, 10);
+        const sem = isNaN(parsedSem) ? (kind === 'Regular' ? 1 : 0) : parsedSem;
+        const code = uniqueCode(prog.id, sem, kind, String(r.code || ""));
+
+        let rawCategory = String(r.category || "");
+        let type = r.type || "REGULAR";
+        let category = rawCategory;
+
+        if (rawCategory === "OE_MAIN") { category = "OE"; type = "OE_MAIN"; }
+        else if (rawCategory === "OE_OPTION") { category = "OE"; type = "OE_OPTION"; }
+        else if (rawCategory === "PEC_MAIN") { category = "PEC"; type = "PEC_MAIN"; }
+        else if (rawCategory === "PEC_OPTION") { category = "PEC"; type = "PEC_OPTION"; }
+        else if (rawCategory === "MDM_MAIN") { category = "MDM"; type = "MDM_MAIN"; }
+        else if (rawCategory === "MDM_OPTION") { category = "MDM"; type = "MDM_OPTION"; }
+        else if (isOECategory(rawCategory) && type === "REGULAR") { type = "OE_OPTION"; }
+        else if (isPECCategory(rawCategory) && type === "REGULAR") { type = "PEC_OPTION"; }
+        else if (isMDMCategory(rawCategory) && type === "REGULAR") { type = "MDM_OPTION"; }
+
         const course = {
           id: genId(r), sem, code, title: String(r.title || ""),
-          category: String(r.category || ""), L: parseFloat(r.L) || 0, T: parseFloat(r.T) || 0, P: parseFloat(r.P) || 0,
+          category, type, kind, L: parseFloat(r.L) || 0, T: parseFloat(r.T) || 0, P: parseFloat(r.P) || 0,
           credits: parseFloat(r.credits) || 0, assignments: []
         };
         prog.courses.push(course);
         if (r.id) courseIdMap[String(r.id)] = course;
-        courseIdMap["key:" + prog.id + "|" + course.sem + "|" + course.code] = course;
-        // also index by the *original* sheet code so Assignments/Timetable
-        // rows (which reference the pre-dedupe code) still resolve correctly
-        courseIdMap["origkey:" + prog.id + "|" + sem + "|" + String(r.code || "")] = course;
+        courseIdMap["key:" + prog.id + "|" + course.sem + "|" + course.kind + "|" + course.code] = course;
+        courseIdMap["origkey:" + prog.id + "|" + sem + "|" + kind + "|" + String(r.code || "")] = course;
       });
 
       const assignRows = sheetRows(wb, "Assignments");
@@ -2858,12 +3939,13 @@
         let course = r.courseId && courseIdMap[String(r.courseId)];
         if (!course && r.programName && r.sem && r.code) {
           const prog = idMap["name:" + r.programName];
-          if (prog) course = courseIdMap["origkey:" + prog.id + "|" + parseInt(r.sem, 10) + "|" + r.code];
+          if (prog) course = courseIdMap["origkey:" + prog.id + "|" + parseInt(r.sem, 10) + "|Regular|" + r.code];
         }
         if (!course) return;
         const facultyId = resolveFaculty(r.facultyId, r.facultyName);
         if (!facultyId) return;
-        course.assignments.push({ facultyId, hours: parseFloat(r.hours) || 0 });
+        const aL = parseFloat(r.assignedL) || 0, aT = parseFloat(r.assignedT) || 0, aP = parseFloat(r.assignedP) || 0;
+        course.assignments.push({ facultyId, division: String(r.division || "Division A"), assignedL: aL, assignedT: aT, assignedP: aP, hours: parseFloat(r.hours) || (aL + aT + aP) });
       });
 
       const ttRows = sheetRows(wb, "Timetable");
@@ -2872,7 +3954,7 @@
         let prog = (r.programId && idMap[String(r.programId)]) || (r.programName && idMap["name:" + r.programName]);
         if (!prog) return;
         let course = r.courseId && courseIdMap[String(r.courseId)];
-        if (!course && r.code) course = courseIdMap["origkey:" + prog.id + "|" + parseInt(r.semester, 10) + "|" + r.code];
+        if (!course && r.code) course = courseIdMap["origkey:" + prog.id + "|" + parseInt(r.semester, 10) + "|Regular|" + r.code];
         if (!course) return;
         newTimetable.push({
           id: genId(r), programId: prog.id, semester: parseInt(r.semester, 10) || 1, division: String(r.division || "A"),
@@ -2892,30 +3974,31 @@
         const wb = XLSX.read(buf, { type: "array" });
         const { newDept, newPrograms, newFaculty, newTimetable, courseRows, assignRows } = parseWorkbook(wb, mode);
 
+        ensureDefaultYearAndVersion();
+        newPrograms.forEach(p => { p.versionId = ACTIVE_VERSION_ID; });
+
         if (mode === "add") {
-          // Keep everything already in the planner; append the new rows.
-          // Fresh ids were already assigned inside parseWorkbook(), so none of
-          // PROGRAMS/FACULTY/TIMETABLE's existing primary keys are touched.
-          if (!DEPARTMENT.name) DEPARTMENT = newDept; // only fill in dept name if it was blank
+          if (!DEPARTMENT.name) DEPARTMENT = newDept;
           PROGRAMS = PROGRAMS.concat(newPrograms);
           FACULTY = FACULTY.concat(newFaculty);
           TIMETABLE = TIMETABLE.concat(newTimetable);
-          if (!ACTIVE_PROGRAM_ID) ACTIVE_PROGRAM_ID = PROGRAMS[0] ? PROGRAMS[0].id : null;
+          const vp = visiblePrograms();
+          if (!ACTIVE_PROGRAM_ID) ACTIVE_PROGRAM_ID = vp[0] ? vp[0].id : null;
           if (!LOAD_PROGRAM_ID) LOAD_PROGRAM_ID = ACTIVE_PROGRAM_ID;
           if (!TT_PROGRAM_ID) TT_PROGRAM_ID = ACTIVE_PROGRAM_ID;
           if (!EXPORT_PROGRAM_ID) EXPORT_PROGRAM_ID = ACTIVE_PROGRAM_ID;
         } else {
-          // Wipe the current state arrays and load only what was just imported.
-          DEPARTMENT = newDept; PROGRAMS = newPrograms; FACULTY = newFaculty; TIMETABLE = newTimetable;
-          ACTIVE_PROGRAM_ID = PROGRAMS[0] ? PROGRAMS[0].id : null;
+          const oldVersionProgramIds = PROGRAMS.filter(p => p.versionId === ACTIVE_VERSION_ID).map(p => p.id);
+          PROGRAMS = PROGRAMS.filter(p => p.versionId !== ACTIVE_VERSION_ID).concat(newPrograms);
+          TIMETABLE = TIMETABLE.filter(t => !oldVersionProgramIds.includes(t.programId)).concat(newTimetable);
+          DEPARTMENT = newDept; FACULTY = newFaculty;
+          const vp = visiblePrograms();
+          ACTIVE_PROGRAM_ID = vp[0] ? vp[0].id : null;
           LOAD_PROGRAM_ID = ACTIVE_PROGRAM_ID; TT_PROGRAM_ID = ACTIVE_PROGRAM_ID; EXPORT_PROGRAM_ID = ACTIVE_PROGRAM_ID;
         }
 
-        // "replace" must delete the old rows in Supabase too — upsert alone
-        // only touches rows present in the new payload, so anything left
-        // over from before the import would otherwise silently reappear on
-        // the next page load/refresh.
-        await saveProject({ wipeFirst: mode === "replace" });
+        if (mode === "replace") await wipeRemoteVersionCurriculum(ACTIVE_VERSION_ID);
+        await saveProject();
         const verb = mode === "add" ? "Added" : "Imported";
         setStatus(`✓ ${verb} ${newPrograms.length} programme(s), ${courseRows.length} course(s), ${newFaculty.length} faculty, ${assignRows.length} assignment(s), ${newTimetable.length} timetable slot(s).`, true);
         render();
@@ -2933,10 +4016,10 @@
       if (btnTemplate) btnTemplate.addEventListener("click", () => {
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet([{ Name: "Department of ..." }]), "Department");
-        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet([{ id: "", name: "", type: "UG4", major: "", minor: "", totalTarget: 160, semMin: 20, semMax: 22, semesters: 8 }]), "Programs");
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet([{ id: "", name: "", type: "UG4", major: "", minor: "", totalTarget: 160, semMin: 20, semMax: 22, semesters: 8, divisionsCount: 1 }]), "Programs");
         XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet([{ id: "", programId: "", programName: "", sem: 1, code: "", title: "", category: "", L: 0, T: 0, P: 0, credits: 0 }]), "Courses");
         XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet([{ id: "", name: "", designation: "", specialization: "", maxLoad: 16 }]), "Faculty");
-        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet([{ courseId: "", programName: "", sem: 1, code: "", facultyId: "", facultyName: "", hours: 0 }]), "Assignments");
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet([{ courseId: "", programName: "", sem: 1, code: "", facultyId: "", facultyName: "", division: "Division A", assignedL: 0, assignedT: 0, assignedP: 0, hours: 0 }]), "Assignments");
         XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet([{ id: "", programId: "", programName: "", semester: 1, division: "A", day: "Mon", period: 1, courseId: "", code: "", facultyId: "", facultyName: "", room: "" }]), "Timetable");
         downloadWorkbook(wb, "academic_planner_template.xlsx");
       });
@@ -2949,7 +4032,7 @@
       if (btnImport) btnImport.addEventListener("click", () => {
         const fileInput = document.getElementById("inp-xl-file");
         if (!fileInput.files[0]) { alert("Choose a .xlsx file first."); return; }
-        openModal(); // ask "Replace all previous data" vs "Add to previous data"
+        openModal();
       });
 
       const btnCancel = document.getElementById("btn-import-cancel");
@@ -2973,6 +4056,103 @@
       });
     }
 
+    /* ============================= ACADEMIC YEAR / CURRICULUM VERSION TOOLBAR ============================= */
+    function renderVersionToolbar() {
+      const el = document.getElementById("version-toolbar");
+      if (!el || !LOADED) { if (el) el.innerHTML = ""; return; }
+      ensureDefaultYearAndVersion();
+      const year = currentYear();
+      const version = currentVersion();
+      const yearVersions = versionsForYear(ACTIVE_ACADEMIC_YEAR_ID);
+      el.innerHTML = `
+      <div class="vt-row">
+        <div class="vt-field">
+          <label>Academic Year</label>
+          <select id="vt-sel-year">${ACADEMIC_YEARS.map(y => `<option value="${y.id}" ${y.id === ACTIVE_ACADEMIC_YEAR_ID ? 'selected' : ''}>${esc(y.label)}</option>`).join("")}</select>
+        </div>
+        <button class="ghost" id="vt-btn-new-year" type="button" title="Add a new academic year">+ Year</button>
+        <div class="vt-field">
+          <label>Curriculum Version</label>
+          <select id="vt-sel-version">${yearVersions.map(v => `<option value="${v.id}" ${v.id === ACTIVE_VERSION_ID ? 'selected' : ''}>v${esc(v.versionLabel)} — ${v.status}</option>`).join("")}</select>
+        </div>
+        <span class="tag ${version && version.status === 'Active' ? '' : 'purple'}">${version ? version.status : ''}</span>
+        <button class="ghost" id="vt-btn-set-active" type="button" ${version && version.status === 'Active' ? 'disabled' : ''}>Set Active</button>
+        <button class="primary" id="vt-btn-new-version" type="button">+ New Version</button>
+      </div>
+      <div class="modal-overlay" id="new-version-overlay" style="display:none;">
+        <div class="modal-box">
+          <h3>Create New Curriculum Version</h3>
+          <p class="desc">Deep-copies every programme, course, and faculty assignment from <strong>v${version ? esc(version.versionLabel) : ''}</strong> (${year ? esc(year.label) : ''}) into a brand-new version. The original version is left exactly as-is for history/audit. Syllabus attachments and timetable slots are not copied — the new version starts fresh for those.</p>
+          <form id="f-new-version">
+            <div class="field"><label>Version label</label><input type="text" name="versionLabel" id="inp-new-version-label" value="${suggestNextVersionLabel(ACTIVE_ACADEMIC_YEAR_ID)}" required></div>
+            <label style="display:flex; align-items:center; gap:8px; font-size:13px; margin:10px 0 16px;"><input type="checkbox" name="makeActive" checked style="width:auto;"> Set this new version as Active</label>
+            <button class="primary" type="submit">Create version</button>
+            <button class="ghost" type="button" id="btn-new-version-cancel">Cancel</button>
+          </form>
+        </div>
+      </div>`;
+    }
+
+    function bindVersionToolbar() {
+      const selYear = document.getElementById("vt-sel-year");
+      if (selYear) selYear.addEventListener("change", () => {
+        ACTIVE_ACADEMIC_YEAR_ID = selYear.value;
+        ACTIVE_VERSION_ID = null;
+        EDIT_PROGRAM_ID = null; EDIT_COURSE_ID = null; SYLLABUS_OPEN_COURSE_ID = null;
+        render();
+      });
+      const selVersion = document.getElementById("vt-sel-version");
+      if (selVersion) selVersion.addEventListener("change", () => {
+        ACTIVE_VERSION_ID = selVersion.value;
+        ACTIVE_PROGRAM_ID = null; LOAD_PROGRAM_ID = null; TT_PROGRAM_ID = null; EXPORT_PROGRAM_ID = null;
+        EDIT_PROGRAM_ID = null; EDIT_COURSE_ID = null; SYLLABUS_OPEN_COURSE_ID = null;
+        render();
+      });
+
+      const btnNewYear = document.getElementById("vt-btn-new-year");
+      if (btnNewYear) btnNewYear.addEventListener("click", async () => {
+        const label = prompt("New academic year label (e.g. 2027-2028):", "");
+        if (!label || !label.trim()) return;
+        const year = { id: uid(), label: label.trim() };
+        ACADEMIC_YEARS.push(year);
+        CURRICULUM_VERSIONS.push({ id: uid(), academicYearId: year.id, versionLabel: "1.0", status: "Active", notes: "", createdAt: new Date().toISOString() });
+        ACTIVE_ACADEMIC_YEAR_ID = year.id; ACTIVE_VERSION_ID = null;
+        await saveProject();
+        render();
+      });
+
+      const btnSetActive = document.getElementById("vt-btn-set-active");
+      if (btnSetActive) btnSetActive.addEventListener("click", async () => {
+        CURRICULUM_VERSIONS.forEach(v => { if (v.academicYearId === ACTIVE_ACADEMIC_YEAR_ID) v.status = (v.id === ACTIVE_VERSION_ID) ? "Active" : "Inactive"; });
+        await saveProject();
+        render();
+      });
+
+      const overlay = document.getElementById("new-version-overlay");
+      const openModal = () => { if (overlay) { overlay.style.display = "flex"; const inp = document.getElementById("inp-new-version-label"); if (inp) inp.focus(); } };
+      const closeModal = () => { if (overlay) overlay.style.display = "none"; };
+      const btnNewVersion = document.getElementById("vt-btn-new-version");
+      if (btnNewVersion) btnNewVersion.addEventListener("click", openModal);
+      const btnCancel = document.getElementById("btn-new-version-cancel");
+      if (btnCancel) btnCancel.addEventListener("click", closeModal);
+      if (overlay) overlay.addEventListener("click", (e) => { if (e.target === overlay) closeModal(); });
+
+      const fNewVersion = document.getElementById("f-new-version");
+      if (fNewVersion) fNewVersion.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const fd = new FormData(fNewVersion);
+        const label = (fd.get("versionLabel") || "").trim();
+        if (!label) return;
+        const dupe = versionsForYear(ACTIVE_ACADEMIC_YEAR_ID).find(v => v.versionLabel.toLowerCase() === label.toLowerCase());
+        if (dupe) { alert(`Version "${label}" already exists for this academic year.`); return; }
+        const makeActive = !!fd.get("makeActive");
+        createNewCurriculumVersion(label, makeActive);
+        closeModal();
+        await saveProject();
+        render();
+      });
+    }
+
     /* ============================= ROUTER ============================= */
     const PAGES = {
       "reference-framework": { render: pageReferenceFramework },
@@ -2993,10 +4173,12 @@
     async function render() {
       if (!LOADED && !LOAD_ATTEMPTED) await loadProject();
       renderNav();
+      renderVersionToolbar();
       const page = PAGES[ROUTE] || PAGES["reference-framework"];
       const main = document.getElementById("main");
       main.innerHTML = page.render();
       if (page.bind) page.bind();
+      bindVersionToolbar();
     }
     bootstrap();
   </script>
