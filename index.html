@@ -1910,16 +1910,15 @@
       const n = Math.max(1, parseInt(prog && prog.divisionsCount, 10) || 1);
       return Array.from({ length: n }, (_, i) => divisionLabel(i));
     }
-    // Normalise legacy letter-based division names ("Division A" -> "Division 1", etc.) and shorthand numbers.
+    // Normalise legacy letter-based division names ("Division A" -> "Division 1", etc.).
     function normaliseDivision(d) {
       if (!d) return "Division 1";
-      const s = String(d).trim();
-      if (/^\d+$/.test(s)) return "Division " + s;
-      if (/^Div \d+$/i.test(s)) return s.replace(/^Div /i, "Division ");
-      if (/^Division \d+$/i.test(s)) return s;
-      const m = s.match(/^Division ([A-Za-z])$/i);
+      // Already numeric: "Division 1", "Division 2", ...
+      if (/^Division \d+$/.test(d)) return d;
+      // Legacy letter format: "Division A" -> "Division 1", "Division B" -> "Division 2", ...
+      const m = d.match(/^Division ([A-Za-z])$/);
       if (m) return "Division " + (m[1].toUpperCase().charCodeAt(0) - 64);
-      return s;
+      return d;
     }
     // Shorten "Division 1" -> "Div 1" for compact tags (e.g. Load Summary breakdown).
     function divShort(d) { return String(normaliseDivision(d)).replace(/^Division /, "Div "); }
@@ -2613,15 +2612,6 @@
     function esc(s) { return (s || "").toString().replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
     function uid() { return crypto.randomUUID(); }
     function toRoman(n) { return (["I", "II", "III", "IV", "V", "VI", "VII", "VIII"][n - 1]) || String(n); }
-    function fromRoman(str) {
-      if (!str) return 0;
-      const s = String(str).toUpperCase().trim();
-      const map = { I: 1, II: 2, III: 3, IV: 4, V: 5, VI: 6, VII: 7, VIII: 8 };
-      if (map[s]) return map[s];
-      const match = s.match(/^SEM(?:ESTER)?\s*(I{1,3}|IV|V|VI{1,3}|IX|X)$/);
-      if (match && map[match[1]]) return map[match[1]];
-      return parseInt(s, 10) || 0;
-    }
     function semRange(n) { return Array.from({ length: n || 8 }, (_, i) => i + 1); }
     function getProgram(id) { return PROGRAMS.find(p => p.id === id) || null; }
     function facultyName(id) { const f = FACULTY.find(f => f.id === id); return f ? f.name : "—"; }
@@ -6208,8 +6198,8 @@
           <tr><td><span class="tag">CurriculumVersions</span></td><td style="font-family:'IBM Plex Mono',monospace; font-size:11px;">id, academicYear, versionLabel, status</td><td>Read-only reference sheet — not re-imported.</td></tr>
           <tr><td><span class="tag">Courses</span></td><td style="font-family:'IBM Plex Mono',monospace; font-size:11px;">id, programId, programName, sem, code, title, category, kind, L, T, P, credits</td><td>programId links back to Programs; programName is for readability only. Supports regular courses as well as OE/PEC main slots & options. kind is Regular, Minor, or Honors (blank = Regular); Minor/Honors rows carry sem = 0.</td></tr>
           <tr><td><span class="tag">Faculty</span></td><td style="font-family:'IBM Plex Mono',monospace; font-size:11px;">id, name, designation, specialization, maxLoad</td><td></td></tr>
-          <tr><td><span class="tag">Assignments</span></td><td style="font-family:'IBM Plex Mono',monospace; font-size:11px;">courseId, programName, sem, code, facultyId, facultyName, division, batches, assignedL, assignedT, assignedP, hours</td><td>Links Faculty to Courses (Load Distribution), scoped per Division/Batch. division uses numeric format: 1, 2, etc. batches is a comma-separated list of assigned lab batches (e.g. "Batch A, Batch B"). assignedL/T/P are the faculty member's slice of that division's Theory/Tutorial/Practical hours; hours is their total.</td></tr>
-          <tr><td><span class="tag">Timetable</span></td><td style="font-family:'IBM Plex Mono',monospace; font-size:11px;">id, programId, programName, semester, division, subBatch, day, period, courseId, code, facultyId, facultyName, room</td><td>day is Mon–Sat; period is 1–10. subBatch can be "Batch A", "Batch B", etc.</td></tr>
+          <tr><td><span class="tag">Assignments</span></td><td style="font-family:'IBM Plex Mono',monospace; font-size:11px;">courseId, programName, sem, code, facultyId, facultyName, division, assignedL, assignedT, assignedP, hours</td><td>Links Faculty to Courses (Load Distribution), scoped per Division/Batch. division uses numeric format: "Division 1", "Division 2", etc. (legacy letter values like "Division A" are auto-converted). assignedL/T/P are the faculty member's slice of that division's Theory/Tutorial/Practical hours; hours is their total (assignedL+assignedT+assignedP).</td></tr>
+          <tr><td><span class="tag">Timetable</span></td><td style="font-family:'IBM Plex Mono',monospace; font-size:11px;">id, programId, programName, semester, division, day, period, courseId, code, facultyId, facultyName, room</td><td>day is Mon–Sat; period is 1–7.</td></tr>
         </tbody>
       </table>
     </div>
@@ -6240,12 +6230,11 @@
       const assignRows = [];
       PROGRAMS.forEach(p => p.courses.forEach(c => {
         const dbCategory = (c.type && (isMainType(c.type) || isOptionType(c.type))) ? c.type : (c.category || '');
-        courseRows.push({ id: c.id, programId: p.id, programName: p.name, sem: c.sem === 0 ? "0" : toRoman(c.sem), code: c.code, title: c.title, category: dbCategory, kind: c.kind || 'Regular', L: c.L, T: c.T, P: c.P, credits: c.credits });
+        courseRows.push({ id: c.id, programId: p.id, programName: p.name, sem: c.sem, code: c.code, title: c.title, category: dbCategory, kind: c.kind || 'Regular', L: c.L, T: c.T, P: c.P, credits: c.credits });
         (c.assignments || []).forEach(a => {
           assignRows.push({
-            courseId: c.id, programName: p.name, sem: c.sem === 0 ? "0" : toRoman(c.sem), code: c.code,
-            facultyId: a.facultyId, facultyName: facultyName(a.facultyId), division: divShort(a.division).replace(/^Div /, ""),
-            batches: (a.batches || []).join(", "),
+            courseId: c.id, programName: p.name, sem: c.sem, code: c.code,
+            facultyId: a.facultyId, facultyName: facultyName(a.facultyId), division: normaliseDivision(a.division || "Division 1"),
             assignedL: parseFloat(a.assignedL) || 0, assignedT: parseFloat(a.assignedT) || 0, assignedP: parseFloat(a.assignedP) || 0,
             hours: parseFloat(a.hours) || 0
           });
@@ -6260,7 +6249,7 @@
 
       const ttRows = TIMETABLE.map(t => {
         const p = getProgram(t.programId);
-        return { id: t.id, programId: t.programId, programName: p ? p.name : "", semester: t.semester === 0 ? "0" : toRoman(t.semester), division: divShort(t.division).replace(/^Div /, ""), subBatch: t.subBatch || "", day: t.day, period: t.period, courseId: t.courseId, code: t.code, facultyId: t.facultyId, facultyName: facultyName(t.facultyId), room: t.room };
+        return { id: t.id, programId: t.programId, programName: p ? p.name : "", semester: t.semester, division: t.division, day: t.day, period: t.period, courseId: t.courseId, code: t.code, facultyId: t.facultyId, facultyName: facultyName(t.facultyId), room: t.room };
       });
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(ttRows), "Timetable");
 
@@ -6332,9 +6321,8 @@
         let prog = (r.programId && idMap[String(r.programId)]) || (r.programName && idMap["name:" + r.programName]);
         if (!prog) return;
         const kind = (r.kind === 'Minor' || r.kind === 'Honors') ? r.kind : 'Regular';
-        let parsedSem = parseInt(r.sem, 10);
-        if (isNaN(parsedSem)) parsedSem = fromRoman(r.sem);
-        const sem = (parsedSem === 0 && kind !== 'Regular') ? 0 : (parsedSem || 1);
+        const parsedSem = parseInt(r.sem, 10);
+        const sem = isNaN(parsedSem) ? (kind === 'Regular' ? 1 : 0) : parsedSem;
         const code = uniqueCode(prog.id, sem, kind, String(r.code || ""));
 
         let rawCategory = String(r.category || "");
@@ -6364,22 +6352,16 @@
 
       const assignRows = sheetRows(wb, "Assignments");
       assignRows.forEach(r => {
-        let parsedSem = parseInt(r.sem, 10);
-        if (isNaN(parsedSem)) parsedSem = fromRoman(r.sem);
         let course = r.courseId && courseIdMap[String(r.courseId)];
         if (!course && r.programName && r.sem && r.code) {
           const prog = idMap["name:" + r.programName];
-          if (prog) course = courseIdMap["origkey:" + prog.id + "|" + parsedSem + "|Regular|" + r.code];
+          if (prog) course = courseIdMap["origkey:" + prog.id + "|" + parseInt(r.sem, 10) + "|Regular|" + r.code];
         }
         if (!course) return;
         const facultyId = resolveFaculty(r.facultyId, r.facultyName);
         if (!facultyId) return;
         const aL = parseFloat(r.assignedL) || 0, aT = parseFloat(r.assignedT) || 0, aP = parseFloat(r.assignedP) || 0;
-        let batches = [];
-        if (r.batches) {
-            batches = String(r.batches).split(',').map(s => s.trim()).filter(s => s);
-        }
-        course.assignments.push({ facultyId, division: normaliseDivision(String(r.division || "1")), batches, assignedL: aL, assignedT: aT, assignedP: aP, hours: parseFloat(r.hours) || (aL + aT + aP) });
+        course.assignments.push({ facultyId, division: normaliseDivision(String(r.division || "Division 1")), assignedL: aL, assignedT: aT, assignedP: aP, hours: parseFloat(r.hours) || (aL + aT + aP) });
       });
 
       const ttRows = sheetRows(wb, "Timetable");
@@ -6387,14 +6369,11 @@
       ttRows.forEach(r => {
         let prog = (r.programId && idMap[String(r.programId)]) || (r.programName && idMap["name:" + r.programName]);
         if (!prog) return;
-        let parsedSem = parseInt(r.semester, 10);
-        if (isNaN(parsedSem)) parsedSem = fromRoman(r.semester);
         let course = r.courseId && courseIdMap[String(r.courseId)];
-        if (!course && r.code) course = courseIdMap["origkey:" + prog.id + "|" + parsedSem + "|Regular|" + r.code];
+        if (!course && r.code) course = courseIdMap["origkey:" + prog.id + "|" + parseInt(r.semester, 10) + "|Regular|" + r.code];
         if (!course) return;
         newTimetable.push({
-          id: genId(r), programId: prog.id, semester: parsedSem || 1, division: normaliseDivision(String(r.division || "1")),
-          subBatch: String(r.subBatch || ""),
+          id: genId(r), programId: prog.id, semester: parseInt(r.semester, 10) || 1, division: String(r.division || "A"),
           day: String(r.day || "Mon"), period: parseInt(r.period, 10) || 1, courseId: course.id, code: course.code,
           facultyId: resolveFaculty(r.facultyId, r.facultyName), room: String(r.room || "")
         });
@@ -6454,10 +6433,10 @@
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet([{ Name: "Department of ..." }]), "Department");
         XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet([{ id: "", name: "", type: "UG4", major: "", minor: "", totalTarget: 160, semMin: 20, semMax: 22, semesters: 8, divisionsCount: 1 }]), "Programs");
-        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet([{ id: "", programId: "", programName: "", sem: "I", code: "", title: "", category: "", kind: "Regular", L: 0, T: 0, P: 0, credits: 0 }]), "Courses");
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet([{ id: "", programId: "", programName: "", sem: 1, code: "", title: "", category: "", L: 0, T: 0, P: 0, credits: 0 }]), "Courses");
         XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet([{ id: "", name: "", designation: "", specialization: "", maxLoad: 16 }]), "Faculty");
-        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet([{ courseId: "", programName: "", sem: "I", code: "", facultyId: "", facultyName: "", division: "1", batches: "", assignedL: 0, assignedT: 0, assignedP: 0, hours: 0 }]), "Assignments");
-        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet([{ id: "", programId: "", programName: "", semester: "I", division: "1", subBatch: "", day: "Mon", period: 1, courseId: "", code: "", facultyId: "", facultyName: "", room: "" }]), "Timetable");
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet([{ courseId: "", programName: "", sem: 1, code: "", facultyId: "", facultyName: "", division: "Division 1", assignedL: 0, assignedT: 0, assignedP: 0, hours: 0 }]), "Assignments");
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet([{ id: "", programId: "", programName: "", semester: 1, division: "A", day: "Mon", period: 1, courseId: "", code: "", facultyId: "", facultyName: "", room: "" }]), "Timetable");
         downloadWorkbook(wb, "academic_planner_template.xlsx");
       });
 
