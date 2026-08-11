@@ -1,5 +1,5 @@
 -- =====================================================================
--- Department Academic Planner — Supabase schema (v6)
+-- Department Academic Planner — Supabase schema (v7)
 -- Paste this entire file into Supabase Dashboard → SQL Editor → New query → Run
 --
 -- v3 added: Academic Years, Curriculum Versions (multiple versions per year,
@@ -53,7 +53,10 @@
 -- ---------------------------------------------------------------------
 drop view  if exists public.v_timetable_full;
 drop table if exists public.syllabus_files      cascade;
-drop table if exists public.timetable           cascade;
+drop table if exists public.tt_schedules        cascade;
+drop table if exists public.tt_rooms            cascade;
+drop table if exists public.tt_batches          cascade;
+drop table if exists public.timetable           cascade;  -- legacy; now replaced by tt_schedules
 drop table if exists public.assignments         cascade;
 drop table if exists public.courses             cascade;
 drop table if exists public.faculty             cascade;
@@ -196,11 +199,63 @@ create table public.assignments (
   constraint assignments_course_faculty_division_unique unique ("courseId", "facultyId", "division")
 );
 
--- ---- timetable -------------------------------------------------------
+-- ---- tt_rooms: Classroom/Lab register (per user, for Timetable Board) -------
+-- Separate from program data; managed in the Timetable → Classrooms tab.
+create table public.tt_rooms (
+  id          uuid primary key default gen_random_uuid(),
+  user_id     uuid not null references auth.users(id) on delete cascade,
+  "name"      text not null default '',
+  "capacity"  integer not null default 60 check ("capacity" > 0),
+  "type"      text not null default 'Lecture' check ("type" in ('Lecture','Lab')),
+  created_at  timestamptz not null default now(),
+  updated_at  timestamptz not null default now(),
+  constraint tt_rooms_name_user_unique unique (user_id, "name")
+);
+
+-- ---- tt_batches: Student batch register (per user, for Timetable Board) ----
+-- Each row = one programme + semester + division combination.
+-- programme_id is a soft FK (text) so batches survive programme renames.
+create table public.tt_batches (
+  id           uuid primary key default gen_random_uuid(),
+  user_id      uuid not null references auth.users(id) on delete cascade,
+  "progId"     uuid references public.programs(id) on delete cascade,
+  "progName"   text not null default '',
+  "sem"        integer not null default 1 check ("sem" between 1 and 8),
+  "division"   text not null default 'Division A',
+  "count"      integer not null default 60 check ("count" >= 0),
+  created_at   timestamptz not null default now(),
+  updated_at   timestamptz not null default now(),
+  constraint tt_batches_unique unique (user_id, "progId", "sem", "division")
+);
+
+-- ---- tt_schedules: Generated timetable assignments -----------------------
+-- Stores each placed session from the auto-generation engine.
+-- batchKey is the composite "progId||sem||division" used by the JS engine.
+-- This table is always replaced wholesale on each re-generation; it is
+-- not intended for manual slot-by-slot editing (use the timetable view
+-- for read-only access; re-generate to change the schedule).
+create table public.tt_schedules (
+  id             uuid primary key default gen_random_uuid(),
+  user_id        uuid not null references auth.users(id) on delete cascade,
+  "batchKey"    text not null default '',
+  "day"         integer not null default 0,  -- 0=Mon … 5=Sat
+  "startPeriod" integer not null default 1,
+  "length"      integer not null default 1 check ("length" in (1,2)),
+  "subjectCode" text not null default '',
+  "subjectName" text not null default '',
+  "subjectType" text not null default 'Theory' check ("subjectType" in ('Theory','Lab')),
+  "facultyName" text not null default '',
+  "roomName"    text not null default '',
+  created_at     timestamptz not null default now()
+);
+
+-- Legacy timetable table is preserved for backward compatibility but no
+-- longer written to by the application.  New installs can omit it.
+-- (Dropped and re-created as an empty shell with no rows.)
 create table public.timetable (
   id             uuid primary key default gen_random_uuid(),
   user_id        uuid not null references auth.users(id) on delete cascade,
-  "programId"    uuid not null references public.programs(id) on delete cascade,
+  "programId"    uuid references public.programs(id) on delete cascade,
   "programName"  text not null default '',
   "semester"     integer not null default 1 check ("semester" between 1 and 8),
   "division"     text not null default 'A',
@@ -248,6 +303,11 @@ create index idx_faculty_user        on public.faculty(user_id);
 create index idx_courses_user        on public.courses(user_id);
 create index idx_assignments_user    on public.assignments(user_id);
 create index idx_timetable_user      on public.timetable(user_id);
+create index idx_tt_rooms_user       on public.tt_rooms(user_id);
+create index idx_tt_batches_user     on public.tt_batches(user_id);
+create index idx_tt_schedules_user   on public.tt_schedules(user_id);
+create index idx_tt_batches_prog     on public.tt_batches("progId");
+create index idx_tt_schedules_batch  on public.tt_schedules("batchKey");
 
 create index idx_courses_program     on public.courses("programId");
 create index idx_assignments_course  on public.assignments("courseId");
@@ -297,7 +357,7 @@ do $$
 declare
   t text;
 begin
-  foreach t in array array['department','academic_years','curriculum_versions','programs','faculty','courses','assignments','timetable'] loop
+  foreach t in array array['department','academic_years','curriculum_versions','programs','faculty','courses','assignments','timetable','tt_rooms','tt_batches'] loop
     execute format('create trigger trg_%1$s_set_owner before insert on public.%1$s
                     for each row execute function public.set_owner_on_insert()', t);
     execute format('create trigger trg_%1$s_touch before update on public.%1$s
@@ -305,6 +365,8 @@ begin
   end loop;
   -- syllabus_files has no updated_at column (append/delete only), so it only
   -- needs the owner-stamping trigger, not the touch trigger.
+  execute 'create trigger trg_tt_schedules_set_owner before insert on public.tt_schedules
+           for each row execute function public.set_owner_on_insert()';
   execute 'create trigger trg_syllabus_files_set_owner before insert on public.syllabus_files
            for each row execute function public.set_owner_on_insert()';
 end $$;
@@ -348,13 +410,16 @@ alter table public.faculty               enable row level security;
 alter table public.courses               enable row level security;
 alter table public.assignments           enable row level security;
 alter table public.timetable             enable row level security;
+alter table public.tt_rooms              enable row level security;
+alter table public.tt_batches            enable row level security;
+alter table public.tt_schedules          enable row level security;
 alter table public.syllabus_files        enable row level security;
 
 do $$
 declare
   t text;
 begin
-  foreach t in array array['department','academic_years','curriculum_versions','programs','faculty','courses','assignments','timetable','syllabus_files'] loop
+  foreach t in array array['department','academic_years','curriculum_versions','programs','faculty','courses','assignments','timetable','tt_rooms','tt_batches','tt_schedules','syllabus_files'] loop
     execute format('create policy "select own %1$s" on public.%1$s
                     for select using (user_id = auth.uid())', t);
     execute format('create policy "insert own %1$s" on public.%1$s
@@ -369,6 +434,8 @@ end $$;
 -- =====================================================================
 -- 5. CONVENIENCE VIEW (used by Export / Print and Clash Report pages)
 -- =====================================================================
+-- v_timetable_full: legacy view kept for backward compatibility.
+-- New timetable data lives in tt_schedules, tt_rooms, tt_batches.
 create or replace view public.v_timetable_full
 with (security_invoker = true) as
 select
@@ -388,6 +455,24 @@ select
   tt."room"        as "room"
 from public.timetable tt
 left join public.courses c on c.id = tt."courseId";
+
+-- v_tt_schedules_full: primary schedule view for the Timetable Board.
+create or replace view public.v_tt_schedules_full
+with (security_invoker = true) as
+select
+  s.id,
+  s.user_id,
+  s."batchKey",
+  s."day",
+  s."startPeriod",
+  s."length",
+  s."subjectCode",
+  s."subjectName",
+  s."subjectType",
+  s."facultyName",
+  s."roomName",
+  s.created_at
+from public.tt_schedules s;
 
 -- =====================================================================
 -- 6. STORAGE — "syllabi" bucket + policies
