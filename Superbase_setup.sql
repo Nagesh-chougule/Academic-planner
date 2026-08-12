@@ -1,81 +1,47 @@
 -- =====================================================================
--- Department Academic Planner — Supabase schema (v7)
+-- Department Academic Planner — Supabase schema (v8 / V11)
 -- Paste this entire file into Supabase Dashboard → SQL Editor → New query → Run
 --
--- v3 added: Academic Years, Curriculum Versions (multiple versions per year,
--- exactly one Active per year), and Syllabus attachments (Supabase Storage).
+-- v8 adds: Academic Calendar module.
+--   * public.cal_configs     — one calendar configuration per academic year / semester per user
+--   * public.cal_events      — holidays, internal tests, college events, exams
+--   * public.cal_day_cells   — computed day-cell entries (generated calendar grid rows)
+--   * public.cal_approvals   — approval/lock records per calendar config
 --
--- v4 added: granular Theory (L) / Tutorial (T) / Practical (P) columns —
--- "assignedL", "assignedT", "assignedP" — on public.assignments, so a
--- faculty member's slice of a course's load is stored component-by-component
--- instead of as one lump "hours" figure. "hours" is kept as the row's total
--- (assignedL + assignedT + assignedP) for backward compatibility with any
--- existing reports/exports that only read "hours".
---
--- v5 adds: batch/division-wise Load Distribution.
---   * public.programs gains "divisionsCount" (integer, default 1) — how many
---     parallel batches/divisions (Division A, Division B, ...) the programme
---     is split into for faculty allocation purposes.
---   * public.assignments gains "division" (text, default 'Division A') so a
---     faculty member's L/T/P slice of a course is scoped to one division —
---     the same course+faculty pair can now have one row per division (e.g.
---     Prof. X teaches Theory to Division A while Prof. Y teaches Practical
---     to Division B). The old one-row-per-course-per-faculty uniqueness is
---     replaced with one-row-per-course-per-faculty-per-division.
---
--- v6 adds: Curriculum Builder "Minors" and "Honors" tabs.
---   * public.courses gains "kind" text (default 'Regular', check in
---     ('Regular','Minor','Honors')) so Minor-Programme and Honors-Programme
---     courses are tagged and stored separately from the regular Semester
---     I–VIII curriculum, without touching Sem I–VIII credit calculations.
---   * public.courses "sem" check is relaxed to "between 0 and 8" — Minor/
---     Honors rows carry sem = 0 (not applicable; they aren't tied to a
---     specific semester), while every regular row keeps using 1–8 exactly
---     as before.
---   * The "courses_program_sem_code_unique" constraint becomes
---     ("programId","sem","kind","code") so a Minor course and an Honors
---     course under the same programme (both at sem = 0) may reuse the same
---     course code without colliding with each other.
---
--- This is a CLEAN-SLATE script like v2/v3/v4: it drops the tables (and any
--- data in them) and rebuilds everything, including the "syllabi" storage
--- bucket. Export via the app's Excel Export button first if you need to
--- keep existing data, then re-import the workbook after running this
--- script and creating your first Academic Year + Version.
---
--- Upgrading an existing v4 database WITHOUT wiping data? Skip this whole
--- script and instead run only the migration block at the very bottom
--- of this file (search for "IN-PLACE MIGRATION").
+-- This is a CLEAN-SLATE script like previous versions.
+-- Run the IN-PLACE MIGRATION block at the bottom instead if you want to
+-- keep existing data from v7.
 -- =====================================================================
 
 -- ---------------------------------------------------------------------
 -- 0. CLEAN SLATE
 -- ---------------------------------------------------------------------
 drop view  if exists public.v_timetable_full;
-drop table if exists public.syllabus_files      cascade;
-drop table if exists public.tt_schedules        cascade;
-drop table if exists public.tt_rooms            cascade;
-drop table if exists public.tt_batches          cascade;
-drop table if exists public.timetable           cascade;  -- legacy; now replaced by tt_schedules
-drop table if exists public.assignments         cascade;
-drop table if exists public.courses             cascade;
-drop table if exists public.faculty             cascade;
-drop table if exists public.programs            cascade;
+drop view  if exists public.v_tt_schedules_full;
+drop table if exists public.cal_approvals      cascade;
+drop table if exists public.cal_day_cells      cascade;
+drop table if exists public.cal_events         cascade;
+drop table if exists public.cal_configs        cascade;
+drop table if exists public.syllabus_files     cascade;
+drop table if exists public.tt_schedules       cascade;
+drop table if exists public.tt_rooms           cascade;
+drop table if exists public.tt_batches         cascade;
+drop table if exists public.timetable          cascade;
+drop table if exists public.assignments        cascade;
+drop table if exists public.courses            cascade;
+drop table if exists public.faculty            cascade;
+drop table if exists public.programs           cascade;
 drop table if exists public.curriculum_versions cascade;
-drop table if exists public.academic_years      cascade;
-drop table if exists public.department          cascade;
+drop table if exists public.academic_years     cascade;
+drop table if exists public.department         cascade;
 
-create extension if not exists pgcrypto; -- gives us gen_random_uuid()
+create extension if not exists pgcrypto;
 
 -- =====================================================================
--- 1. TABLES
+-- 1. TABLES  (existing v7 tables first, then new cal_* tables)
 -- =====================================================================
--- Ownership model unchanged: every row belongs to exactly one auth.users
--- row (user_id), forced server-side by a trigger — never trusted from
--- the client. Column names in quotes preserve the camelCase the app's
--- JS already uses.
 
--- ---- department: one row per user --------------------------------------
+-- ---- department: one row per user ----------------------------------------
 create table public.department (
   user_id     uuid primary key references auth.users(id) on delete cascade,
   "name"      text not null default '',
@@ -83,8 +49,7 @@ create table public.department (
   updated_at  timestamptz not null default now()
 );
 
--- ---- academic_years --------------------------------------------------
--- e.g. label = '2025-2026'. One department can have several, one per year.
+-- ---- academic_years -------------------------------------------------------
 create table public.academic_years (
   id          uuid primary key default gen_random_uuid(),
   user_id     uuid not null references auth.users(id) on delete cascade,
@@ -94,12 +59,7 @@ create table public.academic_years (
   constraint academic_years_label_unique unique (user_id, "label")
 );
 
--- ---- curriculum_versions ----------------------------------------------
--- Every programme/course structure hangs off exactly one version row.
--- A version belongs to exactly one academic year. Exactly one version
--- per academic year may have status = 'Active' (enforced by the partial
--- unique index below) — all others are 'Inactive' (read-only by
--- convention in the UI, but still editable if the user switches to them).
+-- ---- curriculum_versions --------------------------------------------------
 create table public.curriculum_versions (
   id                uuid primary key default gen_random_uuid(),
   user_id           uuid not null references auth.users(id) on delete cascade,
@@ -112,16 +72,11 @@ create table public.curriculum_versions (
   constraint curriculum_versions_label_unique unique ("academicYearId", "versionLabel")
 );
 
--- Only one Active version per academic year, department-wide (per user).
 create unique index idx_one_active_version_per_year
   on public.curriculum_versions ("academicYearId")
   where "status" = 'Active';
 
--- ---- programs ------------------------------------------------------------
--- Now version-scoped: a programme row belongs to exactly one curriculum
--- version. "Create New Version" deep-copies every programme+course row
--- for the previous version into new rows tagged with the new versionId,
--- leaving the originals untouched for audit/history.
+-- ---- programs ---------------------------------------------------------------
 create table public.programs (
   id            uuid primary key default gen_random_uuid(),
   user_id       uuid not null references auth.users(id) on delete cascade,
@@ -140,10 +95,7 @@ create table public.programs (
   constraint programs_sem_range check ("semMax" >= "semMin")
 );
 
--- ---- faculty ---------------------------------------------------------------
--- Faculty are NOT version-scoped — a department's faculty roster is shared
--- across academic years/versions; only the curriculum (programs/courses)
--- and syllabus attachments are versioned.
+-- ---- faculty ----------------------------------------------------------------
 create table public.faculty (
   id               uuid primary key default gen_random_uuid(),
   user_id          uuid not null references auth.users(id) on delete cascade,
@@ -155,13 +107,13 @@ create table public.faculty (
   updated_at       timestamptz not null default now()
 );
 
--- ---- courses -----------------------------------------------------------
+-- ---- courses ----------------------------------------------------------------
 create table public.courses (
   id            uuid primary key default gen_random_uuid(),
   user_id       uuid not null references auth.users(id) on delete cascade,
   "programId"   uuid not null references public.programs(id) on delete cascade,
   "programName" text not null default '',
-  "sem"         integer not null default 1 check ("sem" between 0 and 8), -- 0 = n/a (Minor/Honors rows)
+  "sem"         integer not null default 1 check ("sem" between 0 and 8),
   "code"        text not null default '',
   "title"       text not null default '',
   "category"    text not null default '',
@@ -172,12 +124,10 @@ create table public.courses (
   "credits"     numeric not null default 0 check ("credits" >= 0),
   created_at    timestamptz not null default now(),
   updated_at    timestamptz not null default now(),
-  -- "kind" is part of the uniqueness key so a Minor course and an Honors
-  -- course (both stored at sem = 0) can share the same code.
   constraint courses_program_sem_code_unique unique ("programId", "sem", "kind", "code")
 );
 
--- ---- assignments (faculty load per course) ------------------------------
+-- ---- assignments (faculty load per course) ----------------------------------
 create table public.assignments (
   id             uuid primary key default gen_random_uuid(),
   user_id        uuid not null references auth.users(id) on delete cascade,
@@ -194,13 +144,10 @@ create table public.assignments (
   "hours"        numeric not null default 0 check ("hours" >= 0),
   created_at     timestamptz not null default now(),
   updated_at     timestamptz not null default now(),
-  -- One row per faculty PER DIVISION on a course — lets the same faculty member
-  -- teach different divisions of the same course (e.g. Theory to Div A, Practical to Div B).
   constraint assignments_course_faculty_division_unique unique ("courseId", "facultyId", "division")
 );
 
--- ---- tt_rooms: Classroom/Lab register (per user, for Timetable Board) -------
--- Separate from program data; managed in the Timetable → Classrooms tab.
+-- ---- tt_rooms ---------------------------------------------------------------
 create table public.tt_rooms (
   id          uuid primary key default gen_random_uuid(),
   user_id     uuid not null references auth.users(id) on delete cascade,
@@ -212,9 +159,7 @@ create table public.tt_rooms (
   constraint tt_rooms_name_user_unique unique (user_id, "name")
 );
 
--- ---- tt_batches: Student batch register (per user, for Timetable Board) ----
--- Each row = one programme + semester + division combination.
--- programme_id is a soft FK (text) so batches survive programme renames.
+-- ---- tt_batches -------------------------------------------------------------
 create table public.tt_batches (
   id           uuid primary key default gen_random_uuid(),
   user_id      uuid not null references auth.users(id) on delete cascade,
@@ -228,17 +173,12 @@ create table public.tt_batches (
   constraint tt_batches_unique unique (user_id, "progId", "sem", "division")
 );
 
--- ---- tt_schedules: Generated timetable assignments -----------------------
--- Stores each placed session from the auto-generation engine.
--- batchKey is the composite "progId||sem||division" used by the JS engine.
--- This table is always replaced wholesale on each re-generation; it is
--- not intended for manual slot-by-slot editing (use the timetable view
--- for read-only access; re-generate to change the schedule).
+-- ---- tt_schedules -----------------------------------------------------------
 create table public.tt_schedules (
   id             uuid primary key default gen_random_uuid(),
   user_id        uuid not null references auth.users(id) on delete cascade,
   "batchKey"    text not null default '',
-  "day"         integer not null default 0,  -- 0=Mon … 5=Sat
+  "day"         integer not null default 0,
   "startPeriod" integer not null default 1,
   "length"      integer not null default 1 check ("length" in (1,2)),
   "subjectCode" text not null default '',
@@ -249,9 +189,7 @@ create table public.tt_schedules (
   created_at     timestamptz not null default now()
 );
 
--- Legacy timetable table is preserved for backward compatibility but no
--- longer written to by the application.  New installs can omit it.
--- (Dropped and re-created as an empty shell with no rows.)
+-- ---- legacy timetable (kept for backward compatibility) --------------------
 create table public.timetable (
   id             uuid primary key default gen_random_uuid(),
   user_id        uuid not null references auth.users(id) on delete cascade,
@@ -271,62 +209,146 @@ create table public.timetable (
   constraint timetable_slot_unique unique ("programId", "semester", "division", "day", "period")
 );
 
--- ---- syllabus_files -----------------------------------------------------
--- Metadata rows for files uploaded to the 'syllabi' Storage bucket.
--- Linked to BOTH the course and the curriculum version so the same course
--- code appearing in two different versions of the curriculum can carry
--- different syllabus documents (Version Isolation requirement).
+-- ---- syllabus_files ---------------------------------------------------------
 create table public.syllabus_files (
   id             uuid primary key default gen_random_uuid(),
   user_id        uuid not null references auth.users(id) on delete cascade,
   "courseId"     uuid not null references public.courses(id) on delete cascade,
   "versionId"    uuid not null references public.curriculum_versions(id) on delete cascade,
   "fileName"     text not null default '',
-  "storagePath"  text not null default '', -- path inside the 'syllabi' bucket: {user_id}/{courseId}/{uuid}-{fileName}
+  "storagePath"  text not null default '',
   "fileSize"     numeric not null default 0,
   created_at     timestamptz not null default now(),
-  -- Exactly one syllabus attachment per course per curriculum version. The app
-  -- always deletes any existing row before inserting a replacement, but this
-  -- constraint is the backend backstop in case two uploads ever race.
   constraint syllabus_files_course_version_unique unique ("courseId", "versionId")
+);
+
+-- =====================================================================
+-- 1b. NEW TABLES — Academic Calendar (v8)
+-- =====================================================================
+
+-- ---- cal_configs: one configuration row per user per academic-year+semester -
+-- Stores the semester date bounds, target days, and lecture configuration.
+-- "academicYearId" is a soft link (text label) so the calendar module can
+-- work independently of the curriculum version selector.
+create table public.cal_configs (
+  id                  uuid primary key default gen_random_uuid(),
+  user_id             uuid not null references auth.users(id) on delete cascade,
+  "academicYearId"    uuid references public.academic_years(id) on delete cascade,
+  "academicYearLabel" text not null default '',         -- human-readable e.g. "2025-2026"
+  "semesterLabel"     text not null default '',         -- e.g. "Semester I (Odd)"
+  "semesterType"      text not null default 'odd'
+                         check ("semesterType" in ('odd','even')),
+  "startDate"         date not null,
+  "endDate"           date not null,
+  "examStartDate"     date,
+  "workingDaysTarget" integer not null default 90
+                         check ("workingDaysTarget" > 0),
+  "lecturesPerDay"    integer not null default 6
+                         check ("lecturesPerDay" > 0 and "lecturesPerDay" <= 12),
+  "weekendRule"       text not null default 'sunday_only'
+                         check ("weekendRule" in ('sunday_only','sat_sun')),
+  "institutionName"   text not null default '',
+  "university"        text not null default '',
+  "regulation"        text not null default '',
+  "isApproved"        boolean not null default false,
+  "aiOutput"          text not null default '',         -- last AI-generated analysis text
+  created_at          timestamptz not null default now(),
+  updated_at          timestamptz not null default now(),
+  -- One config per user per academic year per semester type
+  constraint cal_configs_unique unique (user_id, "academicYearId", "semesterType")
+);
+
+-- ---- cal_events: holidays, internal tests, college events, exams -----------
+-- Each row is one dated event attached to a calendar configuration.
+-- "configId" cascades on delete so removing a config removes its events.
+create table public.cal_events (
+  id          uuid primary key default gen_random_uuid(),
+  user_id     uuid not null references auth.users(id) on delete cascade,
+  "configId"  uuid not null references public.cal_configs(id) on delete cascade,
+  "date"      date not null,
+  "name"      text not null default '',
+  "type"      text not null default 'holiday'
+                 check ("type" in ('holiday','event','test','exam')),
+  "remarks"   text not null default '',
+  created_at  timestamptz not null default now(),
+  updated_at  timestamptz not null default now(),
+  -- Prevent duplicate event names on the same date within a config
+  constraint cal_events_config_date_name_unique unique ("configId", "date", "name")
+);
+
+-- ---- cal_day_cells: pre-computed day classification for each calendar date --
+-- Generated (or re-generated) by the app whenever the config or event list
+-- changes. Storing these allows fast reporting without re-computing in JS.
+-- "classification" mirrors the HOLIDAYS type vocabulary so the front-end
+-- CSS classes map 1-to-1.
+create table public.cal_day_cells (
+  id               uuid primary key default gen_random_uuid(),
+  user_id          uuid not null references auth.users(id) on delete cascade,
+  "configId"       uuid not null references public.cal_configs(id) on delete cascade,
+  "date"           date not null,
+  "classification" text not null default 'working'
+                      check ("classification" in ('working','holiday','test','event','exam','sunday','outside')),
+  "eventId"        uuid references public.cal_events(id) on delete set null,
+  created_at       timestamptz not null default now(),
+  constraint cal_day_cells_config_date_unique unique ("configId", "date")
+);
+
+-- ---- cal_approvals: audit trail for calendar approvals --------------------
+create table public.cal_approvals (
+  id          uuid primary key default gen_random_uuid(),
+  user_id     uuid not null references auth.users(id) on delete cascade,
+  "configId"  uuid not null references public.cal_configs(id) on delete cascade,
+  "approvedAt" timestamptz not null default now(),
+  "approvedBy" text not null default '',    -- free-text signatory name
+  "remarks"   text not null default '',
+  created_at  timestamptz not null default now()
 );
 
 -- =====================================================================
 -- 2. INDEXES
 -- =====================================================================
+-- Existing v7 indexes ---------------------------------------------------
 create index idx_academic_years_user       on public.academic_years(user_id);
 create index idx_curriculum_versions_user  on public.curriculum_versions(user_id);
 create index idx_curriculum_versions_year  on public.curriculum_versions("academicYearId");
-create index idx_programs_user       on public.programs(user_id);
-create index idx_programs_version    on public.programs("versionId");
-create index idx_faculty_user        on public.faculty(user_id);
-create index idx_courses_user        on public.courses(user_id);
-create index idx_assignments_user    on public.assignments(user_id);
-create index idx_timetable_user      on public.timetable(user_id);
-create index idx_tt_rooms_user       on public.tt_rooms(user_id);
-create index idx_tt_batches_user     on public.tt_batches(user_id);
-create index idx_tt_schedules_user   on public.tt_schedules(user_id);
-create index idx_tt_batches_prog     on public.tt_batches("progId");
-create index idx_tt_schedules_batch  on public.tt_schedules("batchKey");
+create index idx_programs_user             on public.programs(user_id);
+create index idx_programs_version          on public.programs("versionId");
+create index idx_faculty_user              on public.faculty(user_id);
+create index idx_courses_user              on public.courses(user_id);
+create index idx_assignments_user          on public.assignments(user_id);
+create index idx_timetable_user            on public.timetable(user_id);
+create index idx_tt_rooms_user             on public.tt_rooms(user_id);
+create index idx_tt_batches_user           on public.tt_batches(user_id);
+create index idx_tt_schedules_user         on public.tt_schedules(user_id);
+create index idx_tt_batches_prog           on public.tt_batches("progId");
+create index idx_tt_schedules_batch        on public.tt_schedules("batchKey");
+create index idx_courses_program           on public.courses("programId");
+create index idx_assignments_course        on public.assignments("courseId");
+create index idx_assignments_faculty       on public.assignments("facultyId");
+create index idx_timetable_program         on public.timetable("programId");
+create index idx_timetable_course          on public.timetable("courseId");
+create index idx_timetable_faculty         on public.timetable("facultyId");
+create index idx_syllabus_user             on public.syllabus_files(user_id);
+create index idx_syllabus_course           on public.syllabus_files("courseId");
+create index idx_syllabus_version          on public.syllabus_files("versionId");
 
-create index idx_courses_program     on public.courses("programId");
-create index idx_assignments_course  on public.assignments("courseId");
-create index idx_assignments_faculty on public.assignments("facultyId");
-create index idx_timetable_program   on public.timetable("programId");
-create index idx_timetable_course    on public.timetable("courseId");
-create index idx_timetable_faculty   on public.timetable("facultyId");
-
-create index idx_syllabus_user       on public.syllabus_files(user_id);
-create index idx_syllabus_course     on public.syllabus_files("courseId");
-create index idx_syllabus_version    on public.syllabus_files("versionId");
+-- New v8 (cal_*) indexes ------------------------------------------------
+create index idx_cal_configs_user          on public.cal_configs(user_id);
+create index idx_cal_configs_year          on public.cal_configs("academicYearId");
+create index idx_cal_events_user           on public.cal_events(user_id);
+create index idx_cal_events_config         on public.cal_events("configId");
+create index idx_cal_events_date           on public.cal_events("date");
+create index idx_cal_day_cells_user        on public.cal_day_cells(user_id);
+create index idx_cal_day_cells_config      on public.cal_day_cells("configId");
+create index idx_cal_day_cells_date        on public.cal_day_cells("date");
+create index idx_cal_approvals_user        on public.cal_approvals(user_id);
+create index idx_cal_approvals_config      on public.cal_approvals("configId");
 
 -- =====================================================================
 -- 3. TRIGGERS
 -- =====================================================================
 
--- 3a. Force user_id = auth.uid() on every insert, ignoring anything the
---     client sends — makes the exposed anon key safe even if the client
---     JS is tampered with.
+-- 3a. Force user_id = auth.uid() on every insert
 create or replace function public.set_owner_on_insert()
 returns trigger
 language plpgsql
@@ -339,7 +361,7 @@ begin
 end;
 $$;
 
--- 3b. On update: keep ownership immutable and stamp updated_at.
+-- 3b. Keep ownership immutable and stamp updated_at on update
 create or replace function public.touch_and_lock_owner()
 returns trigger
 language plpgsql
@@ -353,30 +375,30 @@ begin
 end;
 $$;
 
+-- Apply set_owner + touch triggers to all tables that have updated_at
 do $$
 declare
   t text;
 begin
-  foreach t in array array['department','academic_years','curriculum_versions','programs','faculty','courses','assignments','timetable','tt_rooms','tt_batches'] loop
+  foreach t in array array[
+    'department','academic_years','curriculum_versions','programs','faculty',
+    'courses','assignments','timetable','tt_rooms','tt_batches',
+    'cal_configs','cal_events'
+  ] loop
     execute format('create trigger trg_%1$s_set_owner before insert on public.%1$s
                     for each row execute function public.set_owner_on_insert()', t);
     execute format('create trigger trg_%1$s_touch before update on public.%1$s
                     for each row execute function public.touch_and_lock_owner()', t);
   end loop;
-  -- syllabus_files has no updated_at column (append/delete only), so it only
-  -- needs the owner-stamping trigger, not the touch trigger.
-  execute 'create trigger trg_tt_schedules_set_owner before insert on public.tt_schedules
-           for each row execute function public.set_owner_on_insert()';
-  execute 'create trigger trg_syllabus_files_set_owner before insert on public.syllabus_files
-           for each row execute function public.set_owner_on_insert()';
+
+  -- Tables with no updated_at: only set_owner trigger
+  foreach t in array array['tt_schedules','syllabus_files','cal_day_cells','cal_approvals'] loop
+    execute format('create trigger trg_%1$s_set_owner before insert on public.%1$s
+                    for each row execute function public.set_owner_on_insert()', t);
+  end loop;
 end $$;
 
--- 3c. Enforce "exactly one Active version per academic year" from the app
---     side too: whenever a version is set to 'Active', flip every other
---     version in the same academic year to 'Inactive'. This makes the
---     "Set Active" action a single UPDATE from the client instead of a
---     multi-statement transaction, while the partial unique index above
---     remains as a hard backstop.
+-- 3c. Enforce "exactly one Active version per academic year"
 create or replace function public.deactivate_sibling_versions()
 returns trigger
 language plpgsql
@@ -399,6 +421,26 @@ create trigger trg_curriculum_versions_exclusive_active
   after insert or update of "status" on public.curriculum_versions
   for each row execute function public.deactivate_sibling_versions();
 
+-- 3d. Auto-sync cal_configs.isApproved when an approval row is inserted
+--     (one-way: inserting a cal_approvals row locks the config)
+create or replace function public.sync_cal_config_approval()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  update public.cal_configs
+    set "isApproved" = true, updated_at = now()
+    where id = new."configId";
+  return new;
+end;
+$$;
+
+create trigger trg_cal_approvals_sync
+  after insert on public.cal_approvals
+  for each row execute function public.sync_cal_config_approval();
+
 -- =====================================================================
 -- 4. ROW LEVEL SECURITY
 -- =====================================================================
@@ -414,12 +456,21 @@ alter table public.tt_rooms              enable row level security;
 alter table public.tt_batches            enable row level security;
 alter table public.tt_schedules          enable row level security;
 alter table public.syllabus_files        enable row level security;
+-- New cal_* tables
+alter table public.cal_configs           enable row level security;
+alter table public.cal_events            enable row level security;
+alter table public.cal_day_cells         enable row level security;
+alter table public.cal_approvals         enable row level security;
 
 do $$
 declare
   t text;
 begin
-  foreach t in array array['department','academic_years','curriculum_versions','programs','faculty','courses','assignments','timetable','tt_rooms','tt_batches','tt_schedules','syllabus_files'] loop
+  foreach t in array array[
+    'department','academic_years','curriculum_versions','programs','faculty',
+    'courses','assignments','timetable','tt_rooms','tt_batches','tt_schedules',
+    'syllabus_files','cal_configs','cal_events','cal_day_cells','cal_approvals'
+  ] loop
     execute format('create policy "select own %1$s" on public.%1$s
                     for select using (user_id = auth.uid())', t);
     execute format('create policy "insert own %1$s" on public.%1$s
@@ -432,31 +483,194 @@ begin
 end $$;
 
 -- =====================================================================
--- 5. CONVENIENCE VIEW (used by Export / Print and Clash Report pages)
+-- 5. SUPABASE RPC FUNCTIONS — Academic Calendar
 -- =====================================================================
--- v_timetable_full: legacy view kept for backward compatibility.
--- New timetable data lives in tt_schedules, tt_rooms, tt_batches.
+
+-- rpc: upsert_cal_config
+-- Creates or replaces the calendar configuration for the given
+-- (user, academicYearId, semesterType) triple.  The client calls this
+-- instead of raw INSERT/UPDATE so the server always stamps user_id.
+create or replace function public.upsert_cal_config(
+  p_academic_year_id    uuid,
+  p_academic_year_label text,
+  p_semester_label      text,
+  p_semester_type       text,
+  p_start_date          date,
+  p_end_date            date,
+  p_exam_start_date     date,
+  p_working_days_target integer,
+  p_lectures_per_day    integer,
+  p_weekend_rule        text,
+  p_institution_name    text,
+  p_university          text,
+  p_regulation          text
+)
+returns public.cal_configs
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_config public.cal_configs;
+begin
+  insert into public.cal_configs (
+    user_id, "academicYearId", "academicYearLabel", "semesterLabel",
+    "semesterType", "startDate", "endDate", "examStartDate",
+    "workingDaysTarget", "lecturesPerDay", "weekendRule",
+    "institutionName", "university", "regulation"
+  ) values (
+    auth.uid(), p_academic_year_id, p_academic_year_label, p_semester_label,
+    p_semester_type, p_start_date, p_end_date, p_exam_start_date,
+    p_working_days_target, p_lectures_per_day, p_weekend_rule,
+    p_institution_name, p_university, p_regulation
+  )
+  on conflict (user_id, "academicYearId", "semesterType") do update set
+    "academicYearLabel"  = excluded."academicYearLabel",
+    "semesterLabel"      = excluded."semesterLabel",
+    "startDate"          = excluded."startDate",
+    "endDate"            = excluded."endDate",
+    "examStartDate"      = excluded."examStartDate",
+    "workingDaysTarget"  = excluded."workingDaysTarget",
+    "lecturesPerDay"     = excluded."lecturesPerDay",
+    "weekendRule"        = excluded."weekendRule",
+    "institutionName"    = excluded."institutionName",
+    "university"         = excluded."university",
+    "regulation"         = excluded."regulation",
+    "isApproved"         = false,   -- any config change un-approves it
+    updated_at           = now()
+  returning * into v_config;
+
+  return v_config;
+end;
+$$;
+
+-- rpc: regenerate_cal_day_cells
+-- Deletes all day-cell rows for a given config and recomputes them from
+-- the config date range and the current event list.  Call this after
+-- any event is added, edited, or removed, or after the config dates change.
+create or replace function public.regenerate_cal_day_cells(p_config_id uuid)
+returns integer            -- number of rows inserted
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_config    public.cal_configs;
+  v_cur_date  date;
+  v_class     text;
+  v_event     public.cal_events;
+  v_count     integer := 0;
+begin
+  -- Ownership check: config must belong to caller
+  select * into v_config
+    from public.cal_configs
+    where id = p_config_id and user_id = auth.uid();
+  if not found then
+    raise exception 'calendar config not found or access denied';
+  end if;
+
+  -- Wipe previous cells for this config
+  delete from public.cal_day_cells
+    where "configId" = p_config_id and user_id = auth.uid();
+
+  v_cur_date := v_config."startDate";
+
+  while v_cur_date <= v_config."endDate" loop
+    -- Determine classification
+    if extract(dow from v_cur_date) = 0 then
+      -- Sunday
+      v_class := 'sunday';
+      v_event := null;
+    elsif v_config."weekendRule" = 'sat_sun' and extract(dow from v_cur_date) = 6 then
+      -- Saturday when full weekend rule is active
+      v_class := 'sunday';
+      v_event := null;
+    else
+      -- Check if there is a cal_event on this date
+      select * into v_event
+        from public.cal_events
+        where "configId" = p_config_id
+          and "date" = v_cur_date
+          and user_id = auth.uid()
+        limit 1;
+
+      if found then
+        v_class := v_event."type";   -- holiday / test / event / exam
+      else
+        v_class := 'working';
+      end if;
+    end if;
+
+    insert into public.cal_day_cells
+      (user_id, "configId", "date", "classification", "eventId")
+    values
+      (auth.uid(), p_config_id, v_cur_date, v_class,
+       case when v_event.id is not null then v_event.id else null end);
+
+    v_count  := v_count + 1;
+    v_cur_date := v_cur_date + interval '1 day';
+  end loop;
+
+  return v_count;
+end;
+$$;
+
+-- rpc: cal_working_day_summary
+-- Returns a JSON summary of working-day counts grouped by month for
+-- a given config.  Used by the Editable Report to populate the
+-- "Month-wise Working Day Summary" table.
+create or replace function public.cal_working_day_summary(p_config_id uuid)
+returns table (
+  yr          integer,
+  mo          integer,
+  total_days  integer,
+  working     integer,
+  holidays    integer,
+  events      integer
+)
+language sql
+security definer
+set search_path = public
+as $$
+  select
+    extract(year  from "date")::integer as yr,
+    extract(month from "date")::integer as mo,
+    count(*)::integer                              as total_days,
+    count(*) filter (where "classification" = 'working')::integer  as working,
+    count(*) filter (where "classification" = 'holiday')::integer  as holidays,
+    count(*) filter (where "classification" in ('event','test','exam'))::integer as events
+  from public.cal_day_cells
+  where "configId" = p_config_id
+    and user_id = auth.uid()
+    and "classification" <> 'outside'
+  group by yr, mo
+  order by yr, mo;
+$$;
+
+-- =====================================================================
+-- 6. CONVENIENCE VIEWS (backward-compatible with v7)
+-- =====================================================================
+
 create or replace view public.v_timetable_full
 with (security_invoker = true) as
 select
   tt.id,
   tt.user_id,
-  tt."programId"   as "programId",
-  tt."programName" as "programName",
-  tt."semester"    as "semester",
-  tt."division"    as "division",
-  tt."day"         as "day",
-  tt."period"      as "period",
-  tt."courseId"    as "courseId",
-  tt."code"        as "code",
-  c."title"        as "courseTitle",
-  tt."facultyId"   as "facultyId",
-  tt."facultyName" as "facultyName",
-  tt."room"        as "room"
+  tt."programId",
+  tt."programName",
+  tt."semester",
+  tt."division",
+  tt."day",
+  tt."period",
+  tt."courseId",
+  tt."code",
+  c."title" as "courseTitle",
+  tt."facultyId",
+  tt."facultyName",
+  tt."room"
 from public.timetable tt
 left join public.courses c on c.id = tt."courseId";
 
--- v_tt_schedules_full: primary schedule view for the Timetable Board.
 create or replace view public.v_tt_schedules_full
 with (security_invoker = true) as
 select
@@ -475,13 +689,8 @@ select
 from public.tt_schedules s;
 
 -- =====================================================================
--- 6. STORAGE — "syllabi" bucket + policies
+-- 7. STORAGE — "syllabi" bucket + policies
 -- =====================================================================
--- Private bucket (public = false): files are only reachable via a signed
--- URL created server-side by the app for the owning user, never a public
--- URL. Convention: object path = "{auth.uid()}/{courseId}/{uuid}-{fileName}"
--- so the folder-name policies below can check ownership from the path
--- alone, the same "defense in depth" pattern used by the table RLS above.
 insert into storage.buckets (id, name, public)
 values ('syllabi', 'syllabi', false)
 on conflict (id) do nothing;
@@ -496,19 +705,16 @@ create policy "syllabi select own" on storage.objects
     bucket_id = 'syllabi'
     and (storage.foldername(name))[1] = auth.uid()::text
   );
-
 create policy "syllabi insert own" on storage.objects
   for insert with check (
     bucket_id = 'syllabi'
     and (storage.foldername(name))[1] = auth.uid()::text
   );
-
 create policy "syllabi update own" on storage.objects
   for update using (
     bucket_id = 'syllabi'
     and (storage.foldername(name))[1] = auth.uid()::text
   );
-
 create policy "syllabi delete own" on storage.objects
   for delete using (
     bucket_id = 'syllabi'
@@ -516,49 +722,122 @@ create policy "syllabi delete own" on storage.objects
   );
 
 -- =====================================================================
--- Done. Next: Authentication → Providers → Email (see setup guide),
--- then open the app, create your first account, and add your first
--- Academic Year + Curriculum Version from the toolbar before adding
--- programmes.
+-- Done.
 -- =====================================================================
 
 -- =====================================================================
--- IN-PLACE MIGRATION (v3 → v4, no data loss)
--- If you already have a v3 database and want to KEEP existing data,
--- do NOT run the script above. Run only this block instead:
+-- IN-PLACE MIGRATION (v7 → v8, no data loss for existing tables)
+-- If you already have a v7 database and want to KEEP existing data,
+-- do NOT run the clean-slate script above. Run only this block:
 -- =====================================================================
--- alter table public.assignments add column if not exists "assignedL" numeric not null default 0 check ("assignedL" >= 0);
--- alter table public.assignments add column if not exists "assignedT" numeric not null default 0 check ("assignedT" >= 0);
--- alter table public.assignments add column if not exists "assignedP" numeric not null default 0 check ("assignedP" >= 0);
--- -- Back-fill existing rows: treat every pre-existing assignment's lump "hours"
--- -- value as pure Theory (L) so nothing silently disappears from Load Summary.
--- -- Adjust manually afterwards in the Load Distribution page as needed.
--- update public.assignments set "assignedL" = "hours" where "assignedL" = 0 and "assignedT" = 0 and "assignedP" = 0 and "hours" > 0;
+/*
+create extension if not exists pgcrypto;
 
--- =====================================================================
--- IN-PLACE MIGRATION (v4 → v5, no data loss)
--- If you already have a v4 database (has assignedL/T/P) and want to KEEP
--- existing data, do NOT run the clean-slate script above. Run only this
--- block instead. Every existing programme defaults to 1 division and every
--- existing assignment defaults to "Division A", so nothing changes visually
--- until you raise a programme's "Number of Batches/Divisions" above 1.
--- =====================================================================
--- alter table public.programs add column if not exists "divisionsCount" integer not null default 1 check ("divisionsCount" >= 1);
--- alter table public.assignments add column if not exists "division" text not null default 'Division A';
--- -- Swap the old (courseId, facultyId) uniqueness for (courseId, facultyId, division)
--- -- so the same faculty member can be assigned to more than one division of a course.
--- alter table public.assignments drop constraint if exists assignments_course_faculty_unique;
--- alter table public.assignments add constraint assignments_course_faculty_division_unique unique ("courseId", "facultyId", "division");
+create table if not exists public.cal_configs (
+  id                  uuid primary key default gen_random_uuid(),
+  user_id             uuid not null references auth.users(id) on delete cascade,
+  "academicYearId"    uuid references public.academic_years(id) on delete cascade,
+  "academicYearLabel" text not null default '',
+  "semesterLabel"     text not null default '',
+  "semesterType"      text not null default 'odd'
+                         check ("semesterType" in ('odd','even')),
+  "startDate"         date not null default current_date,
+  "endDate"           date not null default current_date + interval '5 months',
+  "examStartDate"     date,
+  "workingDaysTarget" integer not null default 90 check ("workingDaysTarget" > 0),
+  "lecturesPerDay"    integer not null default 6 check ("lecturesPerDay" > 0 and "lecturesPerDay" <= 12),
+  "weekendRule"       text not null default 'sunday_only' check ("weekendRule" in ('sunday_only','sat_sun')),
+  "institutionName"   text not null default '',
+  "university"        text not null default '',
+  "regulation"        text not null default '',
+  "isApproved"        boolean not null default false,
+  "aiOutput"          text not null default '',
+  created_at          timestamptz not null default now(),
+  updated_at          timestamptz not null default now(),
+  constraint cal_configs_unique unique (user_id, "academicYearId", "semesterType")
+);
 
--- =====================================================================
--- IN-PLACE MIGRATION (v5 → v6, no data loss)
--- If you already have a v5 database and want to KEEP existing data, do NOT
--- run the clean-slate script above. Run only this block instead. Every
--- existing course row defaults to "kind" = 'Regular', so nothing changes
--- visually until you start adding courses on the new Minors/Honors tabs.
--- =====================================================================
--- alter table public.courses add column if not exists "kind" text not null default 'Regular' check ("kind" in ('Regular','Minor','Honors'));
--- alter table public.courses drop constraint if exists courses_sem_check;
--- alter table public.courses add constraint courses_sem_check check ("sem" between 0 and 8);
--- alter table public.courses drop constraint if exists courses_program_sem_code_unique;
--- alter table public.courses add constraint courses_program_sem_code_unique unique ("programId", "sem", "kind", "code");
+create table if not exists public.cal_events (
+  id          uuid primary key default gen_random_uuid(),
+  user_id     uuid not null references auth.users(id) on delete cascade,
+  "configId"  uuid not null references public.cal_configs(id) on delete cascade,
+  "date"      date not null,
+  "name"      text not null default '',
+  "type"      text not null default 'holiday' check ("type" in ('holiday','event','test','exam')),
+  "remarks"   text not null default '',
+  created_at  timestamptz not null default now(),
+  updated_at  timestamptz not null default now(),
+  constraint cal_events_config_date_name_unique unique ("configId", "date", "name")
+);
+
+create table if not exists public.cal_day_cells (
+  id               uuid primary key default gen_random_uuid(),
+  user_id          uuid not null references auth.users(id) on delete cascade,
+  "configId"       uuid not null references public.cal_configs(id) on delete cascade,
+  "date"           date not null,
+  "classification" text not null default 'working'
+                      check ("classification" in ('working','holiday','test','event','exam','sunday','outside')),
+  "eventId"        uuid references public.cal_events(id) on delete set null,
+  created_at       timestamptz not null default now(),
+  constraint cal_day_cells_config_date_unique unique ("configId", "date")
+);
+
+create table if not exists public.cal_approvals (
+  id           uuid primary key default gen_random_uuid(),
+  user_id      uuid not null references auth.users(id) on delete cascade,
+  "configId"   uuid not null references public.cal_configs(id) on delete cascade,
+  "approvedAt" timestamptz not null default now(),
+  "approvedBy" text not null default '',
+  "remarks"    text not null default '',
+  created_at   timestamptz not null default now()
+);
+
+-- Indexes
+create index if not exists idx_cal_configs_user    on public.cal_configs(user_id);
+create index if not exists idx_cal_configs_year    on public.cal_configs("academicYearId");
+create index if not exists idx_cal_events_user     on public.cal_events(user_id);
+create index if not exists idx_cal_events_config   on public.cal_events("configId");
+create index if not exists idx_cal_events_date     on public.cal_events("date");
+create index if not exists idx_cal_day_cells_user  on public.cal_day_cells(user_id);
+create index if not exists idx_cal_day_cells_config on public.cal_day_cells("configId");
+create index if not exists idx_cal_day_cells_date  on public.cal_day_cells("date");
+create index if not exists idx_cal_approvals_user  on public.cal_approvals(user_id);
+create index if not exists idx_cal_approvals_config on public.cal_approvals("configId");
+
+-- Triggers (reuse existing set_owner function from v7)
+create trigger trg_cal_configs_set_owner    before insert on public.cal_configs    for each row execute function public.set_owner_on_insert();
+create trigger trg_cal_configs_touch        before update on public.cal_configs    for each row execute function public.touch_and_lock_owner();
+create trigger trg_cal_events_set_owner     before insert on public.cal_events     for each row execute function public.set_owner_on_insert();
+create trigger trg_cal_events_touch         before update on public.cal_events     for each row execute function public.touch_and_lock_owner();
+create trigger trg_cal_day_cells_set_owner  before insert on public.cal_day_cells  for each row execute function public.set_owner_on_insert();
+create trigger trg_cal_approvals_set_owner  before insert on public.cal_approvals  for each row execute function public.set_owner_on_insert();
+
+-- RLS
+alter table public.cal_configs     enable row level security;
+alter table public.cal_events      enable row level security;
+alter table public.cal_day_cells   enable row level security;
+alter table public.cal_approvals   enable row level security;
+
+do $$
+declare t text;
+begin
+  foreach t in array array['cal_configs','cal_events','cal_day_cells','cal_approvals'] loop
+    execute format('create policy "select own %1$s" on public.%1$s for select using (user_id = auth.uid())', t);
+    execute format('create policy "insert own %1$s" on public.%1$s for insert with check (user_id = auth.uid())', t);
+    execute format('create policy "update own %1$s" on public.%1$s for update using (user_id = auth.uid()) with check (user_id = auth.uid())', t);
+    execute format('create policy "delete own %1$s" on public.%1$s for delete using (user_id = auth.uid())', t);
+  end loop;
+end $$;
+
+-- Approval sync trigger
+create or replace function public.sync_cal_config_approval()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  update public.cal_configs set "isApproved" = true, updated_at = now() where id = new."configId";
+  return new;
+end; $$;
+create trigger trg_cal_approvals_sync after insert on public.cal_approvals for each row execute function public.sync_cal_config_approval();
+
+-- RPCs: paste the three functions (upsert_cal_config, regenerate_cal_day_cells,
+-- cal_working_day_summary) from section 5 above.
+*/
