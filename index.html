@@ -1847,7 +1847,9 @@
        ===================================================================== */
 
     /* ── Calendar day grid ── */
-    .acal-section { margin-bottom: 24px; }
+    .acal-section {
+      margin-bottom: 24px;
+    }
 
     .acal-cal-grid {
       display: grid;
@@ -1882,18 +1884,75 @@
       min-height: 34px;
       font-weight: 500;
     }
-    .acal-day:hover { border-color: var(--blue); transform: scale(1.06); z-index: 2; }
-    .acal-day.empty { background: transparent; cursor: default; }
-    .acal-day.empty:hover { border-color: transparent; transform: none; }
-    .acal-day.working { background: var(--green-pale); color: var(--green); }
-    .acal-day.holiday { background: var(--red-pale); color: var(--red); font-weight: 700; }
-    .acal-day.test    { background: #ccfbf1; color: #0d9488; font-weight: 700; }
-    .acal-day.event   { background: var(--purple-pale); color: var(--purple); font-weight: 700; }
-    .acal-day.exam    { background: var(--orange-pale); color: var(--orange); font-weight: 700; }
-    .acal-day.sunday  { background: var(--blue-pale); color: var(--ink-soft); }
-    .acal-day.outside { opacity: .2; background: var(--blue-pale); cursor: default; }
-    .acal-day .day-num { font-weight: 600; line-height: 1; }
-    .acal-day .day-dot { width: 4px; height: 4px; border-radius: 50%; background: currentColor; margin-top: 2px; }
+
+    .acal-day:hover {
+      border-color: var(--blue);
+      transform: scale(1.06);
+      z-index: 2;
+    }
+
+    .acal-day.empty {
+      background: transparent;
+      cursor: default;
+    }
+
+    .acal-day.empty:hover {
+      border-color: transparent;
+      transform: none;
+    }
+
+    .acal-day.working {
+      background: var(--green-pale);
+      color: var(--green);
+    }
+
+    .acal-day.holiday {
+      background: var(--red-pale);
+      color: var(--red);
+      font-weight: 700;
+    }
+
+    .acal-day.test {
+      background: #ccfbf1;
+      color: #0d9488;
+      font-weight: 700;
+    }
+
+    .acal-day.event {
+      background: var(--purple-pale);
+      color: var(--purple);
+      font-weight: 700;
+    }
+
+    .acal-day.exam {
+      background: var(--orange-pale);
+      color: var(--orange);
+      font-weight: 700;
+    }
+
+    .acal-day.sunday {
+      background: var(--blue-pale);
+      color: var(--ink-soft);
+    }
+
+    .acal-day.outside {
+      opacity: .2;
+      background: var(--blue-pale);
+      cursor: default;
+    }
+
+    .acal-day .day-num {
+      font-weight: 600;
+      line-height: 1;
+    }
+
+    .acal-day .day-dot {
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: currentColor;
+      margin-top: 2px;
+    }
 
     .acal-legend {
       display: flex;
@@ -1903,8 +1962,20 @@
       padding-top: 10px;
       border-top: 1px solid var(--line);
     }
-    .acal-legend-item { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--ink-soft); }
-    .acal-legend-dot  { width: 10px; height: 10px; border-radius: 3px; }
+
+    .acal-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11.5px;
+      color: var(--ink-soft);
+    }
+
+    .acal-legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 3px;
+    }
 
     /* ── Semester view ── */
     .acal-sem-grid {
@@ -1959,15 +2030,55 @@
       min-height: 18px;
       cursor: default;
     }
-    .acal-sem-day.empty   { background: transparent; }
-    .acal-sem-day.working { background: var(--green-pale); color: var(--green); }
-    .acal-sem-day.holiday { background: var(--red-pale); color: var(--red); font-weight: 700; }
-    .acal-sem-day.test    { background: #ccfbf1; color: #0d9488; font-weight: 700; }
-    .acal-sem-day.event   { background: var(--purple-pale); color: var(--purple); font-weight: 700; }
-    .acal-sem-day.exam    { background: var(--orange-pale); color: var(--orange); font-weight: 700; }
-    .acal-sem-day.sunday  { background: var(--blue-pale); color: var(--ink-soft); }
-    .acal-sem-day.outside { opacity: .18; background: var(--blue-pale); }
-    .acal-sem-day:hover:not(.empty):not(.outside) { transform: scale(1.2); z-index: 2; box-shadow: 0 2px 6px rgba(0,0,0,.15); }
+
+    .acal-sem-day.empty {
+      background: transparent;
+    }
+
+    .acal-sem-day.working {
+      background: var(--green-pale);
+      color: var(--green);
+    }
+
+    .acal-sem-day.holiday {
+      background: var(--red-pale);
+      color: var(--red);
+      font-weight: 700;
+    }
+
+    .acal-sem-day.test {
+      background: #ccfbf1;
+      color: #0d9488;
+      font-weight: 700;
+    }
+
+    .acal-sem-day.event {
+      background: var(--purple-pale);
+      color: var(--purple);
+      font-weight: 700;
+    }
+
+    .acal-sem-day.exam {
+      background: var(--orange-pale);
+      color: var(--orange);
+      font-weight: 700;
+    }
+
+    .acal-sem-day.sunday {
+      background: var(--blue-pale);
+      color: var(--ink-soft);
+    }
+
+    .acal-sem-day.outside {
+      opacity: .18;
+      background: var(--blue-pale);
+    }
+
+    .acal-sem-day:hover:not(.empty):not(.outside) {
+      transform: scale(1.2);
+      z-index: 2;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, .15);
+    }
 
     .acal-sem-stats {
       display: grid;
@@ -1975,13 +2086,25 @@
       gap: 16px;
       margin-top: 6px;
     }
+
     .acal-sem-stat {
       text-align: center;
       padding: 5px 0;
       border-top: 2px solid var(--line);
     }
-    .acal-sem-stat-val { font-family: 'IBM Plex Mono', monospace; font-size: 16px; font-weight: 700; color: var(--ink); }
-    .acal-sem-stat-lbl { font-size: 9.5px; color: var(--ink-soft); margin-top: 1px; }
+
+    .acal-sem-stat-val {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .acal-sem-stat-lbl {
+      font-size: 9.5px;
+      color: var(--ink-soft);
+      margin-top: 1px;
+    }
 
     /* ── View tabs ── */
     .acal-view-tabs {
@@ -1991,6 +2114,7 @@
       border-radius: 6px;
       padding: 3px;
     }
+
     .acal-view-tab {
       padding: 5px 14px;
       border-radius: 4px;
@@ -2002,7 +2126,13 @@
       color: var(--ink-soft);
       transition: all .12s;
     }
-    .acal-view-tab.active { background: var(--white); color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,.1); font-weight: 600; }
+
+    .acal-view-tab.active {
+      background: var(--white);
+      color: var(--ink);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, .1);
+      font-weight: 600;
+    }
 
     /* ── AI panel ── */
     .acal-ai-panel {
@@ -2012,23 +2142,42 @@
       padding: 16px 18px;
       margin-bottom: 16px;
     }
+
     .acal-ai-header {
       display: flex;
       align-items: center;
       gap: 8px;
       margin-bottom: 10px;
     }
+
     .acal-ai-dot {
-      width: 8px; height: 8px;
+      width: 8px;
+      height: 8px;
       background: var(--blue);
       border-radius: 50%;
       animation: acalpulse 2s infinite;
     }
+
     @keyframes acalpulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.4; transform: scale(0.8); }
+
+      0%,
+      100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+
+      50% {
+        opacity: 0.4;
+        transform: scale(0.8);
+      }
     }
-    .acal-ai-title { font-size: 12.5px; font-weight: 600; color: var(--blue-deep); }
+
+    .acal-ai-title {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--blue-deep);
+    }
+
     .acal-ai-output {
       background: white;
       border: 1px solid #c7d5fe;
@@ -2041,7 +2190,11 @@
       white-space: pre-wrap;
       font-family: 'IBM Plex Mono', monospace;
     }
-    .acal-ai-loading { color: var(--ink-soft); font-style: italic; }
+
+    .acal-ai-loading {
+      color: var(--ink-soft);
+      font-style: italic;
+    }
 
     /* ── Summary stat boxes ── */
     .acal-summary-grid {
@@ -2050,6 +2203,7 @@
       gap: 10px;
       margin-bottom: 14px;
     }
+
     .acal-stat-box {
       background: var(--white);
       border: 1px solid var(--line);
@@ -2057,8 +2211,22 @@
       padding: 12px 14px;
       box-shadow: var(--shadow);
     }
-    .acal-stat-label { font-size: 11px; color: var(--ink-soft); font-weight: 600; margin-bottom: 4px; }
-    .acal-stat-value { font-family: 'IBM Plex Mono', monospace; font-size: 22px; font-weight: 700; color: var(--ink); line-height: 1; }
+
+    .acal-stat-label {
+      font-size: 11px;
+      color: var(--ink-soft);
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .acal-stat-value {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--ink);
+      line-height: 1;
+    }
+
     .acal-compliance-ok {
       margin-top: 10px;
       padding: 8px 12px;
@@ -2068,6 +2236,7 @@
       color: var(--green);
       font-weight: 600;
     }
+
     .acal-compliance-warn {
       margin-top: 10px;
       padding: 8px 12px;
@@ -2089,11 +2258,41 @@
       justify-content: space-between;
       gap: 12px;
     }
-    .acal-sem-banner-title { font-size: 14px; font-weight: 700; color: white; font-family: 'Space Grotesk', sans-serif; }
-    .acal-sem-banner-sub   { font-size: 10px; color: rgba(255,255,255,.45); letter-spacing: .07em; text-transform: uppercase; margin-bottom: 2px; font-family: 'IBM Plex Mono', monospace; }
-    .acal-sem-banner-stats { display: flex; gap: 20px; }
-    .acal-banner-stat-val  { font-family: 'IBM Plex Mono', monospace; font-size: 20px; font-weight: 700; color: white; }
-    .acal-banner-stat-lbl  { font-size: 9px; color: rgba(255,255,255,.4); text-transform: uppercase; letter-spacing: .06em; }
+
+    .acal-sem-banner-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: white;
+      font-family: 'Space Grotesk', sans-serif;
+    }
+
+    .acal-sem-banner-sub {
+      font-size: 10px;
+      color: rgba(255, 255, 255, .45);
+      letter-spacing: .07em;
+      text-transform: uppercase;
+      margin-bottom: 2px;
+      font-family: 'IBM Plex Mono', monospace;
+    }
+
+    .acal-sem-banner-stats {
+      display: flex;
+      gap: 20px;
+    }
+
+    .acal-banner-stat-val {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 20px;
+      font-weight: 700;
+      color: white;
+    }
+
+    .acal-banner-stat-lbl {
+      font-size: 9px;
+      color: rgba(255, 255, 255, .4);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
 
     /* ── Report styles ── */
     .acal-report-toolbar {
@@ -2105,7 +2304,16 @@
       border-radius: var(--radius) var(--radius) 0 0;
       flex-wrap: wrap;
     }
-    .acal-report-toolbar-lbl { color: rgba(255,255,255,.5); font-size: 10.5px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; font-family: 'IBM Plex Mono', monospace; }
+
+    .acal-report-toolbar-lbl {
+      color: rgba(255, 255, 255, .5);
+      font-size: 10.5px;
+      font-weight: 600;
+      letter-spacing: .07em;
+      text-transform: uppercase;
+      font-family: 'IBM Plex Mono', monospace;
+    }
+
     .acal-report-frame {
       border: 2px solid var(--blue-deep);
       border-top: none;
@@ -2113,6 +2321,7 @@
       background: white;
       min-height: 500px;
     }
+
     .acal-report-page {
       max-width: 860px;
       margin: 0 auto;
@@ -2123,59 +2332,296 @@
       color: #111;
       line-height: 1.55;
     }
-    .acal-report-header-block { border-bottom: 3px solid #111; padding-bottom: 18px; margin-bottom: 22px; }
-    .acal-report-institution  { font-size: 17px; font-weight: 700; font-family: 'Space Grotesk', sans-serif; color: #111; outline: none; border: 1px dashed transparent; border-radius: 3px; padding: 2px 4px; display: block; width: 100%; }
-    .acal-report-institution:hover { border-color: var(--blue); }
-    .acal-report-institution:focus { border-color: var(--blue); box-shadow: 0 0 0 2px var(--blue-pale); }
-    .acal-report-subtitle { font-size: 12px; color: #6b7280; outline: none; border: 1px dashed transparent; border-radius: 3px; padding: 2px 4px; display: inline-block; min-width: 140px; }
-    .acal-report-subtitle:hover { border-color: var(--blue); }
-    .acal-report-doc-title { font-size: 22px; font-weight: 800; color: #111; text-align: center; margin-bottom: 3px; outline: none; border: 1px dashed transparent; border-radius: 3px; padding: 2px 6px; width: 100%; display: block; }
-    .acal-report-doc-title:hover { border-color: var(--blue); }
-    .acal-report-section-head {
-      font-size: 11.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
-      color: #111; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px;
-      margin: 20px 0 10px; display: flex; align-items: center; gap: 7px;
+
+    .acal-report-header-block {
+      border-bottom: 3px solid #111;
+      padding-bottom: 18px;
+      margin-bottom: 22px;
     }
-    .acal-report-section-head::before { content: ''; display: block; width: 4px; height: 13px; background: var(--blue); border-radius: 2px; flex-shrink: 0; }
-    .acal-report-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 12px; }
-    .acal-report-table th { background: var(--blue-deep); color: white; padding: 7px 9px; text-align: left; font-size: 10px; letter-spacing: .05em; text-transform: uppercase; }
-    .acal-report-table td { padding: 6px 9px; border-bottom: 1px solid #e5e7eb; vertical-align: middle; }
-    .acal-report-table td[contenteditable="true"] { outline: none; cursor: text; }
-    .acal-report-table td[contenteditable="true"]:hover { background: var(--blue-pale) !important; }
-    .acal-report-table td[contenteditable="true"]:focus { background: #eff6ff !important; box-shadow: inset 0 0 0 2px var(--blue); }
-    .acal-report-kv-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
-    .acal-report-kv { display: flex; align-items: baseline; gap: 7px; padding: 6px 9px; background: #f7f5ee; border-radius: 4px; border: 1px solid #e5e7eb; }
-    .acal-report-kv-key { font-size: 10px; font-weight: 700; color: #6b7280; white-space: nowrap; min-width: 120px; }
-    .acal-report-kv-val { font-size: 12px; color: #111; font-weight: 500; outline: none; border: 1px dashed transparent; border-radius: 3px; padding: 1px 4px; flex: 1; }
-    .acal-report-kv-val:hover { border-color: var(--blue); }
-    .acal-report-kv-val:focus { border-color: var(--blue); background: white; }
-    .acal-report-sig-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; margin-top: 36px; padding-top: 16px; border-top: 1px solid #e5e7eb; }
-    .acal-report-sig { text-align: center; }
-    .acal-report-sig-line { border-bottom: 1px solid #111; width: 80%; margin: 30px auto 5px; }
-    .acal-report-sig-label { font-size: 10px; color: #6b7280; font-weight: 700; outline: none; }
-    .acal-report-monthly-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-top: 6px; }
-    .acal-report-month-mini { border: 1px solid #e5e7eb; border-radius: 4px; overflow: hidden; }
-    .acal-report-month-mini-title { background: var(--blue-deep); color: white; font-size: 7.5px; font-weight: 700; text-align: center; padding: 3px; letter-spacing: .06em; }
-    .acal-report-month-mini-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; padding: 2px; background: #e5e7eb; }
-    .acal-rmg-dh { background: #f3f4f6; text-align: center; font-size: 5.5px; font-weight: 700; color: #6b7280; padding: 1.5px 0; }
-    .acal-rmg-d  { background: white; text-align: center; font-size: 6.5px; padding: 1.5px 0; font-weight: 500; }
-    .acal-rmg-d.h  { background: var(--red-pale); color: var(--red); font-weight: 700; }
-    .acal-rmg-d.t  { background: #ccfbf1; color: #0d9488; font-weight: 700; }
-    .acal-rmg-d.e  { background: var(--purple-pale); color: var(--purple); font-weight: 700; }
-    .acal-rmg-d.x  { background: var(--orange-pale); color: var(--orange); font-weight: 700; }
-    .acal-rmg-d.su { background: var(--blue-pale); color: var(--ink-soft); }
-    .acal-rmg-d.em { background: white; color: transparent; }
+
+    .acal-report-institution {
+      font-size: 17px;
+      font-weight: 700;
+      font-family: 'Space Grotesk', sans-serif;
+      color: #111;
+      outline: none;
+      border: 1px dashed transparent;
+      border-radius: 3px;
+      padding: 2px 4px;
+      display: block;
+      width: 100%;
+    }
+
+    .acal-report-institution:hover {
+      border-color: var(--blue);
+    }
+
+    .acal-report-institution:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 2px var(--blue-pale);
+    }
+
+    .acal-report-subtitle {
+      font-size: 12px;
+      color: #6b7280;
+      outline: none;
+      border: 1px dashed transparent;
+      border-radius: 3px;
+      padding: 2px 4px;
+      display: inline-block;
+      min-width: 140px;
+    }
+
+    .acal-report-subtitle:hover {
+      border-color: var(--blue);
+    }
+
+    .acal-report-doc-title {
+      font-size: 22px;
+      font-weight: 800;
+      color: #111;
+      text-align: center;
+      margin-bottom: 3px;
+      outline: none;
+      border: 1px dashed transparent;
+      border-radius: 3px;
+      padding: 2px 6px;
+      width: 100%;
+      display: block;
+    }
+
+    .acal-report-doc-title:hover {
+      border-color: var(--blue);
+    }
+
+    .acal-report-section-head {
+      font-size: 11.5px;
+      font-weight: 700;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: #111;
+      border-bottom: 1px solid #e5e7eb;
+      padding-bottom: 5px;
+      margin: 20px 0 10px;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .acal-report-section-head::before {
+      content: '';
+      display: block;
+      width: 4px;
+      height: 13px;
+      background: var(--blue);
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+
+    .acal-report-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+      margin-bottom: 12px;
+    }
+
+    .acal-report-table th {
+      background: var(--blue-deep);
+      color: white;
+      padding: 7px 9px;
+      text-align: left;
+      font-size: 10px;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+    }
+
+    .acal-report-table td {
+      padding: 6px 9px;
+      border-bottom: 1px solid #e5e7eb;
+      vertical-align: middle;
+    }
+
+    .acal-report-table td[contenteditable="true"] {
+      outline: none;
+      cursor: text;
+    }
+
+    .acal-report-table td[contenteditable="true"]:hover {
+      background: var(--blue-pale) !important;
+    }
+
+    .acal-report-table td[contenteditable="true"]:focus {
+      background: #eff6ff !important;
+      box-shadow: inset 0 0 0 2px var(--blue);
+    }
+
+    .acal-report-kv-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .acal-report-kv {
+      display: flex;
+      align-items: baseline;
+      gap: 7px;
+      padding: 6px 9px;
+      background: #f7f5ee;
+      border-radius: 4px;
+      border: 1px solid #e5e7eb;
+    }
+
+    .acal-report-kv-key {
+      font-size: 10px;
+      font-weight: 700;
+      color: #6b7280;
+      white-space: nowrap;
+      min-width: 120px;
+    }
+
+    .acal-report-kv-val {
+      font-size: 12px;
+      color: #111;
+      font-weight: 500;
+      outline: none;
+      border: 1px dashed transparent;
+      border-radius: 3px;
+      padding: 1px 4px;
+      flex: 1;
+    }
+
+    .acal-report-kv-val:hover {
+      border-color: var(--blue);
+    }
+
+    .acal-report-kv-val:focus {
+      border-color: var(--blue);
+      background: white;
+    }
+
+    .acal-report-sig-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 24px;
+      margin-top: 36px;
+      padding-top: 16px;
+      border-top: 1px solid #e5e7eb;
+    }
+
+    .acal-report-sig {
+      text-align: center;
+    }
+
+    .acal-report-sig-line {
+      border-bottom: 1px solid #111;
+      width: 80%;
+      margin: 30px auto 5px;
+    }
+
+    .acal-report-sig-label {
+      font-size: 10px;
+      color: #6b7280;
+      font-weight: 700;
+      outline: none;
+    }
+
+    .acal-report-monthly-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    .acal-report-month-mini {
+      border: 1px solid #e5e7eb;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .acal-report-month-mini-title {
+      background: var(--blue-deep);
+      color: white;
+      font-size: 7.5px;
+      font-weight: 700;
+      text-align: center;
+      padding: 3px;
+      letter-spacing: .06em;
+    }
+
+    .acal-report-month-mini-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 1px;
+      padding: 2px;
+      background: #e5e7eb;
+    }
+
+    .acal-rmg-dh {
+      background: #f3f4f6;
+      text-align: center;
+      font-size: 5.5px;
+      font-weight: 700;
+      color: #6b7280;
+      padding: 1.5px 0;
+    }
+
+    .acal-rmg-d {
+      background: white;
+      text-align: center;
+      font-size: 6.5px;
+      padding: 1.5px 0;
+      font-weight: 500;
+    }
+
+    .acal-rmg-d.h {
+      background: var(--red-pale);
+      color: var(--red);
+      font-weight: 700;
+    }
+
+    .acal-rmg-d.t {
+      background: #ccfbf1;
+      color: #0d9488;
+      font-weight: 700;
+    }
+
+    .acal-rmg-d.e {
+      background: var(--purple-pale);
+      color: var(--purple);
+      font-weight: 700;
+    }
+
+    .acal-rmg-d.x {
+      background: var(--orange-pale);
+      color: var(--orange);
+      font-weight: 700;
+    }
+
+    .acal-rmg-d.su {
+      background: var(--blue-pale);
+      color: var(--ink-soft);
+    }
+
+    .acal-rmg-d.em {
+      background: white;
+      color: transparent;
+    }
 
     /* ── Calendar modal for holiday add/edit ── */
     #acal-holiday-overlay {
-      position: fixed; inset: 0;
-      background: rgba(0,0,0,.45);
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .45);
       z-index: 9000;
-      display: flex; align-items: center; justify-content: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
-    #acal-holiday-overlay .modal-box { max-width: 420px; }
 
-
+    #acal-holiday-overlay .modal-box {
+      max-width: 420px;
+    }
   </style>
 </head>
 
@@ -2347,6 +2793,8 @@
     }
 
     /* ---- Honors / Minors Category persistence ---- */
+    const HM_CAT_STORE_KEY = "dap_hm_categories_v1";
+    
     function saveHMCategories() {
       try {
         localStorage.setItem(HM_CAT_STORE_KEY, JSON.stringify({ honors: HONORS_CATEGORIES, minors: MINORS_CATEGORIES }));
@@ -2549,7 +2997,6 @@
     let MINORS_CATEGORIES = [];   // [{id, name}] — user-defined categories for the Minors Programme tab
     let HONOR_ACTIVE_CAT_FILTER = 'ALL';  // 'ALL' or a category name — drives the category filter pills
     let MINOR_ACTIVE_CAT_FILTER = 'ALL';
-    const HM_CAT_STORE_KEY = "dap_hm_categories_v1";
     // Semester options used only by the "Add Course" form dropdown (not the filter pills)
     const HM_SEM_OPTIONS = [
       { val: 0, label: 'All Sems' }, { val: 3, label: 'SEM III' }, { val: 4, label: 'SEM IV' },
@@ -5458,6 +5905,9 @@
     }
 
     /* ============================= LOAD SUMMARY ============================= */
+    let LS_ACTIVE_TAB = "overview"; // "overview" | "detailed"
+    let LS_SELECTED_FACULTY = "";
+
     function facultyTotalLoad(facId) {
       let total = 0, l = 0, t = 0, p = 0; const courses = [];
       visiblePrograms().forEach(prog => {
@@ -5480,46 +5930,143 @@
       });
       return { total, l, t, p, courses };
     }
+
     function pageLoadSummary() {
       if (FACULTY.length === 0) return pageHeader("Faculty Load · 03", "Load Summary", "") + `<div class="empty">Add faculty in the Faculty Directory first.</div>`;
+
       const rows = FACULTY.map(f => ({ f, ...facultyTotalLoad(f.id) }));
+
+      const tabsHtml = `
+        <div class="tt-sub-nav" style="margin-bottom: 20px;">
+          <button class="tt-sub-tab ls-tab-btn ${LS_ACTIVE_TAB === 'overview' ? 'active' : ''}" data-tab="overview">Overview / Summary</button>
+          <button class="tt-sub-tab ls-tab-btn ${LS_ACTIVE_TAB === 'detailed' ? 'active' : ''}" data-tab="detailed">Detailed Load Breakdown</button>
+        </div>
+      `;
+
+      let contentHtml = "";
+
+      if (LS_ACTIVE_TAB === "overview") {
+        contentHtml = `
+          <div class="card tick">
+            <h3>Weekly workload breakdown</h3>
+            <table style="margin-top:10px;">
+              <thead><tr><th>Faculty Name</th><th>Theory (L)</th><th>Tutorial (T)</th><th>Practical (P)</th><th>Total Teaching Load (Hours/Week)</th><th>Action</th></tr></thead>
+              <tbody>${rows.map(({ f, total, l, t, p }) => {
+          const st = total === 0 ? null : total > f.maxLoad ? "bad" : total === f.maxLoad ? "ok" : "warn";
+          return `<tr class="ls-row-click" data-facid="${f.id}" style="cursor:pointer;" onmouseover="this.style.background='var(--blue-pale)'" onmouseout="this.style.background=''">
+                  <td><strong>${esc(f.name)}</strong></td>
+                  <td style="font-family:'IBM Plex Mono',monospace;">${l}</td>
+                  <td style="font-family:'IBM Plex Mono',monospace;">${t}</td>
+                  <td style="font-family:'IBM Plex Mono',monospace;">${p}</td>
+                  <td style="font-family:'IBM Plex Mono',monospace; font-weight:700;">${total}/${f.maxLoad} hrs ${st ? `<span class="status ${st}" style="margin-left:6px;">${st === 'bad' ? '⚠ OVERLOADED' : st === 'ok' ? '✓ AT CAPACITY' : '· under capacity'}</span>` : `<span class="status warn" style="margin-left:6px;">— unassigned</span>`}</td>
+                  <td><button class="ghost ls-view-details" data-facid="${f.id}">View Details →</button></td>
+                </tr>`;
+        }).join("")}</tbody>
+            </table>
+          </div>
+        `;
+      } else {
+        const facOptions = `<option value="all" ${LS_SELECTED_FACULTY === 'all' ? "selected" : ""}>All Faculty</option>` +
+          FACULTY.map(f => `<option value="${f.id}" ${LS_SELECTED_FACULTY === f.id ? "selected" : ""}>${esc(f.name)}</option>`).join("");
+
+        let selFacId = LS_SELECTED_FACULTY;
+        if (!selFacId && FACULTY.length > 0) {
+          selFacId = 'all';
+          LS_SELECTED_FACULTY = selFacId;
+        }
+
+        const displayRows = selFacId === 'all' ? rows : rows.filter(r => r.f.id === selFacId);
+
+        const detailedContent = displayRows.map(selRow => {
+          const { f, total, courses } = selRow;
+          const st = total === 0 ? null : total > f.maxLoad ? "bad" : total === f.maxLoad ? "ok" : "warn";
+
+          return `
+              <div class="card tick">
+                <h3>${esc(f.name)} <span style="color:var(--ink-soft); font-weight:400; font-size:13px;">— ${esc(f.designation) || ''}</span>
+                  <span class="status ${st || 'warn'}" style="margin-left:8px;">${total}/${f.maxLoad} hrs ${st === 'bad' ? '⚠ OVERLOADED' : st === 'ok' ? '✓ AT CAPACITY' : st === 'warn' ? '· under capacity' : '— unassigned'}</span>
+                </h3>
+                <div class="meter ${st === 'bad' ? 'bad' : st === 'warn' ? 'warn' : ''}"><div style="width:${Math.min(100, total / f.maxLoad * 100)}%"></div></div>
+                ${courses.length === 0 ? `<div class="empty" style="margin-top:14px;">No subjects assigned.<br><br><button class="primary" onclick="ROUTE='load-dist'; render();" style="margin-top: 10px;">+ Assign Subject</button></div>` : `
+                <table style="margin-top:12px;"><thead><tr><th>Program</th><th>Semester</th><th>Subject / Course Name</th><th>Type (L/T/P)</th><th>Batch / Section</th><th>Assigned Hours/Week</th><th>Status</th><th>Actions</th></tr></thead>
+                  <tbody>${courses.map(c => {
+            const typeLabel = c.l > 0 ? "Theory (L)" : c.p > 0 ? "Practical (P)" : c.t > 0 ? "Tutorial (T)" : "-";
+            const batchStr = (c.batches && c.batches.length > 0) ? c.batches.map(esc).join(', ') : esc(divShort(c.division));
+
+            return `<tr>
+                      <td>${esc(c.prog)}</td>
+                      <td>${toRoman(c.sem)}</td>
+                      <td>${esc(c.code)} — ${esc(c.title)}</td>
+                      <td>${typeLabel}</td>
+                      <td>${batchStr}</td>
+                      <td style="font-family:'IBM Plex Mono',monospace; font-weight:700;">${c.hours} hrs/wk</td>
+                      <td><span class="status ok">Confirmed</span></td>
+                      <td><button class="ghost" onclick="ROUTE='load-dist'; render();">Edit / Remove</button></td>
+                    </tr>`;
+          }).join("")}</tbody>
+                </table>`}
+              </div>
+            `;
+        }).join("");
+
+        contentHtml = `
+          <div class="selectbar" style="margin-bottom: 20px;">
+            <div class="field" style="margin-bottom:0; min-width: 280px;">
+              <label>Select Faculty Member</label>
+              <select id="ls-fac-selector">
+                ${facOptions}
+              </select>
+            </div>
+          </div>
+          ${detailedContent}
+        `;
+      }
+
       return `
     ${pageHeader("Faculty Load · 03", "Load Summary", "Total weekly teaching hours per faculty member, across every programme and semester, broken down by Theory (L), Tutorial (T) and Practical (P).")}
-    <div class="card tick">
-      <h3>Weekly workload breakdown</h3>
-      <table style="margin-top:10px;">
-        <thead><tr><th>Faculty Name</th><th>Theory (L)</th><th>Tutorial (T)</th><th>Practical (P)</th><th>Total Teaching Load (Hours/Week)</th></tr></thead>
-        <tbody>${rows.map(({ f, total, l, t, p }) => {
-        const st = total === 0 ? null : total > f.maxLoad ? "bad" : total === f.maxLoad ? "ok" : "warn";
-        return `<tr>
-            <td><strong>${esc(f.name)}</strong></td>
-            <td style="font-family:'IBM Plex Mono',monospace;">${l}</td>
-            <td style="font-family:'IBM Plex Mono',monospace;">${t}</td>
-            <td style="font-family:'IBM Plex Mono',monospace;">${p}</td>
-            <td style="font-family:'IBM Plex Mono',monospace; font-weight:700;">${total}/${f.maxLoad} hrs ${st ? `<span class="status ${st}" style="margin-left:6px;">${st === 'bad' ? '⚠ OVERLOADED' : st === 'ok' ? '✓ AT CAPACITY' : '· under capacity'}</span>` : `<span class="status warn" style="margin-left:6px;">— unassigned</span>`}</td>
-          </tr>`;
-      }).join("")}</tbody>
-      </table>
-    </div>
-    ${rows.map(({ f, total, courses }) => {
-        const st = total === 0 ? null : total > f.maxLoad ? "bad" : total === f.maxLoad ? "ok" : "warn";
-        return `
-      <div class="card tick">
-        <h3>${esc(f.name)} <span style="color:var(--ink-soft); font-weight:400; font-size:13px;">— ${esc(f.designation) || ''}</span>
-          <span class="status ${st || 'warn'}" style="margin-left:8px;">${total}/${f.maxLoad} hrs ${st === 'bad' ? '⚠ OVERLOADED' : st === 'ok' ? '✓ AT CAPACITY' : st === 'warn' ? '· under capacity' : '— unassigned'}</span>
-        </h3>
-        <div class="meter ${st === 'bad' ? 'bad' : st === 'warn' ? 'warn' : ''}"><div style="width:${Math.min(100, total / f.maxLoad * 100)}%"></div></div>
-        ${courses.length === 0 ? `<p class="desc" style="margin-top:10px;">No courses assigned.</p>` : `
-        <table style="margin-top:12px;"><thead><tr><th>Programme</th><th>Sem</th><th>Course</th><th>L</th><th>T</th><th>P</th><th>Total</th></tr></thead>
-          <tbody>${courses.map(c => {
-          const batchStr = (c.batches && c.batches.length > 0) ? ' · ' + c.batches.map(esc).join(', ') : '';
-          const divInfo = (c.showDiv || batchStr) ? ` <span style="color:var(--ink-soft); font-weight:600;">(${esc(divShort(c.division))}${batchStr})</span>` : '';
-          return `<tr><td>${esc(c.prog)}</td><td>${toRoman(c.sem)}</td><td>${esc(c.code)} — ${esc(c.title)}${divInfo}</td><td style="font-family:'IBM Plex Mono',monospace;">${c.l}</td><td style="font-family:'IBM Plex Mono',monospace;">${c.t}</td><td style="font-family:'IBM Plex Mono',monospace;">${c.p}</td><td style="font-family:'IBM Plex Mono',monospace; font-weight:700;">${c.hours}</td></tr>`;
-        }).join("")}</tbody>
-        </table>`}
-      </div>`;
-      }).join("")}
-  `;
+    ${tabsHtml}
+    ${contentHtml}
+      `;
+    }
+
+    function bindLoadSummary() {
+      document.querySelectorAll(".ls-tab-btn").forEach(btn => {
+        btn.addEventListener("click", (e) => {
+          LS_ACTIVE_TAB = e.target.dataset.tab;
+          render();
+        });
+      });
+
+      const facSel = document.getElementById("ls-fac-selector");
+      if (facSel) {
+        facSel.addEventListener("change", (e) => {
+          LS_SELECTED_FACULTY = e.target.value;
+          render();
+        });
+      }
+
+      document.querySelectorAll(".ls-row-click").forEach(el => {
+        el.addEventListener("click", (e) => {
+          const facId = e.currentTarget.dataset.facid;
+          if (facId) {
+            LS_SELECTED_FACULTY = facId;
+            LS_ACTIVE_TAB = "detailed";
+            render();
+          }
+        });
+      });
+
+      document.querySelectorAll(".ls-view-details").forEach(el => {
+        el.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const facId = e.currentTarget.dataset.facid;
+          if (facId) {
+            LS_SELECTED_FACULTY = facId;
+            LS_ACTIVE_TAB = "detailed";
+            render();
+          }
+        });
+      });
     }
 
     /* ============================= TIMETABLE BOARD (Integrated Module) ============================= */
@@ -7131,23 +7678,23 @@
     /* ---- State ---- */
     let ACAL_CAL_VIEW = 'month';   // 'month' | 'semester'
     let ACAL_CURRENT_MONTH = 6;    // 0-indexed; July = 6
-    let ACAL_CURRENT_YEAR  = 2025;
-    let ACAL_APPROVED      = false;
+    let ACAL_CURRENT_YEAR = 2025;
+    let ACAL_APPROVED = false;
 
     /* ---- Default holidays (Maharashtra / Anna University pattern) ---- */
     let ACAL_HOLIDAYS = [
-      {date:'2025-07-18', name:'Bakrid', type:'holiday'},
-      {date:'2025-08-15', name:'Independence Day', type:'holiday'},
-      {date:'2025-08-27', name:'Janmashtami', type:'holiday'},
-      {date:'2025-09-05', name:'Teachers Day – College Event', type:'event'},
-      {date:'2025-09-29', name:'I Internal Assessment (Unit I & II)', type:'test'},
-      {date:'2025-10-02', name:'Gandhi Jayanti', type:'holiday'},
-      {date:'2025-10-20', name:'Ayudha Pooja', type:'holiday'},
-      {date:'2025-10-21', name:'Vijayadasami', type:'holiday'},
-      {date:'2025-11-01', name:'Diwali Holiday', type:'holiday'},
-      {date:'2025-11-03', name:'II Internal Assessment (Unit III & IV)', type:'test'},
-      {date:'2025-11-14', name:'Last Working Day', type:'event'},
-      {date:'2025-11-17', name:'End Semester Examinations Begin', type:'exam'},
+      { date: '2025-07-18', name: 'Bakrid', type: 'holiday' },
+      { date: '2025-08-15', name: 'Independence Day', type: 'holiday' },
+      { date: '2025-08-27', name: 'Janmashtami', type: 'holiday' },
+      { date: '2025-09-05', name: 'Teachers Day – College Event', type: 'event' },
+      { date: '2025-09-29', name: 'I Internal Assessment (Unit I & II)', type: 'test' },
+      { date: '2025-10-02', name: 'Gandhi Jayanti', type: 'holiday' },
+      { date: '2025-10-20', name: 'Ayudha Pooja', type: 'holiday' },
+      { date: '2025-10-21', name: 'Vijayadasami', type: 'holiday' },
+      { date: '2025-11-01', name: 'Diwali Holiday', type: 'holiday' },
+      { date: '2025-11-03', name: 'II Internal Assessment (Unit III & IV)', type: 'test' },
+      { date: '2025-11-14', name: 'Last Working Day', type: 'event' },
+      { date: '2025-11-17', name: 'End Semester Examinations Begin', type: 'exam' },
     ];
 
     /* ---- Config ---- */
@@ -7167,7 +7714,7 @@
 
     /* ---- Helpers ---- */
     function acalDateStr(y, m, d) {
-      return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      return `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
     }
 
     function acalFindEvent(ds) {
@@ -7190,11 +7737,11 @@
 
     function acalCountWorkingDays() {
       const start = new Date(ACAL_CONFIG.startDate + 'T00:00:00');
-      const end   = new Date(ACAL_CONFIG.endDate   + 'T00:00:00');
+      const end = new Date(ACAL_CONFIG.endDate + 'T00:00:00');
       let count = 0;
       const cur = new Date(start);
       while (cur <= end) {
-        const ds = `${cur.getFullYear()}-${String(cur.getMonth()+1).padStart(2,'0')}-${String(cur.getDate()).padStart(2,'0')}`;
+        const ds = `${cur.getFullYear()}-${String(cur.getMonth() + 1).padStart(2, '0')}-${String(cur.getDate()).padStart(2, '0')}`;
         const cls = acalClassify(ds);
         if (cls === 'working') count++;
         cur.setDate(cur.getDate() + 1);
@@ -7213,8 +7760,8 @@
       const totalLectures = wd * ACAL_CONFIG.lecturesPerDay;
       const onTrack = wd >= ACAL_CONFIG.workingDaysTarget;
 
-      const MONTH_NAMES = ['January','February','March','April','May','June',
-                           'July','August','September','October','November','December'];
+      const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'];
 
       return `
         ${pageHeader("Planning", "Academic Calendar", "AI-generated semester calendar — configure, review, approve.")}
@@ -7275,8 +7822,8 @@
             <div class="field" style="margin:0;">
               <label>Weekend Off</label>
               <select id="acal-cfg-wkd">
-                <option value="sunday_only" ${ACAL_CONFIG.weekendRule==='sunday_only'?'selected':''}>Sunday only</option>
-                <option value="sat_sun"     ${ACAL_CONFIG.weekendRule==='sat_sun'    ?'selected':''}>Saturday &amp; Sunday</option>
+                <option value="sunday_only" ${ACAL_CONFIG.weekendRule === 'sunday_only' ? 'selected' : ''}>Sunday only</option>
+                <option value="sat_sun"     ${ACAL_CONFIG.weekendRule === 'sat_sun' ? 'selected' : ''}>Saturday &amp; Sunday</option>
               </select>
             </div>
           </div>
@@ -7339,8 +7886,8 @@
             </div>
             <div class="${onTrack ? 'acal-compliance-ok' : 'acal-compliance-warn'}" id="acal-compliance-msg">
               ${onTrack
-                ? `✓ ${wd} working days meet the ≥${ACAL_CONFIG.workingDaysTarget}-day UGC requirement`
-                : `⚠ Only ${wd} working days — ${ACAL_CONFIG.workingDaysTarget - wd} more needed to meet the ${ACAL_CONFIG.workingDaysTarget}-day requirement`}
+          ? `✓ ${wd} working days meet the ≥${ACAL_CONFIG.workingDaysTarget}-day UGC requirement`
+          : `⚠ Only ${wd} working days — ${ACAL_CONFIG.workingDaysTarget - wd} more needed to meet the ${ACAL_CONFIG.workingDaysTarget}-day requirement`}
             </div>
           </div>
         </div>
@@ -7566,14 +8113,14 @@
 
       // Config apply
       document.getElementById('acal-btn-apply-cfg').addEventListener('click', () => {
-        ACAL_CONFIG.academicYear    = document.getElementById('acal-cfg-ay').value.trim() || ACAL_CONFIG.academicYear;
-        ACAL_CONFIG.semesterLabel   = document.getElementById('acal-cfg-sem').value;
-        ACAL_CONFIG.startDate       = document.getElementById('acal-cfg-start').value || ACAL_CONFIG.startDate;
-        ACAL_CONFIG.endDate         = document.getElementById('acal-cfg-end').value   || ACAL_CONFIG.endDate;
-        ACAL_CONFIG.examStart       = document.getElementById('acal-cfg-exam').value  || ACAL_CONFIG.examStart;
+        ACAL_CONFIG.academicYear = document.getElementById('acal-cfg-ay').value.trim() || ACAL_CONFIG.academicYear;
+        ACAL_CONFIG.semesterLabel = document.getElementById('acal-cfg-sem').value;
+        ACAL_CONFIG.startDate = document.getElementById('acal-cfg-start').value || ACAL_CONFIG.startDate;
+        ACAL_CONFIG.endDate = document.getElementById('acal-cfg-end').value || ACAL_CONFIG.endDate;
+        ACAL_CONFIG.examStart = document.getElementById('acal-cfg-exam').value || ACAL_CONFIG.examStart;
         ACAL_CONFIG.workingDaysTarget = parseInt(document.getElementById('acal-cfg-wdt').value, 10) || 90;
-        ACAL_CONFIG.lecturesPerDay    = parseInt(document.getElementById('acal-cfg-lpd').value, 10) || 6;
-        ACAL_CONFIG.weekendRule     = document.getElementById('acal-cfg-wkd').value;
+        ACAL_CONFIG.lecturesPerDay = parseInt(document.getElementById('acal-cfg-lpd').value, 10) || 6;
+        ACAL_CONFIG.weekendRule = document.getElementById('acal-cfg-wkd').value;
         ACAL_APPROVED = false;
         // Navigate re-renders the page with updated config
         ROUTE = 'academic-calendar';
@@ -7596,7 +8143,7 @@
 
       // Holiday overlay
       const overlay = document.getElementById('acal-holiday-overlay');
-      const btnAdd  = document.getElementById('acal-btn-add-holiday');
+      const btnAdd = document.getElementById('acal-btn-add-holiday');
       if (btnAdd) btnAdd.addEventListener('click', () => { overlay.style.display = 'flex'; });
       const btnCancel = document.getElementById('acal-h-cancel');
       if (btnCancel) btnCancel.addEventListener('click', () => { overlay.style.display = 'none'; });
@@ -7636,8 +8183,8 @@
        CALENDAR RENDER — MONTH VIEW
        ======================================================== */
     function acalRenderMonthGrid() {
-      const MONTH_NAMES = ['January','February','March','April','May','June',
-                           'July','August','September','October','November','December'];
+      const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'];
       const label = document.getElementById('acal-month-label');
       if (label) label.textContent = `${MONTH_NAMES[ACAL_CURRENT_MONTH]} ${ACAL_CURRENT_YEAR}`;
 
@@ -7645,7 +8192,7 @@
       if (!grid) return;
       grid.innerHTML = '';
 
-      const firstDay    = new Date(ACAL_CURRENT_YEAR, ACAL_CURRENT_MONTH, 1).getDay();
+      const firstDay = new Date(ACAL_CURRENT_YEAR, ACAL_CURRENT_MONTH, 1).getDay();
       const startOffset = firstDay === 0 ? 6 : firstDay - 1; // Mon-based
       const daysInMonth = new Date(ACAL_CURRENT_YEAR, ACAL_CURRENT_MONTH + 1, 0).getDate();
 
@@ -7656,8 +8203,8 @@
       }
       for (let d = 1; d <= daysInMonth; d++) {
         const date = new Date(ACAL_CURRENT_YEAR, ACAL_CURRENT_MONTH, d);
-        const ds   = acalDateStr(ACAL_CURRENT_YEAR, ACAL_CURRENT_MONTH, d);
-        const h    = acalFindEvent(ds);
+        const ds = acalDateStr(ACAL_CURRENT_YEAR, ACAL_CURRENT_MONTH, d);
+        const h = acalFindEvent(ds);
         const isWk = acalIsWeekend(date);
 
         const el = document.createElement('div');
@@ -7678,7 +8225,7 @@
        ======================================================== */
     function acalRenderSemesterView() {
       const start = new Date(ACAL_CONFIG.startDate + 'T00:00:00');
-      const end   = new Date(ACAL_CONFIG.endDate   + 'T00:00:00');
+      const end = new Date(ACAL_CONFIG.endDate + 'T00:00:00');
 
       // Build list of months to show
       const months = [];
@@ -7689,11 +8236,11 @@
       }
       // Cap to 5 months for layout
       const MONTHS = months.slice(0, 5);
-      const MN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-      const FULL_MN = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-      const DN = ['M','T','W','T','F','S','S'];
+      const MN = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const FULL_MN = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+      const DN = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
-      const semGrid  = document.getElementById('acal-sem-grid');
+      const semGrid = document.getElementById('acal-sem-grid');
       const semStats = document.getElementById('acal-sem-stats');
       if (!semGrid) return;
       semGrid.innerHTML = '';
@@ -7701,10 +8248,10 @@
 
       let totalWork = 0, totalHol = 0, totalExam = 0, totalTest = 0;
 
-      MONTHS.forEach(({y, m}) => {
+      MONTHS.forEach(({ y, m }) => {
         const firstDow = new Date(y, m, 1).getDay();
-        const offset   = firstDow === 0 ? 6 : firstDow - 1;
-        const days     = new Date(y, m + 1, 0).getDate();
+        const offset = firstDow === 0 ? 6 : firstDow - 1;
+        const days = new Date(y, m + 1, 0).getDate();
         let mWork = 0, mHol = 0;
 
         const col = document.createElement('div');
@@ -7726,22 +8273,22 @@
           const e = document.createElement('div'); e.className = 'acal-sem-day empty'; g.appendChild(e);
         }
         for (let d = 1; d <= days; d++) {
-          const date    = new Date(y, m, d);
-          const ds      = acalDateStr(y, m, d);
-          const h       = acalFindEvent(ds);
-          const isWk    = acalIsWeekend(date);
+          const date = new Date(y, m, d);
+          const ds = acalDateStr(y, m, d);
+          const h = acalFindEvent(ds);
+          const isWk = acalIsWeekend(date);
           const outside = date < start || date > end;
-          const cell    = document.createElement('div');
+          const cell = document.createElement('div');
           cell.textContent = d;
-          if (outside)     cell.className = 'acal-sem-day outside';
-          else if (isWk)   cell.className = 'acal-sem-day sunday';
+          if (outside) cell.className = 'acal-sem-day outside';
+          else if (isWk) cell.className = 'acal-sem-day sunday';
           else if (h) {
-            const cls = {holiday:'holiday',test:'test',event:'event',exam:'exam'}[h.type] || 'event';
+            const cls = { holiday: 'holiday', test: 'test', event: 'event', exam: 'exam' }[h.type] || 'event';
             cell.className = `acal-sem-day ${cls}`;
             cell.title = h.name;
             if (h.type === 'holiday') { mHol++; totalHol++; }
-            if (h.type === 'test')    totalTest++;
-            if (h.type === 'exam')    totalExam++;
+            if (h.type === 'test') totalTest++;
+            if (h.type === 'exam') totalExam++;
           } else {
             cell.className = 'acal-sem-day working';
             mWork++;
@@ -7761,9 +8308,9 @@
 
       // Update banner stats
       const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
-      setEl('acal-sem-stat-work',  totalWork);
-      setEl('acal-sem-stat-hol',   totalHol);
-      setEl('acal-sem-stat-exam',  totalExam);
+      setEl('acal-sem-stat-work', totalWork);
+      setEl('acal-sem-stat-hol', totalHol);
+      setEl('acal-sem-stat-exam', totalExam);
       setEl('acal-sem-stat-tests', totalTest);
     }
 
@@ -7774,16 +8321,16 @@
       ACAL_CAL_VIEW = view;
       const tabM = document.getElementById('acal-tab-month');
       const tabS = document.getElementById('acal-tab-semester');
-      const vM   = document.getElementById('acal-view-month');
-      const vS   = document.getElementById('acal-view-semester');
-      const nav  = document.getElementById('acal-month-nav');
-      const vt   = document.getElementById('acal-view-title');
+      const vM = document.getElementById('acal-view-month');
+      const vS = document.getElementById('acal-view-semester');
+      const nav = document.getElementById('acal-month-nav');
+      const vt = document.getElementById('acal-view-title');
       if (tabM) tabM.classList.toggle('active', view === 'month');
       if (tabS) tabS.classList.toggle('active', view === 'semester');
-      if (vM)   vM.style.display = view === 'month'    ? ''     : 'none';
-      if (vS)   vS.style.display = view === 'semester' ? ''     : 'none';
-      if (nav)  nav.style.display = view === 'month'   ? 'flex' : 'none';
-      if (vt)   vt.textContent = view === 'month' ? 'Month-wise Calendar View' : 'Semester-wise Calendar View';
+      if (vM) vM.style.display = view === 'month' ? '' : 'none';
+      if (vS) vS.style.display = view === 'semester' ? '' : 'none';
+      if (nav) nav.style.display = view === 'month' ? 'flex' : 'none';
+      if (vt) vt.textContent = view === 'month' ? 'Month-wise Calendar View' : 'Semester-wise Calendar View';
       if (view === 'semester') acalRenderSemesterView();
     }
 
@@ -7791,19 +8338,19 @@
        HOLIDAY TABLE
        ======================================================== */
     function acalRenderHolidayTable() {
-      const DAY_NAMES = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-      const TYPE_MAP  = {
+      const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      const TYPE_MAP = {
         holiday: ['var(--red-pale)', 'var(--red)', 'Holiday'],
-        event:   ['var(--purple-pale)', 'var(--purple)', 'Event'],
-        test:    ['#ccfbf1', '#0d9488', 'Internal Test'],
-        exam:    ['var(--orange-pale)', 'var(--orange)', 'Exam'],
+        event: ['var(--purple-pale)', 'var(--purple)', 'Event'],
+        test: ['#ccfbf1', '#0d9488', 'Internal Test'],
+        exam: ['var(--orange-pale)', 'var(--orange)', 'Exam'],
       };
       const tbody = document.getElementById('acal-holiday-tbody');
       if (!tbody) return;
       tbody.innerHTML = ACAL_HOLIDAYS.map((h, i) => {
-        const d   = new Date(h.date + 'T00:00:00');
-        const tm  = TYPE_MAP[h.type] || ['var(--blue-pale)', 'var(--ink-soft)', h.type];
-        const bg  = i % 2 === 0 ? '#f7f5ee' : '#fff';
+        const d = new Date(h.date + 'T00:00:00');
+        const tm = TYPE_MAP[h.type] || ['var(--blue-pale)', 'var(--ink-soft)', h.type];
+        const bg = i % 2 === 0 ? '#f7f5ee' : '#fff';
         return `<tr style="background:${bg}">
           <td style="font-family:'IBM Plex Mono',monospace;font-size:11px;">${h.date}</td>
           <td style="font-size:11px;color:var(--ink-soft);">${DAY_NAMES[d.getDay()]}</td>
@@ -7843,12 +8390,12 @@
     }
 
     function acalUpdateSummaryStats() {
-      const wd    = acalCountWorkingDays();
-      const hols  = ACAL_HOLIDAYS.filter(h => h.type === 'holiday').length;
+      const wd = acalCountWorkingDays();
+      const hols = ACAL_HOLIDAYS.filter(h => h.type === 'holiday').length;
       const tests = ACAL_HOLIDAYS.filter(h => h.type === 'test').length;
       const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
-      setEl('acal-stat-wd',    wd);
-      setEl('acal-stat-hol',   hols);
+      setEl('acal-stat-wd', wd);
+      setEl('acal-stat-hol', hols);
       setEl('acal-stat-tests', tests);
       const onTrack = wd >= ACAL_CONFIG.workingDaysTarget;
       const msg = document.getElementById('acal-compliance-msg');
@@ -7900,9 +8447,9 @@ Be concise and practical.`;
         const data = await response.json();
         el.textContent = data.content.map(i => i.text || '').join('');
         acalToast('AI analysis complete.');
-      } catch(e) {
+      } catch (e) {
         const wd2 = acalCountWorkingDays();
-        const ok  = wd2 >= ACAL_CONFIG.workingDaysTarget;
+        const ok = wd2 >= ACAL_CONFIG.workingDaysTarget;
         el.textContent = `Academic Calendar Analysis — ${ACAL_CONFIG.academicYear} ${ACAL_CONFIG.semesterLabel}
 
 ${ok ? '✓' : '⚠'} Working Days: ${wd2} ${ok ? '(meets' : '(falls short of'} the ${ACAL_CONFIG.workingDaysTarget}-day UGC requirement${ok ? ')' : ')'}
@@ -7915,8 +8462,8 @@ Recommended Internal Assessment Schedule:
 Exam Preparation Period: 5 working days before exam commencement
 
 Key Observations:
-• ${ACAL_HOLIDAYS.filter(h=>h.type==='holiday').length} public holidays declared — ${ACAL_HOLIDAYS.filter(h=>h.type==='holiday').length > 8 ? 'higher than average; schedule buffer lectures' : 'within acceptable range'}
-• Internal assessments: ${ACAL_HOLIDAYS.filter(h=>h.type==='test').length} scheduled
+• ${ACAL_HOLIDAYS.filter(h => h.type === 'holiday').length} public holidays declared — ${ACAL_HOLIDAYS.filter(h => h.type === 'holiday').length > 8 ? 'higher than average; schedule buffer lectures' : 'within acceptable range'}
+• Internal assessments: ${ACAL_HOLIDAYS.filter(h => h.type === 'test').length} scheduled
 • Ensure syllabus coverage ≥85% before exam preparation period begins
 • Review holiday clusters for compensatory lecture planning`;
         acalToast('AI analysis loaded (offline mode).');
@@ -7927,47 +8474,47 @@ Key Observations:
        EDITABLE REPORT
        ======================================================== */
     const ACAL_REPORT_KEY_DATES = [
-      {key:'Semester Commencement',   val:''},
-      {key:'Last Working Day',        val:''},
-      {key:'Exam Start Date',         val:''},
-      {key:'Semester End Date',       val:''},
-      {key:'Total Working Days',      val:''},
-      {key:'Lectures per Day',        val:''},
-      {key:'Working Days per Week',   val:''},
-      {key:'I Internal Assessment',   val:''},
-      {key:'II Internal Assessment',  val:''},
-      {key:'Exam Preparation Period', val:''},
+      { key: 'Semester Commencement', val: '' },
+      { key: 'Last Working Day', val: '' },
+      { key: 'Exam Start Date', val: '' },
+      { key: 'Semester End Date', val: '' },
+      { key: 'Total Working Days', val: '' },
+      { key: 'Lectures per Day', val: '' },
+      { key: 'Working Days per Week', val: '' },
+      { key: 'I Internal Assessment', val: '' },
+      { key: 'II Internal Assessment', val: '' },
+      { key: 'Exam Preparation Period', val: '' },
     ];
 
     function acalInitReport() {
       // Stamp generation date
       const gendate = document.getElementById('acal-r-gendate');
-      if (gendate) gendate.textContent = new Date().toLocaleDateString('en-IN', {day:'2-digit', month:'short', year:'numeric'});
+      if (gendate) gendate.textContent = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
 
       // Compute key date values dynamically from config
-      const startD  = new Date(ACAL_CONFIG.startDate + 'T00:00:00');
-      const endD    = new Date(ACAL_CONFIG.endDate   + 'T00:00:00');
-      const examD   = ACAL_CONFIG.examStart ? new Date(ACAL_CONFIG.examStart + 'T00:00:00') : null;
-      const fmtDate = d => d.toLocaleDateString('en-IN', {day:'numeric', month:'long', year:'numeric'});
-      const testEvents = ACAL_HOLIDAYS.filter(h=>h.type==='test');
+      const startD = new Date(ACAL_CONFIG.startDate + 'T00:00:00');
+      const endD = new Date(ACAL_CONFIG.endDate + 'T00:00:00');
+      const examD = ACAL_CONFIG.examStart ? new Date(ACAL_CONFIG.examStart + 'T00:00:00') : null;
+      const fmtDate = d => d.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
+      const testEvents = ACAL_HOLIDAYS.filter(h => h.type === 'test');
       const wd = acalCountWorkingDays();
 
       const keyDates = [
-        {key:'Semester Commencement',   val: fmtDate(startD)},
-        {key:'Last Working Day',        val: examD ? fmtDate(new Date(examD.getTime() - 86400000)) : '—'},
-        {key:'Exam Start Date',         val: examD ? fmtDate(examD) : '—'},
-        {key:'Semester End Date',       val: fmtDate(endD)},
-        {key:'Total Working Days',      val: `${wd} days (UGC target: ≥${ACAL_CONFIG.workingDaysTarget})`},
-        {key:'Lectures per Day',        val: `${ACAL_CONFIG.lecturesPerDay} periods`},
-        {key:'Working Days per Week',   val: ACAL_CONFIG.weekendRule === 'sat_sun' ? 'Monday – Friday' : 'Monday – Saturday'},
-        {key:'I Internal Assessment',   val: testEvents[0] ? testEvents[0].date : '—'},
-        {key:'II Internal Assessment',  val: testEvents[1] ? testEvents[1].date : '—'},
-        {key:'Exam Preparation Period', val: examD ? `${fmtDate(new Date(examD.getTime()-5*86400000))} – ${fmtDate(new Date(examD.getTime()-86400000))}` : '—'},
+        { key: 'Semester Commencement', val: fmtDate(startD) },
+        { key: 'Last Working Day', val: examD ? fmtDate(new Date(examD.getTime() - 86400000)) : '—' },
+        { key: 'Exam Start Date', val: examD ? fmtDate(examD) : '—' },
+        { key: 'Semester End Date', val: fmtDate(endD) },
+        { key: 'Total Working Days', val: `${wd} days (UGC target: ≥${ACAL_CONFIG.workingDaysTarget})` },
+        { key: 'Lectures per Day', val: `${ACAL_CONFIG.lecturesPerDay} periods` },
+        { key: 'Working Days per Week', val: ACAL_CONFIG.weekendRule === 'sat_sun' ? 'Monday – Friday' : 'Monday – Saturday' },
+        { key: 'I Internal Assessment', val: testEvents[0] ? testEvents[0].date : '—' },
+        { key: 'II Internal Assessment', val: testEvents[1] ? testEvents[1].date : '—' },
+        { key: 'Exam Preparation Period', val: examD ? `${fmtDate(new Date(examD.getTime() - 5 * 86400000))} – ${fmtDate(new Date(examD.getTime() - 86400000))}` : '—' },
       ];
 
       // Key dates grid
       const kd = document.getElementById('acal-r-keydates');
-      if (kd) kd.innerHTML = keyDates.map(({key, val}) => `
+      if (kd) kd.innerHTML = keyDates.map(({ key, val }) => `
         <div class="acal-report-kv">
           <span class="acal-report-kv-key">${esc(key)}</span>
           <span contenteditable="true" class="acal-report-kv-val" spellcheck="false">${esc(val)}</span>
@@ -7987,38 +8534,38 @@ Key Observations:
       const tbody = document.getElementById('acal-r-month-tbody');
       if (!tbody) return;
       const start = new Date(ACAL_CONFIG.startDate + 'T00:00:00');
-      const end   = new Date(ACAL_CONFIG.endDate   + 'T00:00:00');
-      const MN    = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+      const end = new Date(ACAL_CONFIG.endDate + 'T00:00:00');
+      const MN = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
       // Build month set
       const months = [];
       const cur = new Date(start.getFullYear(), start.getMonth(), 1);
-      while (cur <= end) { months.push({y: cur.getFullYear(), m: cur.getMonth()}); cur.setMonth(cur.getMonth()+1); }
+      while (cur <= end) { months.push({ y: cur.getFullYear(), m: cur.getMonth() }); cur.setMonth(cur.getMonth() + 1); }
 
-      let twDay=0, thol=0, tev=0;
-      const rows = months.map(({y,m},idx) => {
-        const total   = new Date(y, m+1, 0).getDate();
-        const dStart  = new Date(y, m, 1) < start ? start.getDate() : 1;
-        const dEnd    = new Date(y, m+1, 0) > end  ? end.getDate()  : new Date(y, m+1, 0).getDate();
-        let working=0, holidays=0, events=0;
+      let twDay = 0, thol = 0, tev = 0;
+      const rows = months.map(({ y, m }, idx) => {
+        const total = new Date(y, m + 1, 0).getDate();
+        const dStart = new Date(y, m, 1) < start ? start.getDate() : 1;
+        const dEnd = new Date(y, m + 1, 0) > end ? end.getDate() : new Date(y, m + 1, 0).getDate();
+        let working = 0, holidays = 0, events = 0;
         for (let d = dStart; d <= dEnd; d++) {
           const date = new Date(y, m, d);
-          const ds   = acalDateStr(y, m, d);
+          const ds = acalDateStr(y, m, d);
           if (acalIsWeekend(date)) continue;
           const h = acalFindEvent(ds);
-          if (!h)                          working++;
-          else if (h.type==='holiday')     holidays++;
-          else                             events++;
+          if (!h) working++;
+          else if (h.type === 'holiday') holidays++;
+          else events++;
         }
-        twDay+=working; thol+=holidays; tev+=events;
-        const bg = idx%2===0 ? '#f7f5ee' : '#fff';
+        twDay += working; thol += holidays; tev += events;
+        const bg = idx % 2 === 0 ? '#f7f5ee' : '#fff';
         return `<tr style="background:${bg}">
           <td contenteditable="true" style="font-weight:600;">${MN[m]} ${y}</td>
           <td contenteditable="true" style="text-align:center;">${total}</td>
           <td contenteditable="true" style="text-align:center;color:var(--green);font-weight:700;">${working}</td>
           <td contenteditable="true" style="text-align:center;color:var(--red);">${holidays}</td>
           <td contenteditable="true" style="text-align:center;color:var(--purple);">${events}</td>
-          <td contenteditable="true" style="text-align:center;">${working*ACAL_CONFIG.lecturesPerDay}</td>
+          <td contenteditable="true" style="text-align:center;">${working * ACAL_CONFIG.lecturesPerDay}</td>
         </tr>`;
       });
       tbody.innerHTML = rows.join('') + `<tr style="background:var(--blue-pale);font-weight:700;">
@@ -8026,7 +8573,7 @@ Key Observations:
         <td style="text-align:center;color:var(--blue-deep);">${twDay}</td>
         <td style="text-align:center;color:var(--red);">${thol}</td>
         <td style="text-align:center;color:var(--purple);">${tev}</td>
-        <td style="text-align:center;">${twDay*ACAL_CONFIG.lecturesPerDay}</td>
+        <td style="text-align:center;">${twDay * ACAL_CONFIG.lecturesPerDay}</td>
       </tr>`;
     }
 
@@ -8035,18 +8582,18 @@ Key Observations:
       if (!g) return;
       g.innerHTML = '';
       const start = new Date(ACAL_CONFIG.startDate + 'T00:00:00');
-      const end   = new Date(ACAL_CONFIG.endDate   + 'T00:00:00');
-      const MN    = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-      const DN    = ['M','T','W','T','F','S','S'];
+      const end = new Date(ACAL_CONFIG.endDate + 'T00:00:00');
+      const MN = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const DN = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
       const cur = new Date(start.getFullYear(), start.getMonth(), 1);
       let count = 0;
       while (cur <= end && count < 5) {
         const y = cur.getFullYear(), m = cur.getMonth();
         const firstDow = new Date(y, m, 1).getDay();
-        const offset   = firstDow === 0 ? 6 : firstDow - 1;
-        const days     = new Date(y, m+1, 0).getDate();
+        const offset = firstDow === 0 ? 6 : firstDow - 1;
+        const days = new Date(y, m + 1, 0).getDate();
 
-        const col  = document.createElement('div');
+        const col = document.createElement('div');
         col.className = 'acal-report-month-mini';
 
         const titleEl = document.createElement('div');
@@ -8056,19 +8603,19 @@ Key Observations:
 
         const grid = document.createElement('div');
         grid.className = 'acal-report-month-mini-grid';
-        DN.forEach(d => { const e=document.createElement('div');e.className='acal-rmg-dh';e.textContent=d;grid.appendChild(e); });
-        for (let i=0;i<offset;i++) { const e=document.createElement('div');e.className='acal-rmg-d em';grid.appendChild(e); }
-        for (let d=1;d<=days;d++) {
-          const date    = new Date(y, m, d);
-          const ds      = acalDateStr(y, m, d);
-          const h       = acalFindEvent(ds);
-          const isWk    = acalIsWeekend(date);
+        DN.forEach(d => { const e = document.createElement('div'); e.className = 'acal-rmg-dh'; e.textContent = d; grid.appendChild(e); });
+        for (let i = 0; i < offset; i++) { const e = document.createElement('div'); e.className = 'acal-rmg-d em'; grid.appendChild(e); }
+        for (let d = 1; d <= days; d++) {
+          const date = new Date(y, m, d);
+          const ds = acalDateStr(y, m, d);
+          const h = acalFindEvent(ds);
+          const isWk = acalIsWeekend(date);
           const outside = date < start || date > end;
           const e = document.createElement('div');
           e.textContent = d;
-          const clsMap  = {holiday:'h', test:'t', event:'e', exam:'x'};
-          e.className   = 'acal-rmg-d' + (outside ? ' em' : isWk ? ' su' : h ? (' ' + (clsMap[h.type] || '')) : '');
-          e.title       = h ? h.name : '';
+          const clsMap = { holiday: 'h', test: 't', event: 'e', exam: 'x' };
+          e.className = 'acal-rmg-d' + (outside ? ' em' : isWk ? ' su' : h ? (' ' + (clsMap[h.type] || '')) : '');
+          e.title = h ? h.name : '';
           grid.appendChild(e);
         }
         col.appendChild(grid);
@@ -8081,25 +8628,25 @@ Key Observations:
     function acalRenderReportHolidayTable() {
       const tbody = document.getElementById('acal-r-holiday-tbody');
       if (!tbody) return;
-      const DAY_NAMES  = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+      const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
       const TYPE_STYLE = {
         holiday: 'color:var(--red);background:var(--red-pale)',
-        test:    'color:#0d9488;background:#ccfbf1',
-        event:   'color:var(--purple);background:var(--purple-pale)',
-        exam:    'color:var(--orange);background:var(--orange-pale)',
+        test: 'color:#0d9488;background:#ccfbf1',
+        event: 'color:var(--purple);background:var(--purple-pale)',
+        exam: 'color:var(--orange);background:var(--orange-pale)',
       };
-      const TYPE_LABEL = {holiday:'Public Holiday', test:'Internal Test', event:'College Event', exam:'Examination'};
+      const TYPE_LABEL = { holiday: 'Public Holiday', test: 'Internal Test', event: 'College Event', exam: 'Examination' };
       tbody.innerHTML = ACAL_HOLIDAYS.map((h, i) => {
-        const d   = new Date(h.date + 'T00:00:00');
-        const bg  = i%2===0 ? '#f7f5ee' : '#fff';
+        const d = new Date(h.date + 'T00:00:00');
+        const bg = i % 2 === 0 ? '#f7f5ee' : '#fff';
         const sty = TYPE_STYLE[h.type] || '';
         return `<tr style="background:${bg}">
-          <td style="text-align:center;color:#6b7280;">${i+1}</td>
+          <td style="text-align:center;color:#6b7280;">${i + 1}</td>
           <td contenteditable="true">${esc(h.date)}</td>
           <td style="text-align:center;color:#6b7280;">${DAY_NAMES[d.getDay()]}</td>
           <td contenteditable="true" style="font-weight:500;">${esc(h.name)}</td>
-          <td><span style="padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600;${sty}">${TYPE_LABEL[h.type]||h.type}</span></td>
-          <td contenteditable="true" style="color:#6b7280;font-size:11px;">${h.type==='holiday'?'No classes':h.type==='test'?'All courses':h.type==='exam'?'Exams only':'Adjusted'}</td>
+          <td><span style="padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600;${sty}">${TYPE_LABEL[h.type] || h.type}</span></td>
+          <td contenteditable="true" style="color:#6b7280;font-size:11px;">${h.type === 'holiday' ? 'No classes' : h.type === 'test' ? 'All courses' : h.type === 'exam' ? 'Exams only' : 'Adjusted'}</td>
         </tr>`;
       }).join('');
     }
@@ -8182,7 +8729,7 @@ Key Observations:
       "validation": { render: pageValidation, bind: bindValidation },
       "faculty": { render: pageFaculty, bind: bindFaculty },
       "load-dist": { render: pageLoadDist, bind: bindLoadDist },
-      "load-summary": { render: pageLoadSummary },
+      "load-summary": { render: pageLoadSummary, bind: bindLoadSummary },
       "timetable": { render: pageTimetable, bind: bindTimetable },
       "export": { render: pageExport, bind: bindExport },
       "excel": { render: pageExcel, bind: bindExcel },
