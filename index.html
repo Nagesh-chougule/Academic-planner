@@ -2622,6 +2622,38 @@
     #acal-holiday-overlay .modal-box {
       max-width: 420px;
     }
+
+    /* ── Odd / Even semester segmented toggle (Load Distribution page) ── */
+    .sem-type-toggle {
+      display: inline-flex;
+      border: 1.5px solid var(--line);
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: var(--white);
+      box-shadow: var(--shadow);
+    }
+    .sem-type-btn {
+      padding: 7px 18px;
+      border: none;
+      background: transparent;
+      font-family: 'Inter', sans-serif;
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--ink-soft);
+      cursor: pointer;
+      transition: background .15s, color .15s;
+      white-space: nowrap;
+      letter-spacing: .01em;
+      line-height: 1;
+    }
+    .sem-type-btn.active {
+      background: var(--blue-deep);
+      color: var(--white);
+    }
+    .sem-type-btn:not(.active):hover {
+      background: var(--blue-pale);
+      color: var(--blue-deep);
+    }
   </style>
 </head>
 
@@ -2976,6 +3008,7 @@
     let ACTIVE_BUILDER_TAB = 'SEM'; // 'SEM' | 'MINOR' | 'HONOR' — which Curriculum Builder tab is showing
     let LOAD_PROGRAM_ID = null;
     let LOAD_SEM = 1;
+    let LOAD_SEM_TYPE = 'odd'; // 'odd' | 'even' — active semester type filter on Load Distribution page
     let TT_PROGRAM_ID = null;
     let TT_SEM = 1;
     let TT_DIVISION = "A";
@@ -3056,6 +3089,18 @@
       e.preventDefault();
       e.returnValue = "";
     });
+
+    /* ---- Semester type (Odd / Even) state persistence ---- */
+    const LOAD_SEM_TYPE_KEY = "dap_load_sem_type_v1";
+    function saveSemTypeState() {
+      try { localStorage.setItem(LOAD_SEM_TYPE_KEY, LOAD_SEM_TYPE); } catch (e) { console.warn("saveSemTypeState:", e); }
+    }
+    function loadSemTypeState() {
+      try {
+        const v = localStorage.getItem(LOAD_SEM_TYPE_KEY);
+        if (v === 'odd' || v === 'even') LOAD_SEM_TYPE = v;
+      } catch (e) { console.warn("loadSemTypeState:", e); }
+    }
 
     /* ============================= API CONFIG ============================= */
     const APP_CONFIG = {
@@ -5603,13 +5648,29 @@
       let prog = getProgram(LOAD_PROGRAM_ID);
       if (!prog || prog.versionId !== ACTIVE_VERSION_ID) prog = vp[0];
       LOAD_PROGRAM_ID = prog.id;
-      if (LOAD_SEM > prog.semesters) LOAD_SEM = 1;
+      // Compute filtered semester lists for the active odd/even type
+      const _oddSems = semRange(prog.semesters).filter(s => s % 2 === 1);
+      const _evenSems = semRange(prog.semesters).filter(s => s % 2 === 0);
+      // Guard: clamp LOAD_SEM to match LOAD_SEM_TYPE (covers program switches & stale state)
+      const _activeSems = LOAD_SEM_TYPE === 'odd' ? _oddSems : _evenSems;
+      if (_activeSems.length > 0 && !_activeSems.includes(LOAD_SEM)) {
+        LOAD_SEM = _activeSems[0];
+      } else if (LOAD_SEM > prog.semesters) {
+        LOAD_SEM = _activeSems[0] || 1;
+      }
       const sc = semesterCourses(prog, LOAD_SEM);
       return `
     ${pageHeader("Faculty Load · 02", "Load Distribution", "Assign faculty to each course by splitting its Theory (L), Tutorial (T) and Practical (P) hours. Co-teach a course by giving each faculty member a slice of L/T/P — practical workload is assigned per batch.")}
     <div class="selectbar">
       ${programSelector(prog.id, "sel-load-prog")}
-      <div class="field"><label>Semester</label><select id="sel-load-sem">${semRange(prog.semesters).map(s => `<option value="${s}" ${s === LOAD_SEM ? 'selected' : ''}>Sem ${toRoman(s)}</option>`).join("")}</select></div>
+      <div class="field">
+        <label>Semester Type</label>
+        <div class="sem-type-toggle">
+          <button type="button" class="sem-type-btn ${LOAD_SEM_TYPE === 'odd' ? 'active' : ''}" id="btn-load-sem-odd" title="Odd Semesters: I, III, V, VII">Odd Semester</button>
+          <button type="button" class="sem-type-btn ${LOAD_SEM_TYPE === 'even' ? 'active' : ''}" id="btn-load-sem-even" title="Even Semesters: II, IV, VI, VIII">Even Semester</button>
+        </div>
+      </div>
+      <div class="field"><label>Semester</label><select id="sel-load-sem">${_activeSems.map(s => `<option value="${s}" ${s === LOAD_SEM ? 'selected' : ''}>Sem ${toRoman(s)}</option>`).join("")}</select></div>
       <div class="field" style="margin-left:auto; display:flex; align-items:flex-end;">
         <button type="button" class="tt-btn tt-btn-orange" id="btn-load-cfg-batches" style="padding:6px 12px; font-size:12.5px;">⚙ Configure Lab Batches (Sem ${toRoman(LOAD_SEM)})</button>
       </div>
@@ -5790,9 +5851,37 @@
 
     function bindLoadDist() {
       const selP = document.getElementById("sel-load-prog");
-      if (selP) selP.addEventListener("change", () => { LOAD_PROGRAM_ID = selP.value; LOAD_SEM = 1; EDIT_ASSIGN_COURSE_ID = null; EDIT_ASSIGN_FACULTY_ID = null; EDIT_ASSIGN_DIVISION = null; render(); });
+      if (selP) selP.addEventListener("change", () => {
+        LOAD_PROGRAM_ID = selP.value;
+        // Clamp LOAD_SEM to the first valid semester of the active type for the newly selected programme
+        const _prog = getProgram(LOAD_PROGRAM_ID);
+        const _sems = semRange(_prog ? _prog.semesters : 8).filter(s => LOAD_SEM_TYPE === 'odd' ? s % 2 === 1 : s % 2 === 0);
+        LOAD_SEM = _sems[0] || (LOAD_SEM_TYPE === 'odd' ? 1 : 2);
+        EDIT_ASSIGN_COURSE_ID = null; EDIT_ASSIGN_FACULTY_ID = null; EDIT_ASSIGN_DIVISION = null; render();
+      });
       const selS = document.getElementById("sel-load-sem");
       if (selS) selS.addEventListener("change", () => { LOAD_SEM = parseInt(selS.value, 10); EDIT_ASSIGN_COURSE_ID = null; EDIT_ASSIGN_FACULTY_ID = null; EDIT_ASSIGN_DIVISION = null; render(); });
+      // ── Odd / Even semester toggle buttons ──
+      const btnOdd = document.getElementById("btn-load-sem-odd");
+      if (btnOdd) btnOdd.addEventListener("click", () => {
+        LOAD_SEM_TYPE = 'odd';
+        saveSemTypeState();
+        const _prog = getProgram(LOAD_PROGRAM_ID);
+        const _odds = semRange(_prog ? _prog.semesters : 8).filter(s => s % 2 === 1);
+        if (!_odds.includes(LOAD_SEM)) LOAD_SEM = _odds[0] || 1;
+        EDIT_ASSIGN_COURSE_ID = null; EDIT_ASSIGN_FACULTY_ID = null; EDIT_ASSIGN_DIVISION = null;
+        render();
+      });
+      const btnEven = document.getElementById("btn-load-sem-even");
+      if (btnEven) btnEven.addEventListener("click", () => {
+        LOAD_SEM_TYPE = 'even';
+        saveSemTypeState();
+        const _prog = getProgram(LOAD_PROGRAM_ID);
+        const _evens = semRange(_prog ? _prog.semesters : 8).filter(s => s % 2 === 0);
+        if (!_evens.includes(LOAD_SEM)) LOAD_SEM = _evens[0] || 2;
+        EDIT_ASSIGN_COURSE_ID = null; EDIT_ASSIGN_FACULTY_ID = null; EDIT_ASSIGN_DIVISION = null;
+        render();
+      });
       const btnCfgBatches = document.getElementById("btn-load-cfg-batches");
       if (btnCfgBatches) {
         btnCfgBatches.addEventListener("click", () => {
@@ -8748,6 +8837,7 @@ Key Observations:
     // Load any user-customised framework data from localStorage before the first render.
     loadFramework();
     loadHMCategories();
+    loadSemTypeState(); // Restore Odd/Even semester type filter from localStorage
     bootstrap();
   </script>
 </body>
