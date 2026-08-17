@@ -8,8 +8,8 @@
   <title>Department Academic Planner — NEP 2020 (Maharashtra)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <!-- Supabase JS v2 — explicit UMD bundle so window.supabase is defined in all browsers -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <!-- Supabase JS v2 — pinned to 2.49.4 which supports both legacy JWT anon keys and new sb_publishable_ keys -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js"></script>
   <link
     href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
     rel="stylesheet">
@@ -1846,782 +1846,753 @@
        ACADEMIC CALENDAR MODULE — CSS
        ===================================================================== */
 
-    /* ── Calendar day grid ── */
-    .acal-section {
-      margin-bottom: 24px;
+    /* ── New Academic Calendar embed ── */
+    #new-acal-root {
+      --nc-navy: #1B2A4A;
+      --nc-navy-light: #243560;
+      --nc-navy-dark: #111E36;
+      --nc-gold: #C9A84C;
+      --nc-gold-light: #E8C96A;
+      --nc-gold-muted: #F0E4C0;
+      --nc-slate: #4A6080;
+      --nc-slate-light: #6B84A0;
+      --nc-bg: #F8F7F4;
+      --nc-bg-card: #FFFFFF;
+      --nc-text: #1C2B3A;
+      --nc-text-muted: #6B7A8D;
+      --nc-border: #DDD8CE;
+      --nc-border-light: #EDE9E1;
+      --nc-radius: 8px;
+      --nc-radius-lg: 12px;
+      --nc-shadow: 0 2px 12px rgba(27, 42, 74, 0.08);
+      --nc-shadow-md: 0 4px 24px rgba(27, 42, 74, 0.12);
+      --nc-cat-teaching: #2E7D56;
+      --nc-cat-exam: #C0392B;
+      --nc-cat-holiday: #1565C0;
+      --nc-cat-vacation: #6A4C93;
+      --nc-cat-admission: #E67E22;
+      --nc-cat-registration: #2980B9;
+      --nc-cat-academic: #8B6914;
+      --nc-cat-other: #546E7A;
+      font-family: 'Inter', sans-serif;
+      background: var(--nc-bg);
+      color: var(--nc-text);
+      font-size: 14px;
+      line-height: 1.5;
+      border-radius: var(--nc-radius-lg);
+      overflow: hidden;
     }
 
-    .acal-cal-grid {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      gap: 4px;
-      margin-top: 8px;
+    #new-acal-root .nc-layout {
+      display: flex;
+      min-height: 600px;
     }
 
-    .acal-day-header {
-      text-align: center;
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: .06em;
-      text-transform: uppercase;
-      color: var(--ink-soft);
-      padding: 5px 0;
-      font-family: 'IBM Plex Mono', monospace;
-    }
-
-    .acal-day {
-      aspect-ratio: 1;
-      border-radius: 5px;
+    #new-acal-root .nc-sidebar {
+      width: 260px;
+      flex-shrink: 0;
+      background: var(--nc-bg-card);
+      border-right: 1px solid var(--nc-border);
       display: flex;
       flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      font-size: 11px;
-      cursor: pointer;
-      border: 1px solid transparent;
-      transition: border-color .12s, transform .12s;
-      position: relative;
-      min-height: 34px;
-      font-weight: 500;
+      overflow-y: auto;
     }
 
-    .acal-day:hover {
-      border-color: var(--blue);
-      transform: scale(1.06);
-      z-index: 2;
-    }
-
-    .acal-day.empty {
-      background: transparent;
-      cursor: default;
-    }
-
-    .acal-day.empty:hover {
-      border-color: transparent;
-      transform: none;
-    }
-
-    .acal-day.working {
-      background: var(--green-pale);
-      color: var(--green);
-    }
-
-    .acal-day.holiday {
-      background: var(--red-pale);
-      color: var(--red);
-      font-weight: 700;
-    }
-
-    .acal-day.test {
-      background: #ccfbf1;
-      color: #0d9488;
-      font-weight: 700;
-    }
-
-    .acal-day.event {
-      background: var(--purple-pale);
-      color: var(--purple);
-      font-weight: 700;
-    }
-
-    .acal-day.exam {
-      background: var(--orange-pale);
-      color: var(--orange);
-      font-weight: 700;
-    }
-
-    .acal-day.sunday {
-      background: var(--blue-pale);
-      color: var(--ink-soft);
-    }
-
-    .acal-day.outside {
-      opacity: .2;
-      background: var(--blue-pale);
-      cursor: default;
-    }
-
-    .acal-day .day-num {
-      font-weight: 600;
-      line-height: 1;
-    }
-
-    .acal-day .day-dot {
-      width: 4px;
-      height: 4px;
-      border-radius: 50%;
-      background: currentColor;
-      margin-top: 2px;
-    }
-
-    .acal-legend {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 12px;
-      padding-top: 10px;
-      border-top: 1px solid var(--line);
-    }
-
-    .acal-legend-item {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 11.5px;
-      color: var(--ink-soft);
-    }
-
-    .acal-legend-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 3px;
-    }
-
-    /* ── Semester view ── */
-    .acal-sem-grid {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 16px;
-      margin-top: 4px;
-    }
-
-    .acal-sem-month-title {
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: .08em;
-      text-transform: uppercase;
-      color: var(--white);
-      background: var(--blue-deep);
-      padding: 5px 8px;
-      border-radius: 5px 5px 0 0;
-      text-align: center;
-    }
-
-    .acal-sem-month-grid {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      gap: 1px;
-      border: 1px solid var(--line);
-      border-top: none;
-      border-radius: 0 0 5px 5px;
+    #new-acal-root .nc-main {
+      flex: 1;
       overflow: hidden;
-      padding: 2px;
-      background: var(--white);
-    }
-
-    .acal-sem-dh {
-      text-align: center;
-      font-size: 7.5px;
-      font-weight: 700;
-      color: var(--ink-soft);
-      letter-spacing: .04em;
-      padding: 2px 0;
-      font-family: 'IBM Plex Mono', monospace;
-    }
-
-    .acal-sem-day {
-      aspect-ratio: 1;
-      border-radius: 2px;
       display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 8px;
+      flex-direction: column;
+    }
+
+    #new-acal-root .nc-sidebar-section {
+      padding: 14px;
+      border-bottom: 1px solid var(--nc-border-light);
+    }
+
+    #new-acal-root .nc-sidebar-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: var(--nc-gold);
+      margin-bottom: 8px;
+    }
+
+    #new-acal-root .nc-form-group {
+      margin-bottom: 8px;
+    }
+
+    #new-acal-root .nc-form-group label {
+      display: block;
+      font-size: 11px;
       font-weight: 500;
-      min-height: 18px;
-      cursor: default;
+      color: var(--nc-text-muted);
+      margin-bottom: 3px;
     }
 
-    .acal-sem-day.empty {
-      background: transparent;
-    }
-
-    .acal-sem-day.working {
-      background: var(--green-pale);
-      color: var(--green);
-    }
-
-    .acal-sem-day.holiday {
-      background: var(--red-pale);
-      color: var(--red);
-      font-weight: 700;
-    }
-
-    .acal-sem-day.test {
-      background: #ccfbf1;
-      color: #0d9488;
-      font-weight: 700;
-    }
-
-    .acal-sem-day.event {
-      background: var(--purple-pale);
-      color: var(--purple);
-      font-weight: 700;
-    }
-
-    .acal-sem-day.exam {
-      background: var(--orange-pale);
-      color: var(--orange);
-      font-weight: 700;
-    }
-
-    .acal-sem-day.sunday {
-      background: var(--blue-pale);
-      color: var(--ink-soft);
-    }
-
-    .acal-sem-day.outside {
-      opacity: .18;
-      background: var(--blue-pale);
-    }
-
-    .acal-sem-day:hover:not(.empty):not(.outside) {
-      transform: scale(1.2);
-      z-index: 2;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, .15);
-    }
-
-    .acal-sem-stats {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 16px;
-      margin-top: 6px;
-    }
-
-    .acal-sem-stat {
-      text-align: center;
-      padding: 5px 0;
-      border-top: 2px solid var(--line);
-    }
-
-    .acal-sem-stat-val {
-      font-family: 'IBM Plex Mono', monospace;
-      font-size: 16px;
-      font-weight: 700;
-      color: var(--ink);
-    }
-
-    .acal-sem-stat-lbl {
-      font-size: 9.5px;
-      color: var(--ink-soft);
-      margin-top: 1px;
-    }
-
-    /* ── View tabs ── */
-    .acal-view-tabs {
-      display: flex;
-      gap: 2px;
-      background: var(--blue-pale);
-      border-radius: 6px;
-      padding: 3px;
-    }
-
-    .acal-view-tab {
-      padding: 5px 14px;
-      border-radius: 4px;
+    #new-acal-root .nc-form-control {
+      width: 100%;
+      padding: 6px 9px;
+      border: 1px solid var(--nc-border);
+      border-radius: var(--nc-radius);
+      background: var(--nc-bg);
       font-size: 12px;
+      color: var(--nc-text);
+    }
+
+    #new-acal-root .nc-form-control:focus {
+      outline: none;
+      border-color: var(--nc-navy);
+      background: #fff;
+    }
+
+    #new-acal-root .nc-search-box {
+      position: relative;
+    }
+
+    #new-acal-root .nc-search-box input {
+      padding-left: 28px;
+    }
+
+    #new-acal-root .nc-search-box .nc-icon {
+      position: absolute;
+      left: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--nc-text-muted);
+      font-size: 12px;
+    }
+
+    #new-acal-root .nc-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+
+    #new-acal-root .nc-chip {
+      padding: 2px 8px;
+      border-radius: 20px;
+      border: 1px solid var(--nc-border);
+      font-size: 10px;
       font-weight: 500;
       cursor: pointer;
-      border: none;
-      background: transparent;
-      color: var(--ink-soft);
-      transition: all .12s;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 3px;
     }
 
-    .acal-view-tab.active {
-      background: var(--white);
-      color: var(--ink);
-      box-shadow: 0 1px 3px rgba(0, 0, 0, .1);
-      font-weight: 600;
+    #new-acal-root .nc-chip.active {
+      border-color: var(--nc-navy);
+      background: var(--nc-navy);
+      color: #fff;
     }
 
-    /* ── AI panel ── */
-    .acal-ai-panel {
-      background: linear-gradient(135deg, #eef3ff 0%, #f4eeff 100%);
-      border: 1px solid #c7d5fe;
-      border-radius: var(--radius);
-      padding: 16px 18px;
-      margin-bottom: 16px;
+    #new-acal-root .nc-chip-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
     }
 
-    .acal-ai-header {
+    #new-acal-root .nc-toolbar {
+      padding: 10px 16px;
+      background: var(--nc-bg-card);
+      border-bottom: 1px solid var(--nc-border);
       display: flex;
       align-items: center;
       gap: 8px;
-      margin-bottom: 10px;
-    }
-
-    .acal-ai-dot {
-      width: 8px;
-      height: 8px;
-      background: var(--blue);
-      border-radius: 50%;
-      animation: acalpulse 2s infinite;
-    }
-
-    @keyframes acalpulse {
-
-      0%,
-      100% {
-        opacity: 1;
-        transform: scale(1);
-      }
-
-      50% {
-        opacity: 0.4;
-        transform: scale(0.8);
-      }
-    }
-
-    .acal-ai-title {
-      font-size: 12.5px;
-      font-weight: 600;
-      color: var(--blue-deep);
-    }
-
-    .acal-ai-output {
-      background: white;
-      border: 1px solid #c7d5fe;
-      border-radius: 5px;
-      padding: 12px 14px;
-      font-size: 12px;
-      line-height: 1.65;
-      color: var(--ink);
-      min-height: 56px;
-      white-space: pre-wrap;
-      font-family: 'IBM Plex Mono', monospace;
-    }
-
-    .acal-ai-loading {
-      color: var(--ink-soft);
-      font-style: italic;
-    }
-
-    /* ── Summary stat boxes ── */
-    .acal-summary-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 10px;
-      margin-bottom: 14px;
-    }
-
-    .acal-stat-box {
-      background: var(--white);
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      padding: 12px 14px;
-      box-shadow: var(--shadow);
-    }
-
-    .acal-stat-label {
-      font-size: 11px;
-      color: var(--ink-soft);
-      font-weight: 600;
-      margin-bottom: 4px;
-    }
-
-    .acal-stat-value {
-      font-family: 'IBM Plex Mono', monospace;
-      font-size: 22px;
-      font-weight: 700;
-      color: var(--ink);
-      line-height: 1;
-    }
-
-    .acal-compliance-ok {
-      margin-top: 10px;
-      padding: 8px 12px;
-      background: var(--green-pale);
-      border-radius: 5px;
-      font-size: 12px;
-      color: var(--green);
-      font-weight: 600;
-    }
-
-    .acal-compliance-warn {
-      margin-top: 10px;
-      padding: 8px 12px;
-      background: var(--orange-pale);
-      border-radius: 5px;
-      font-size: 12px;
-      color: var(--orange);
-      font-weight: 600;
-    }
-
-    /* ── Banner (semester overview) ── */
-    .acal-sem-banner {
-      background: linear-gradient(135deg, var(--blue-deep) 0%, #1a3a52 100%);
-      border-radius: var(--radius);
-      padding: 14px 18px;
-      margin-bottom: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-    }
-
-    .acal-sem-banner-title {
-      font-size: 14px;
-      font-weight: 700;
-      color: white;
-      font-family: 'Space Grotesk', sans-serif;
-    }
-
-    .acal-sem-banner-sub {
-      font-size: 10px;
-      color: rgba(255, 255, 255, .45);
-      letter-spacing: .07em;
-      text-transform: uppercase;
-      margin-bottom: 2px;
-      font-family: 'IBM Plex Mono', monospace;
-    }
-
-    .acal-sem-banner-stats {
-      display: flex;
-      gap: 20px;
-    }
-
-    .acal-banner-stat-val {
-      font-family: 'IBM Plex Mono', monospace;
-      font-size: 20px;
-      font-weight: 700;
-      color: white;
-    }
-
-    .acal-banner-stat-lbl {
-      font-size: 9px;
-      color: rgba(255, 255, 255, .4);
-      text-transform: uppercase;
-      letter-spacing: .06em;
-    }
-
-    /* ── Report styles ── */
-    .acal-report-toolbar {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 10px 14px;
-      background: var(--blue-deep);
-      border-radius: var(--radius) var(--radius) 0 0;
       flex-wrap: wrap;
     }
 
-    .acal-report-toolbar-lbl {
-      color: rgba(255, 255, 255, .5);
-      font-size: 10.5px;
-      font-weight: 600;
-      letter-spacing: .07em;
-      text-transform: uppercase;
-      font-family: 'IBM Plex Mono', monospace;
-    }
-
-    .acal-report-frame {
-      border: 2px solid var(--blue-deep);
-      border-top: none;
-      border-radius: 0 0 var(--radius) var(--radius);
-      background: white;
-      min-height: 500px;
-    }
-
-    .acal-report-page {
-      max-width: 860px;
-      margin: 0 auto;
-      padding: 40px 48px;
-      background: white;
-      font-size: 12px;
-      font-family: 'Inter', sans-serif;
-      color: #111;
-      line-height: 1.55;
-    }
-
-    .acal-report-header-block {
-      border-bottom: 3px solid #111;
-      padding-bottom: 18px;
-      margin-bottom: 22px;
-    }
-
-    .acal-report-institution {
-      font-size: 17px;
-      font-weight: 700;
-      font-family: 'Space Grotesk', sans-serif;
-      color: #111;
-      outline: none;
-      border: 1px dashed transparent;
-      border-radius: 3px;
-      padding: 2px 4px;
-      display: block;
-      width: 100%;
-    }
-
-    .acal-report-institution:hover {
-      border-color: var(--blue);
-    }
-
-    .acal-report-institution:focus {
-      border-color: var(--blue);
-      box-shadow: 0 0 0 2px var(--blue-pale);
-    }
-
-    .acal-report-subtitle {
-      font-size: 12px;
-      color: #6b7280;
-      outline: none;
-      border: 1px dashed transparent;
-      border-radius: 3px;
-      padding: 2px 4px;
-      display: inline-block;
-      min-width: 140px;
-    }
-
-    .acal-report-subtitle:hover {
-      border-color: var(--blue);
-    }
-
-    .acal-report-doc-title {
-      font-size: 22px;
-      font-weight: 800;
-      color: #111;
-      text-align: center;
-      margin-bottom: 3px;
-      outline: none;
-      border: 1px dashed transparent;
-      border-radius: 3px;
-      padding: 2px 6px;
-      width: 100%;
-      display: block;
-    }
-
-    .acal-report-doc-title:hover {
-      border-color: var(--blue);
-    }
-
-    .acal-report-section-head {
-      font-size: 11.5px;
-      font-weight: 700;
-      letter-spacing: .06em;
-      text-transform: uppercase;
-      color: #111;
-      border-bottom: 1px solid #e5e7eb;
-      padding-bottom: 5px;
-      margin: 20px 0 10px;
+    #new-acal-root .nc-toolbar-left {
       display: flex;
       align-items: center;
-      gap: 7px;
-    }
-
-    .acal-report-section-head::before {
-      content: '';
-      display: block;
-      width: 4px;
-      height: 13px;
-      background: var(--blue);
-      border-radius: 2px;
-      flex-shrink: 0;
-    }
-
-    .acal-report-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 11px;
-      margin-bottom: 12px;
-    }
-
-    .acal-report-table th {
-      background: var(--blue-deep);
-      color: white;
-      padding: 7px 9px;
-      text-align: left;
-      font-size: 10px;
-      letter-spacing: .05em;
-      text-transform: uppercase;
-    }
-
-    .acal-report-table td {
-      padding: 6px 9px;
-      border-bottom: 1px solid #e5e7eb;
-      vertical-align: middle;
-    }
-
-    .acal-report-table td[contenteditable="true"] {
-      outline: none;
-      cursor: text;
-    }
-
-    .acal-report-table td[contenteditable="true"]:hover {
-      background: var(--blue-pale) !important;
-    }
-
-    .acal-report-table td[contenteditable="true"]:focus {
-      background: #eff6ff !important;
-      box-shadow: inset 0 0 0 2px var(--blue);
-    }
-
-    .acal-report-kv-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      margin-bottom: 14px;
-    }
-
-    .acal-report-kv {
-      display: flex;
-      align-items: baseline;
-      gap: 7px;
-      padding: 6px 9px;
-      background: #f7f5ee;
-      border-radius: 4px;
-      border: 1px solid #e5e7eb;
-    }
-
-    .acal-report-kv-key {
-      font-size: 10px;
-      font-weight: 700;
-      color: #6b7280;
-      white-space: nowrap;
-      min-width: 120px;
-    }
-
-    .acal-report-kv-val {
-      font-size: 12px;
-      color: #111;
-      font-weight: 500;
-      outline: none;
-      border: 1px dashed transparent;
-      border-radius: 3px;
-      padding: 1px 4px;
+      gap: 6px;
       flex: 1;
     }
 
-    .acal-report-kv-val:hover {
-      border-color: var(--blue);
+    #new-acal-root .nc-toolbar-right {
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
 
-    .acal-report-kv-val:focus {
-      border-color: var(--blue);
-      background: white;
+    #new-acal-root .nc-month-nav {
+      display: flex;
+      align-items: center;
+      gap: 5px;
     }
 
-    .acal-report-sig-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 24px;
-      margin-top: 36px;
-      padding-top: 16px;
-      border-top: 1px solid #e5e7eb;
-    }
-
-    .acal-report-sig {
-      text-align: center;
-    }
-
-    .acal-report-sig-line {
-      border-bottom: 1px solid #111;
-      width: 80%;
-      margin: 30px auto 5px;
-    }
-
-    .acal-report-sig-label {
-      font-size: 10px;
-      color: #6b7280;
-      font-weight: 700;
-      outline: none;
-    }
-
-    .acal-report-monthly-grid {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 10px;
-      margin-top: 6px;
-    }
-
-    .acal-report-month-mini {
-      border: 1px solid #e5e7eb;
-      border-radius: 4px;
-      overflow: hidden;
-    }
-
-    .acal-report-month-mini-title {
-      background: var(--blue-deep);
-      color: white;
-      font-size: 7.5px;
-      font-weight: 700;
-      text-align: center;
-      padding: 3px;
-      letter-spacing: .06em;
-    }
-
-    .acal-report-month-mini-grid {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      gap: 1px;
-      padding: 2px;
-      background: #e5e7eb;
-    }
-
-    .acal-rmg-dh {
-      background: #f3f4f6;
-      text-align: center;
-      font-size: 5.5px;
-      font-weight: 700;
-      color: #6b7280;
-      padding: 1.5px 0;
-    }
-
-    .acal-rmg-d {
-      background: white;
-      text-align: center;
-      font-size: 6.5px;
-      padding: 1.5px 0;
-      font-weight: 500;
-    }
-
-    .acal-rmg-d.h {
-      background: var(--red-pale);
-      color: var(--red);
-      font-weight: 700;
-    }
-
-    .acal-rmg-d.t {
-      background: #ccfbf1;
-      color: #0d9488;
-      font-weight: 700;
-    }
-
-    .acal-rmg-d.e {
-      background: var(--purple-pale);
-      color: var(--purple);
-      font-weight: 700;
-    }
-
-    .acal-rmg-d.x {
-      background: var(--orange-pale);
-      color: var(--orange);
-      font-weight: 700;
-    }
-
-    .acal-rmg-d.su {
-      background: var(--blue-pale);
-      color: var(--ink-soft);
-    }
-
-    .acal-rmg-d.em {
-      background: white;
-      color: transparent;
-    }
-
-    /* ── Calendar modal for holiday add/edit ── */
-    #acal-holiday-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, .45);
-      z-index: 9000;
+    #new-acal-root .nc-month-nav button {
+      width: 26px;
+      height: 26px;
+      border: 1px solid var(--nc-border);
+      background: transparent;
+      cursor: pointer;
+      border-radius: 5px;
       display: flex;
       align-items: center;
       justify-content: center;
+      font-size: 13px;
+      color: var(--nc-text-muted);
     }
 
-    #acal-holiday-overlay .modal-box {
-      max-width: 420px;
+    #new-acal-root .nc-month-nav button:hover {
+      background: var(--nc-bg);
     }
+
+    #new-acal-root .nc-month-label {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--nc-navy);
+      min-width: 140px;
+      text-align: center;
+    }
+
+    #new-acal-root .nc-view-toggle {
+      display: flex;
+      border: 1px solid var(--nc-border);
+      border-radius: var(--nc-radius);
+      overflow: hidden;
+    }
+
+    #new-acal-root .nc-view-btn {
+      padding: 5px 10px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--nc-text-muted);
+      transition: all 0.15s;
+    }
+
+    #new-acal-root .nc-view-btn.active {
+      background: var(--nc-navy);
+      color: #fff;
+    }
+
+    #new-acal-root .nc-view-btn:not(.active):hover {
+      background: var(--nc-bg);
+    }
+
+    #new-acal-root .nc-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 6px 12px;
+      border-radius: var(--nc-radius);
+      border: none;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 500;
+      transition: all 0.15s;
+    }
+
+    #new-acal-root .nc-btn-gold {
+      background: var(--nc-gold);
+      color: var(--nc-navy-dark);
+      font-weight: 600;
+    }
+
+    #new-acal-root .nc-btn-gold:hover {
+      background: var(--nc-gold-light);
+    }
+
+    #new-acal-root .nc-btn-outline {
+      background: transparent;
+      border: 1px solid var(--nc-border);
+      color: var(--nc-text);
+    }
+
+    #new-acal-root .nc-btn-outline:hover {
+      background: var(--nc-bg);
+    }
+
+    /* Dashboard stats */
+    #new-acal-root .nc-dashboard {
+      padding: 14px;
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 10px;
+    }
+
+    #new-acal-root .nc-stat-card {
+      background: var(--nc-bg-card);
+      border-radius: var(--nc-radius);
+      padding: 12px;
+      border: 1px solid var(--nc-border);
+      box-shadow: var(--nc-shadow);
+      position: relative;
+      overflow: hidden;
+      text-align: center;
+    }
+
+    #new-acal-root .nc-stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+    }
+
+    #new-acal-root .nc-stat-card.total::before {
+      background: var(--nc-navy);
+    }
+
+    #new-acal-root .nc-stat-card.teaching::before {
+      background: var(--nc-cat-teaching);
+    }
+
+    #new-acal-root .nc-stat-card.exam::before {
+      background: var(--nc-cat-exam);
+    }
+
+    #new-acal-root .nc-stat-card.holiday::before {
+      background: var(--nc-cat-holiday);
+    }
+
+    #new-acal-root .nc-stat-card.vacation::before {
+      background: var(--nc-cat-vacation);
+    }
+
+    #new-acal-root .nc-stat-card.working::before {
+      background: var(--nc-gold);
+    }
+
+    #new-acal-root .nc-stat-num {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--nc-navy);
+      line-height: 1;
+    }
+
+    #new-acal-root .nc-stat-label {
+      font-size: 10px;
+      color: var(--nc-text-muted);
+      margin-top: 3px;
+      font-weight: 500;
+    }
+
+    /* Calendar grid */
+    #new-acal-root .nc-cal-wrap {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0 14px 14px;
+    }
+
+    #new-acal-root .nc-cal-grid {
+      background: var(--nc-bg-card);
+      border-radius: var(--nc-radius-lg);
+      border: 1px solid var(--nc-border);
+      overflow: hidden;
+      box-shadow: var(--nc-shadow);
+    }
+
+    #new-acal-root .nc-cal-header {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      background: var(--nc-navy);
+    }
+
+    #new-acal-root .nc-cal-dow {
+      text-align: center;
+      padding: 8px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    #new-acal-root .nc-cal-dow:first-child,
+    #new-acal-root .nc-cal-dow:last-child {
+      color: var(--nc-gold-light);
+    }
+
+    #new-acal-root .nc-cal-body {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+    }
+
+    #new-acal-root .nc-cal-day {
+      border-right: 1px solid var(--nc-border-light);
+      border-bottom: 1px solid var(--nc-border-light);
+      min-height: 90px;
+      padding: 5px;
+      position: relative;
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+
+    #new-acal-root .nc-cal-day:nth-child(7n) {
+      border-right: none;
+    }
+
+    #new-acal-root .nc-cal-day:hover {
+      background: #F0EFEC;
+    }
+
+    #new-acal-root .nc-cal-day.other-month {
+      background: #FAFAF8;
+    }
+
+    #new-acal-root .nc-cal-day.other-month .nc-day-num {
+      color: #C5C0B5;
+    }
+
+    #new-acal-root .nc-cal-day.today {
+      background: #EEF2FF;
+    }
+
+    #new-acal-root .nc-cal-day.today .nc-day-num {
+      background: var(--nc-navy);
+      color: #fff;
+      border-radius: 50%;
+      width: 22px;
+      height: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+    }
+
+    #new-acal-root .nc-cal-day.weekend .nc-day-num {
+      color: var(--nc-slate-light);
+    }
+
+    #new-acal-root .nc-day-num {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--nc-text);
+      margin-bottom: 2px;
+    }
+
+    #new-acal-root .nc-cal-events {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    #new-acal-root .nc-event-pill {
+      font-size: 9px;
+      font-weight: 500;
+      padding: 1px 4px;
+      border-radius: 3px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      cursor: pointer;
+      line-height: 1.4;
+    }
+
+    #new-acal-root .nc-more-events {
+      font-size: 9px;
+      color: var(--nc-text-muted);
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    #new-acal-root .nc-more-events:hover {
+      color: var(--nc-navy);
+    }
+
+    /* Pill colors */
+    #new-acal-root .pill-Teaching {
+      background: var(--nc-cat-teaching);
+      color: #fff;
+    }
+
+    #new-acal-root .pill-Examination {
+      background: var(--nc-cat-exam);
+      color: #fff;
+    }
+
+    #new-acal-root .pill-Holiday {
+      background: var(--nc-cat-holiday);
+      color: #fff;
+    }
+
+    #new-acal-root .pill-Vacation {
+      background: var(--nc-cat-vacation);
+      color: #fff;
+    }
+
+    #new-acal-root .pill-Admission {
+      background: var(--nc-cat-admission);
+      color: #fff;
+    }
+
+    #new-acal-root .pill-Registration {
+      background: var(--nc-cat-registration);
+      color: #fff;
+    }
+
+    #new-acal-root .pill-Academic {
+      background: var(--nc-cat-academic);
+      color: #fff;
+    }
+
+    #new-acal-root .pill-Other {
+      background: var(--nc-cat-other);
+      color: #fff;
+    }
+
+    /* Badge colors */
+    #new-acal-root .badge-Teaching {
+      background: #E8F5EE;
+      color: var(--nc-cat-teaching);
+    }
+
+    #new-acal-root .badge-Examination {
+      background: #FDECEA;
+      color: var(--nc-cat-exam);
+    }
+
+    #new-acal-root .badge-Holiday {
+      background: #E3F2FD;
+      color: var(--nc-cat-holiday);
+    }
+
+    #new-acal-root .badge-Vacation {
+      background: #F3E5F5;
+      color: var(--nc-cat-vacation);
+    }
+
+    #new-acal-root .badge-Admission {
+      background: #FFF3E0;
+      color: var(--nc-cat-admission);
+    }
+
+    #new-acal-root .badge-Registration {
+      background: #E1F5FE;
+      color: var(--nc-cat-registration);
+    }
+
+    #new-acal-root .badge-Academic {
+      background: #FFF8E1;
+      color: var(--nc-cat-academic);
+    }
+
+    #new-acal-root .badge-Other {
+      background: #ECEFF1;
+      color: var(--nc-cat-other);
+    }
+
+    /* List view */
+    #new-acal-root .nc-list-wrap {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0 14px 14px;
+    }
+
+    #new-acal-root .nc-list-table {
+      width: 100%;
+      background: var(--nc-bg-card);
+      border-radius: var(--nc-radius-lg);
+      border: 1px solid var(--nc-border);
+      overflow: hidden;
+      box-shadow: var(--nc-shadow);
+      border-collapse: collapse;
+    }
+
+    #new-acal-root .nc-list-table th {
+      background: var(--nc-navy);
+      color: rgba(255, 255, 255, 0.9);
+      padding: 9px 12px;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    #new-acal-root .nc-list-table th:hover {
+      background: var(--nc-navy-light);
+    }
+
+    #new-acal-root .nc-list-table td {
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--nc-border-light);
+      font-size: 12px;
+      vertical-align: middle;
+    }
+
+    #new-acal-root .nc-list-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    #new-acal-root .nc-list-table tr:hover td {
+      background: #FAFAF8;
+    }
+
+    #new-acal-root .nc-cat-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 7px;
+      border-radius: 10px;
+      font-size: 10px;
+      font-weight: 600;
+    }
+
+    #new-acal-root .nc-action-btns {
+      display: flex;
+      gap: 3px;
+    }
+
+    #new-acal-root .nc-icon-btn {
+      width: 26px;
+      height: 26px;
+      border: 1px solid var(--nc-border);
+      background: transparent;
+      border-radius: 5px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      transition: all 0.15s;
+    }
+
+    #new-acal-root .nc-icon-btn:hover {
+      background: var(--nc-bg);
+    }
+
+    #new-acal-root .nc-icon-btn.del:hover {
+      background: #fdecea;
+      border-color: #C0392B;
+      color: #C0392B;
+    }
+
+    #new-acal-root .nc-icon-btn.edit:hover {
+      background: #e8f0fe;
+      border-color: #1565C0;
+      color: #1565C0;
+    }
+
+    /* Modal */
+    #new-acal-root .nc-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(17, 30, 54, 0.55);
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      padding: 20px;
+    }
+
+    #new-acal-root .nc-modal-overlay.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    #new-acal-root .nc-modal {
+      background: var(--nc-bg-card);
+      border-radius: var(--nc-radius-lg);
+      width: 100%;
+      max-width: 540px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: var(--nc-shadow-md);
+      transform: translateY(10px);
+      transition: transform 0.2s;
+    }
+
+    #new-acal-root .nc-modal-overlay.open .nc-modal {
+      transform: translateY(0);
+    }
+
+    #new-acal-root .nc-modal-header {
+      padding: 16px 20px 14px;
+      border-bottom: 1px solid var(--nc-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      background: var(--nc-bg-card);
+      z-index: 1;
+    }
+
+    #new-acal-root .nc-modal-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--nc-navy);
+    }
+
+    #new-acal-root .nc-modal-close {
+      background: none;
+      border: none;
+      font-size: 18px;
+      cursor: pointer;
+      color: var(--nc-text-muted);
+    }
+
+    #new-acal-root .nc-modal-body {
+      padding: 16px 20px;
+    }
+
+    #new-acal-root .nc-modal-footer {
+      padding: 12px 20px;
+      border-top: 1px solid var(--nc-border);
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    #new-acal-root .nc-form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    #new-acal-root .nc-form-group-m {
+      margin-bottom: 12px;
+    }
+
+    #new-acal-root .nc-form-group-m label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--nc-text-muted);
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    #new-acal-root textarea.nc-form-control {
+      resize: vertical;
+      min-height: 60px;
+    }
+
+    #new-acal-root .nc-sem-badge {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 10px;
+      background: var(--nc-gold-muted);
+      color: var(--nc-navy);
+      font-weight: 600;
+    }
+
+    #new-acal-root .nc-hidden {
+      display: none !important;
+    }
+
+    #new-acal-root .nc-gold-rule {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--nc-gold), transparent);
+      margin: 2px 0;
+      opacity: 0.6;
+    }
+
+    /* ── Odd / Even semester segmented toggle (Load Distribution page) ── */
 
     /* ── Odd / Even semester segmented toggle (Load Distribution page) ── */
     .sem-type-toggle {
@@ -2632,6 +2603,7 @@
       background: var(--white);
       box-shadow: var(--shadow);
     }
+
     .sem-type-btn {
       padding: 7px 18px;
       border: none;
@@ -2646,10 +2618,12 @@
       letter-spacing: .01em;
       line-height: 1;
     }
+
     .sem-type-btn.active {
       background: var(--blue-deep);
       color: var(--white);
     }
+
     .sem-type-btn:not(.active):hover {
       background: var(--blue-pale);
       color: var(--blue-deep);
@@ -2826,7 +2800,7 @@
 
     /* ---- Honors / Minors Category persistence ---- */
     const HM_CAT_STORE_KEY = "dap_hm_categories_v1";
-    
+
     function saveHMCategories() {
       try {
         localStorage.setItem(HM_CAT_STORE_KEY, JSON.stringify({ honors: HONORS_CATEGORIES, minors: MINORS_CATEGORIES }));
@@ -3115,7 +3089,14 @@
         + '</div>';
       throw new Error('Supabase CDN bundle not loaded — window.supabase is undefined.');
     }
-    const supabaseClient = window.supabase.createClient(APP_CONFIG.SUPABASE_URL, APP_CONFIG.SUPABASE_KEY);
+    // createClient works with both legacy JWT anon keys (eyJ...) and new publishable keys (sb_publishable_...)
+    const supabaseClient = window.supabase.createClient(APP_CONFIG.SUPABASE_URL, APP_CONFIG.SUPABASE_KEY, {
+      auth: {
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: true
+      }
+    });
 
     /* ============================= AUTH: CORE FUNCTIONS ============================= */
     async function signUp(email, password) {
@@ -7765,1048 +7746,784 @@
     /* ============================= ACADEMIC CALENDAR MODULE ============================= */
 
     /* ---- State ---- */
-    let ACAL_CAL_VIEW = 'month';   // 'month' | 'semester'
-    let ACAL_CURRENT_MONTH = 6;    // 0-indexed; July = 6
-    let ACAL_CURRENT_YEAR = 2025;
-    let ACAL_APPROVED = false;
-
-    /* ---- Default holidays (Maharashtra / Anna University pattern) ---- */
-    let ACAL_HOLIDAYS = [
-      { date: '2025-07-18', name: 'Bakrid', type: 'holiday' },
-      { date: '2025-08-15', name: 'Independence Day', type: 'holiday' },
-      { date: '2025-08-27', name: 'Janmashtami', type: 'holiday' },
-      { date: '2025-09-05', name: 'Teachers Day – College Event', type: 'event' },
-      { date: '2025-09-29', name: 'I Internal Assessment (Unit I & II)', type: 'test' },
-      { date: '2025-10-02', name: 'Gandhi Jayanti', type: 'holiday' },
-      { date: '2025-10-20', name: 'Ayudha Pooja', type: 'holiday' },
-      { date: '2025-10-21', name: 'Vijayadasami', type: 'holiday' },
-      { date: '2025-11-01', name: 'Diwali Holiday', type: 'holiday' },
-      { date: '2025-11-03', name: 'II Internal Assessment (Unit III & IV)', type: 'test' },
-      { date: '2025-11-14', name: 'Last Working Day', type: 'event' },
-      { date: '2025-11-17', name: 'End Semester Examinations Begin', type: 'exam' },
-    ];
-
-    /* ---- Config ---- */
-    let ACAL_CONFIG = {
-      academicYear: '2025-2026',
-      semesterLabel: 'Semester I (Odd)',
-      startDate: '2025-07-14',
-      endDate: '2025-11-28',
-      examStart: '2025-11-17',
-      workingDaysTarget: 90,
-      lecturesPerDay: 6,
-      weekendRule: 'sunday_only',  // 'sunday_only' | 'sat_sun'
-      institutionName: 'Department of Engineering',
-      university: 'University',
-      regulation: 'NEP 2020',
+    /* ========================================================
+       NEW ACADEMIC CALENDAR — State & Data
+       ======================================================== */
+    const NC_STORAGE_KEY = 'nc_acal_v1';
+    const NC_CATEGORIES = ['Teaching', 'Examination', 'Holiday', 'Vacation', 'Admission', 'Registration', 'Academic', 'Other'];
+    const NC_CAT_COLORS = {
+      Teaching: '#2E7D56', Examination: '#C0392B', Holiday: '#1565C0',
+      Vacation: '#6A4C93', Admission: '#E67E22', Registration: '#2980B9',
+      Academic: '#8B6914', Other: '#546E7A'
+    };
+    const NC_CAT_LABELS = {
+      Teaching: 'Teaching', Examination: 'Examination', Holiday: 'Holiday',
+      Vacation: 'Vacation', Admission: 'Admission', Registration: 'Registration',
+      Academic: 'Academic Events', Other: 'Other'
     };
 
-    /* ---- Helpers ---- */
-    function acalDateStr(y, m, d) {
-      return `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    let NC_EVENTS = [];
+    let NC_EDIT_ID = null;
+    let NC_VIEW = 'calendar';
+    let NC_MONTH = new Date().getMonth();
+    let NC_YEAR = new Date().getFullYear();
+    let NC_FILTERS = new Set();
+    let NC_SORT = { col: 'date', dir: 'asc' };
+    let NC_FILTERED = [];
+
+    function ncLoadData() {
+      try {
+        const raw = localStorage.getItem(NC_STORAGE_KEY);
+        if (raw) NC_EVENTS = JSON.parse(raw);
+        else ncSeedData();
+      } catch (e) { ncSeedData(); }
+    }
+    function ncSaveData() { localStorage.setItem(NC_STORAGE_KEY, JSON.stringify(NC_EVENTS)); }
+    function ncUid() { return '_' + Math.random().toString(36).substr(2, 9); }
+
+    function ncSeedData() {
+      const y = new Date().getFullYear();
+      NC_EVENTS = [
+        { id: ncUid(), name: 'Orientation & Induction Program', category: 'Academic', startDate: `${y}-07-15`, endDate: `${y}-07-19`, semester: 'Odd Semester', desc: 'Welcome program for new students.' },
+        { id: ncUid(), name: 'Odd Semester Classes Begin', category: 'Teaching', startDate: `${y}-07-22`, endDate: `${y}-11-15`, semester: 'Odd Semester', desc: 'Regular teaching sessions.' },
+        { id: ncUid(), name: 'Independence Day', category: 'Holiday', startDate: `${y}-08-15`, endDate: `${y}-08-15`, semester: 'Odd Semester', desc: 'National Holiday.' },
+        { id: ncUid(), name: 'Internal Assessment I', category: 'Examination', startDate: `${y}-08-26`, endDate: `${y}-08-30`, semester: 'Odd Semester', desc: 'First internal assessment.' },
+        { id: ncUid(), name: 'Gandhi Jayanti', category: 'Holiday', startDate: `${y}-10-02`, endDate: `${y}-10-02`, semester: 'Odd Semester', desc: 'National Holiday.' },
+        { id: ncUid(), name: 'Dussehra Break', category: 'Vacation', startDate: `${y}-10-10`, endDate: `${y}-10-14`, semester: 'Odd Semester', desc: 'Dussehra festival vacation.' },
+        { id: ncUid(), name: 'Internal Assessment II', category: 'Examination', startDate: `${y}-10-20`, endDate: `${y}-10-25`, semester: 'Odd Semester', desc: 'Second internal assessment.' },
+        { id: ncUid(), name: 'Diwali Vacation', category: 'Vacation', startDate: `${y}-11-01`, endDate: `${y}-11-07`, semester: 'Odd Semester', desc: 'Diwali festival vacation.' },
+        { id: ncUid(), name: 'End-Semester Examinations', category: 'Examination', startDate: `${y}-11-25`, endDate: `${y}-12-15`, semester: 'Odd Semester', desc: 'End-semester examinations.' },
+        { id: ncUid(), name: 'Winter Vacation', category: 'Vacation', startDate: `${y}-12-21`, endDate: `${y + 1}-01-05`, semester: 'Full Year', desc: 'Year-end winter vacation.' },
+        { id: ncUid(), name: 'Even Semester Registration', category: 'Registration', startDate: `${y + 1}-01-06`, endDate: `${y + 1}-01-10`, semester: 'Even Semester', desc: 'Registration for even semester.' },
+        { id: ncUid(), name: 'Even Semester Classes Begin', category: 'Teaching', startDate: `${y + 1}-01-13`, endDate: `${y + 1}-04-30`, semester: 'Even Semester', desc: 'Even semester teaching.' },
+        { id: ncUid(), name: 'Republic Day', category: 'Holiday', startDate: `${y + 1}-01-26`, endDate: `${y + 1}-01-26`, semester: 'Even Semester', desc: 'National Holiday.' },
+        { id: ncUid(), name: 'Internal Assessment III', category: 'Examination', startDate: `${y + 1}-02-17`, endDate: `${y + 1}-02-21`, semester: 'Even Semester', desc: 'Third internal assessment.' },
+        { id: ncUid(), name: 'Holi Holiday', category: 'Holiday', startDate: `${y + 1}-03-14`, endDate: `${y + 1}-03-14`, semester: 'Even Semester', desc: 'Holi festival.' },
+        { id: ncUid(), name: 'UG Admission Counselling', category: 'Admission', startDate: `${y + 1}-04-07`, endDate: `${y + 1}-04-11`, semester: 'Full Year', desc: 'UG admission counselling.' },
+        { id: ncUid(), name: 'Even Semester End Exams', category: 'Examination', startDate: `${y + 1}-05-05`, endDate: `${y + 1}-05-25`, semester: 'Even Semester', desc: 'End-semester exams.' },
+        { id: ncUid(), name: 'Summer Vacation', category: 'Vacation', startDate: `${y + 1}-05-26`, endDate: `${y + 1}-06-30`, semester: 'Full Year', desc: 'Summer recess.' },
+      ];
+      ncSaveData();
     }
 
-    function acalFindEvent(ds) {
-      return ACAL_HOLIDAYS.find(h => h.date === ds) || null;
+    function ncDaysBetween(s, e) {
+      const a = new Date(s + 'T00:00:00'), b = new Date(e + 'T00:00:00');
+      return Math.max(1, Math.round((b - a) / 86400000) + 1);
     }
-
-    function acalIsWeekend(date) {
-      const dow = date.getDay();
-      if (dow === 0) return true;
-      if (ACAL_CONFIG.weekendRule === 'sat_sun' && dow === 6) return true;
-      return false;
-    }
-
-    function acalClassify(ds) {
-      const date = new Date(ds + 'T00:00:00');
-      if (acalIsWeekend(date)) return 'sunday';
-      const h = acalFindEvent(ds);
-      return h ? h.type : 'working';
-    }
-
-    function acalCountWorkingDays() {
-      const start = new Date(ACAL_CONFIG.startDate + 'T00:00:00');
-      const end = new Date(ACAL_CONFIG.endDate + 'T00:00:00');
+    function ncCountWeekdays(s, e) {
       let count = 0;
-      const cur = new Date(start);
-      while (cur <= end) {
-        const ds = `${cur.getFullYear()}-${String(cur.getMonth() + 1).padStart(2, '0')}-${String(cur.getDate()).padStart(2, '0')}`;
-        const cls = acalClassify(ds);
-        if (cls === 'working') count++;
-        cur.setDate(cur.getDate() + 1);
+      const start = new Date(s + 'T00:00:00'), end = new Date(e + 'T00:00:00');
+      for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+        const dow = d.getDay(); if (dow !== 0 && dow !== 6) count++;
       }
       return count;
     }
+    function ncFmtDate(d) {
+      return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    }
+    function ncFmtDisplay(str) {
+      const d = new Date(str + 'T00:00:00');
+      return d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+    }
+    function ncHexAlpha(hex, a) {
+      const r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
+      return `rgba(${r},${g},${b},${a})`;
+    }
+
+    function ncApplyFilters() {
+      const search = (document.getElementById('nc-search') || {}).value?.toLowerCase() || '';
+      const semF = (document.getElementById('nc-sem-filter') || {}).value || '';
+      const from = (document.getElementById('nc-range-from') || {}).value || '';
+      const to = (document.getElementById('nc-range-to') || {}).value || '';
+      const sortVal = (document.getElementById('nc-sort-by') || {}).value || 'date';
+
+      NC_FILTERED = NC_EVENTS.filter(ev => {
+        if (NC_FILTERS.size > 0 && !NC_FILTERS.has(ev.category)) return false;
+        if (semF && ev.semester !== semF) return false;
+        if (search && !ev.name.toLowerCase().includes(search) && !(ev.desc || '').toLowerCase().includes(search)) return false;
+        if (from && ev.endDate < from) return false;
+        if (to && ev.startDate > to) return false;
+        return true;
+      });
+      NC_FILTERED.sort((a, b) => {
+        if (sortVal === 'date') return a.startDate.localeCompare(b.startDate);
+        if (sortVal === 'date-desc') return b.startDate.localeCompare(a.startDate);
+        if (sortVal === 'name') return a.name.localeCompare(b.name);
+        if (sortVal === 'category') return a.category.localeCompare(b.category);
+        if (sortVal === 'duration') return ncDaysBetween(a.startDate, a.endDate) - ncDaysBetween(b.startDate, b.endDate);
+        return 0;
+      });
+      ncRender();
+    }
+
+    function ncRender() {
+      ncUpdateDashboard();
+      if (NC_VIEW === 'calendar') ncRenderCalendar();
+      else ncRenderList();
+    }
+
+    function ncUpdateDashboard() {
+      const total = NC_FILTERED.length;
+      const teaching = NC_FILTERED.filter(e => e.category === 'Teaching').reduce((s, e) => s + ncDaysBetween(e.startDate, e.endDate), 0);
+      const exam = NC_FILTERED.filter(e => e.category === 'Examination').reduce((s, e) => s + ncDaysBetween(e.startDate, e.endDate), 0);
+      const holiday = NC_FILTERED.filter(e => e.category === 'Holiday').reduce((s, e) => s + ncDaysBetween(e.startDate, e.endDate), 0);
+      const vacation = NC_FILTERED.filter(e => e.category === 'Vacation').reduce((s, e) => s + ncDaysBetween(e.startDate, e.endDate), 0);
+      let workingDays = 0;
+      NC_FILTERED.filter(e => e.category === 'Teaching').forEach(e => { workingDays += ncCountWeekdays(e.startDate, e.endDate); });
+      const db = document.getElementById('nc-dashboard');
+      if (!db) return;
+      db.innerHTML = `
+        <div class="nc-stat-card total"><div class="nc-stat-num">${total}</div><div class="nc-stat-label">Total Events</div></div>
+        <div class="nc-stat-card teaching"><div class="nc-stat-num">${teaching}</div><div class="nc-stat-label">Instructional Days</div></div>
+        <div class="nc-stat-card working"><div class="nc-stat-num">${workingDays}</div><div class="nc-stat-label">Working Days</div></div>
+        <div class="nc-stat-card exam"><div class="nc-stat-num">${exam}</div><div class="nc-stat-label">Exam Days</div></div>
+        <div class="nc-stat-card holiday"><div class="nc-stat-num">${holiday}</div><div class="nc-stat-label">Holidays</div></div>
+        <div class="nc-stat-card vacation"><div class="nc-stat-num">${vacation}</div><div class="nc-stat-label">Vacation Days</div></div>
+      `;
+    }
+
+    function ncRenderCalendar() {
+      const grid = document.getElementById('nc-cal-grid');
+      if (!grid) return;
+      const firstDay = new Date(NC_YEAR, NC_MONTH, 1);
+      const lastDay = new Date(NC_YEAR, NC_MONTH + 1, 0);
+      const startDow = firstDay.getDay();
+      const lbl = document.getElementById('nc-month-label');
+      if (lbl) lbl.textContent = firstDay.toLocaleString('default', { month: 'long', year: 'numeric' });
+
+      let html = `<div class="nc-cal-header">${['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => `<div class="nc-cal-dow">${d}</div>`).join('')}</div><div class="nc-cal-body">`;
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      const prevLast = new Date(NC_YEAR, NC_MONTH, 0);
+      for (let i = startDow - 1; i >= 0; i--) {
+        html += `<div class="nc-cal-day other-month"><div class="nc-day-num">${prevLast.getDate() - i}</div></div>`;
+      }
+      for (let d = 1; d <= lastDay.getDate(); d++) {
+        const date = new Date(NC_YEAR, NC_MONTH, d); date.setHours(0, 0, 0, 0);
+        const dateStr = ncFmtDate(date);
+        const isToday = date.getTime() === today.getTime();
+        const isWknd = date.getDay() === 0 || date.getDay() === 6;
+        const dayEvents = NC_FILTERED.filter(e => e.startDate <= dateStr && e.endDate >= dateStr);
+        let cls = 'nc-cal-day';
+        if (isToday) cls += ' today';
+        if (isWknd) cls += ' weekend';
+        const shown = dayEvents.slice(0, 3);
+        const rest = dayEvents.length - shown.length;
+        const pills = shown.map(e => `<div class="nc-event-pill pill-${e.category}" title="${e.name.replace(/"/g, '&quot;')}" onclick="event.stopPropagation();ncEditEvent('${e.id}')">${e.name}</div>`).join('');
+        const more = rest > 0 ? `<div class="nc-more-events" onclick="event.stopPropagation();ncShowDayEvents('${dateStr}')">+${rest} more</div>` : '';
+        html += `<div class="${cls}" onclick="ncShowDayEvents('${dateStr}')"><div class="nc-day-num">${d}</div><div class="nc-cal-events">${pills}${more}</div></div>`;
+      }
+      const cells = startDow + lastDay.getDate();
+      const rem = cells % 7 === 0 ? 0 : 7 - (cells % 7);
+      for (let d = 1; d <= rem; d++) html += `<div class="nc-cal-day other-month"><div class="nc-day-num">${d}</div></div>`;
+      html += '</div>';
+      grid.innerHTML = html;
+    }
+
+    function ncRenderList() {
+      const tbody = document.getElementById('nc-list-body');
+      if (!tbody) return;
+      if (NC_FILTERED.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:30px;color:var(--nc-text-muted);">No events found.</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = NC_FILTERED.map(e => {
+        const dur = ncDaysBetween(e.startDate, e.endDate);
+        return `<tr>
+          <td style="font-weight:600;color:var(--nc-navy);max-width:180px;">${e.name}</td>
+          <td><span class="nc-cat-badge badge-${e.category}">${NC_CAT_LABELS[e.category]}</span></td>
+          <td>${ncFmtDisplay(e.startDate)}</td>
+          <td>${ncFmtDisplay(e.endDate)}</td>
+          <td><span class="nc-sem-badge">${e.semester}</span></td>
+          <td style="text-align:center;font-weight:600;">${dur}</td>
+          <td style="max-width:160px;color:var(--nc-text-muted);font-size:11px;">${e.desc || '—'}</td>
+          <td>
+            <div class="nc-action-btns">
+              <button class="nc-icon-btn edit" title="Edit" onclick="ncEditEvent('${e.id}')">✏</button>
+              <button class="nc-icon-btn" title="Duplicate" onclick="ncDuplicateEvent('${e.id}')">⎘</button>
+              <button class="nc-icon-btn del" title="Delete" onclick="ncDeleteEvent('${e.id}')">🗑</button>
+            </div>
+          </td>
+        </tr>`;
+      }).join('');
+    }
+
+    function ncBuildChips() {
+      const el = document.getElementById('nc-filter-chips');
+      if (!el) return;
+      el.innerHTML = '';
+      const allChip = document.createElement('div');
+      allChip.className = 'nc-chip' + (NC_FILTERS.size === 0 ? ' active' : '');
+      allChip.textContent = 'All';
+      allChip.onclick = () => { NC_FILTERS.clear(); ncBuildChips(); ncApplyFilters(); };
+      el.appendChild(allChip);
+      NC_CATEGORIES.forEach(cat => {
+        const chip = document.createElement('div');
+        chip.className = 'nc-chip' + (NC_FILTERS.has(cat) ? ' active' : '');
+        const dot = document.createElement('span'); dot.className = 'nc-chip-dot'; dot.style.background = NC_CAT_COLORS[cat];
+        chip.appendChild(dot);
+        chip.appendChild(document.createTextNode(NC_CAT_LABELS[cat]));
+        chip.onclick = () => { if (NC_FILTERS.has(cat)) NC_FILTERS.delete(cat); else NC_FILTERS.add(cat); ncBuildChips(); ncApplyFilters(); };
+        el.appendChild(chip);
+      });
+    }
+
+    function ncSetView(v) {
+      NC_VIEW = v;
+      const cv = document.getElementById('nc-cal-view');
+      const lv = document.getElementById('nc-list-view');
+      const mn = document.getElementById('nc-month-nav');
+      if (cv) cv.classList.toggle('nc-hidden', v !== 'calendar');
+      if (lv) lv.classList.toggle('nc-hidden', v !== 'list');
+      if (mn) mn.style.display = v === 'calendar' ? 'flex' : 'none';
+      document.getElementById('nc-vbtn-cal')?.classList.toggle('active', v === 'calendar');
+      document.getElementById('nc-vbtn-list')?.classList.toggle('active', v === 'list');
+      ncRender();
+    }
+
+    function ncPrevMonth() { NC_MONTH--; if (NC_MONTH < 0) { NC_MONTH = 11; NC_YEAR--; } ncRenderCalendar(); }
+    function ncNextMonth() { NC_MONTH++; if (NC_MONTH > 11) { NC_MONTH = 0; NC_YEAR++; } ncRenderCalendar(); }
+    function ncGoToday() { NC_MONTH = new Date().getMonth(); NC_YEAR = new Date().getFullYear(); ncRenderCalendar(); }
+
+    function ncOpenAddModal(dateStr) {
+      NC_EDIT_ID = null;
+      document.getElementById('nc-modal-title').textContent = 'Add New Event';
+      document.getElementById('nc-ev-name').value = '';
+      document.getElementById('nc-ev-cat').value = 'Teaching';
+      document.getElementById('nc-ev-sem').value = 'Odd Semester';
+      document.getElementById('nc-ev-start').value = dateStr || '';
+      document.getElementById('nc-ev-end').value = dateStr || '';
+      document.getElementById('nc-ev-desc').value = '';
+      document.getElementById('nc-dur-preview').textContent = '';
+      document.getElementById('nc-event-modal').classList.add('open');
+      setTimeout(() => document.getElementById('nc-ev-name').focus(), 100);
+    }
+
+    function ncEditEvent(id) {
+      const ev = NC_EVENTS.find(e => e.id === id);
+      if (!ev) return;
+      NC_EDIT_ID = id;
+      document.getElementById('nc-modal-title').textContent = 'Edit Event';
+      document.getElementById('nc-ev-name').value = ev.name;
+      document.getElementById('nc-ev-cat').value = ev.category;
+      document.getElementById('nc-ev-sem').value = ev.semester;
+      document.getElementById('nc-ev-start').value = ev.startDate;
+      document.getElementById('nc-ev-end').value = ev.endDate;
+      document.getElementById('nc-ev-desc').value = ev.desc || '';
+      ncUpdateDurPreview();
+      document.getElementById('nc-event-modal').classList.add('open');
+    }
+
+    function ncCloseModal() { document.getElementById('nc-event-modal').classList.remove('open'); NC_EDIT_ID = null; }
+
+    function ncSaveEvent() {
+      const name = document.getElementById('nc-ev-name').value.trim();
+      const cat = document.getElementById('nc-ev-cat').value;
+      const sem = document.getElementById('nc-ev-sem').value;
+      const start = document.getElementById('nc-ev-start').value;
+      const end = document.getElementById('nc-ev-end').value;
+      const desc = document.getElementById('nc-ev-desc').value.trim();
+      if (!name) { ncToast('Event name is required.', 'error'); return; }
+      if (!start || !end) { ncToast('Start and end dates are required.', 'error'); return; }
+      if (end < start) { ncToast('End date must be on or after start date.', 'error'); return; }
+      if (NC_EDIT_ID) {
+        const idx = NC_EVENTS.findIndex(e => e.id === NC_EDIT_ID);
+        NC_EVENTS[idx] = { id: NC_EDIT_ID, name, category: cat, startDate: start, endDate: end, semester: sem, desc };
+        ncToast('Event updated.', 'success');
+      } else {
+        NC_EVENTS.push({ id: ncUid(), name, category: cat, startDate: start, endDate: end, semester: sem, desc });
+        ncToast('Event added.', 'success');
+      }
+      ncSaveData(); ncCloseModal(); ncApplyFilters();
+    }
+
+    function ncDeleteEvent(id) {
+      if (!confirm('Delete this event?')) return;
+      NC_EVENTS = NC_EVENTS.filter(e => e.id !== id);
+      ncSaveData(); ncApplyFilters();
+      ncToast('Event deleted.', 'success');
+    }
+
+    function ncDuplicateEvent(id) {
+      const ev = NC_EVENTS.find(e => e.id === id);
+      if (!ev) return;
+      NC_EVENTS.push({ ...ev, id: ncUid(), name: ev.name + ' (Copy)' });
+      ncSaveData(); ncApplyFilters();
+      ncToast('Event duplicated.', 'success');
+    }
+
+    function ncUpdateDurPreview() {
+      const s = document.getElementById('nc-ev-start')?.value;
+      const en = document.getElementById('nc-ev-end')?.value;
+      const el = document.getElementById('nc-dur-preview');
+      if (!el) return;
+      if (s && en && en >= s) {
+        const d = ncDaysBetween(s, en), wd = ncCountWeekdays(s, en);
+        el.textContent = `Duration: ${d} day${d !== 1 ? 's' : ''} (${wd} weekday${wd !== 1 ? 's' : ''})`;
+      } else { el.textContent = ''; }
+    }
+
+    function ncShowDayEvents(dateStr) {
+      const dayEvs = NC_FILTERED.filter(e => e.startDate <= dateStr && e.endDate >= dateStr);
+      const d = new Date(dateStr + 'T00:00:00');
+      document.getElementById('nc-day-modal-title').textContent = d.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+      const body = document.getElementById('nc-day-modal-body');
+      if (dayEvs.length === 0) {
+        body.innerHTML = `<p style="color:var(--nc-text-muted);text-align:center;padding:20px 0;">No events on this day.</p>`;
+      } else {
+        body.innerHTML = dayEvs.map(e => `
+          <div style="padding:10px;border-radius:var(--nc-radius);border:1px solid var(--nc-border-light);margin-bottom:8px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <span style="font-weight:600;color:var(--nc-navy);">${e.name}</span>
+              <span class="nc-cat-badge badge-${e.category}" style="flex-shrink:0;">${NC_CAT_LABELS[e.category]}</span>
+            </div>
+            ${e.desc ? `<div style="font-size:11px;color:var(--nc-text-muted);margin-top:3px;">${e.desc}</div>` : ''}
+            <div style="display:flex;gap:6px;margin-top:6px;">
+              <button class="nc-btn nc-btn-outline" style="font-size:11px;padding:4px 10px;" onclick="document.getElementById('nc-day-modal').classList.remove('open');ncEditEvent('${e.id}')">Edit</button>
+              <button style="background:#fdecea;color:#C0392B;border:1px solid #fde;border-radius:var(--nc-radius);font-size:11px;padding:4px 10px;cursor:pointer;" onclick="ncDeleteEvent('${e.id}');document.getElementById('nc-day-modal').classList.remove('open')">Delete</button>
+            </div>
+          </div>`).join('');
+      }
+      document.getElementById('nc-day-modal').classList.add('open');
+    }
+
+    function ncExportCSV() {
+      const header = ['name', 'category', 'startDate', 'endDate', 'semester', 'description'];
+      const rows = NC_EVENTS.map(e => [e.name, e.category, e.startDate, e.endDate, e.semester, e.desc || ''].map(v => `"${String(v).replace(/"/g, '""')}"`).join(','));
+      const csv = [header.join(','), ...rows].join('\r\n');
+      const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = 'academic-calendar.csv'; a.click();
+      ncToast('Exported as CSV.', 'success');
+    }
+
+    function ncPrint() {
+      const sorted = [...NC_FILTERED].sort((a, b) => a.startDate.localeCompare(b.startDate));
+      const deptEl = document.getElementById('nc-dept-name');
+      const dept = (deptEl && deptEl.value) ? deptEl.value : 'Department';
+      const yearEl = document.getElementById('nc-acad-year');
+      const year = (yearEl && yearEl.value) ? yearEl.value : '';
+      const rows = sorted.map(e => {
+        const dur = ncDaysBetween(e.startDate, e.endDate);
+        const color = NC_CAT_COLORS[e.category] || '#555';
+        return `<tr>
+          <td>${e.name}</td>
+          <td><span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;background:${color}1a;color:${color};border:1px solid ${color}44;">${e.category}</span></td>
+          <td>${ncFmtDisplay(e.startDate)}</td>
+          <td>${ncFmtDisplay(e.endDate)}</td>
+          <td style="text-align:center;font-weight:600;">${dur}</td>
+          <td>${e.semester}</td>
+          <td style="color:#666;font-size:11px;">${e.desc || '—'}</td>
+        </tr>`;
+      }).join('');
+      const totalDays = sorted.reduce((s, e) => s + ncDaysBetween(e.startDate, e.endDate), 0);
+      const teachingDays = sorted.filter(e => e.category === 'Teaching').reduce((s, e) => s + ncCountWeekdays(e.startDate, e.endDate), 0);
+      const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Academic Calendar — ${dept}</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', sans-serif; font-size: 12px; color: #1c232b; background: #fff; padding: 24px 32px; }
+  .print-header { border-bottom: 3px solid #1d4e6b; padding-bottom: 14px; margin-bottom: 18px; display: flex; justify-content: space-between; align-items: flex-end; }
+  .print-title { font-size: 22px; font-weight: 700; color: #0f3247; letter-spacing: -0.02em; }
+  .print-sub { font-size: 11px; color: #5b6472; margin-top: 4px; }
+  .print-meta { text-align: right; font-size: 10px; color: #7a8794; font-family: 'IBM Plex Mono', monospace; }
+  .stats { display: flex; gap: 14px; margin-bottom: 18px; }
+  .stat-box { border: 1px solid #e0ddd5; border-radius: 8px; padding: 10px 16px; flex: 1; text-align: center; }
+  .stat-box .n { font-size: 20px; font-weight: 700; color: #0f3247; }
+  .stat-box .l { font-size: 9px; text-transform: uppercase; letter-spacing: 0.06em; color: #7a8794; margin-top: 2px; }
+  table { width: 100%; border-collapse: collapse; font-size: 11px; }
+  th { background: #0f3247; color: rgba(255,255,255,0.9); padding: 7px 10px; text-align: left; font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.06em; font-family: 'IBM Plex Mono', monospace; }
+  td { padding: 6px 10px; border-bottom: 1px solid #ede9e1; vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:nth-child(even) td { background: #fafaf8; }
+  .print-footer { margin-top: 18px; padding-top: 10px; border-top: 1px solid #ede9e1; font-size: 10px; color: #9aa3ad; text-align: center; }
+  @media print {
+    body { padding: 10px 16px; }
+    .no-print { display: none; }
+    table { page-break-inside: auto; }
+    tr { page-break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+  <div class="no-print" style="margin-bottom:16px;">
+    <button onclick="window.print()" style="background:#1d4e6b;color:#fff;border:none;padding:8px 18px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;">&#128438; Print</button>
+    <button onclick="window.close()" style="margin-left:8px;background:none;border:1px solid #ccc;color:#555;padding:8px 14px;border-radius:6px;font-size:12px;cursor:pointer;font-family:Inter,sans-serif;">Close</button>
+  </div>
+  <div class="print-header">
+    <div>
+      <div class="print-title">Academic Calendar</div>
+      <div class="print-sub">${dept}${year ? ' &nbsp;&mdash;&nbsp; ' + year : ''}</div>
+    </div>
+    <div class="print-meta">Generated: ${new Date().toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' })}<br>${sorted.length} events listed</div>
+  </div>
+  <div class="stats">
+    <div class="stat-box"><div class="n">${sorted.length}</div><div class="l">Total Events</div></div>
+    <div class="stat-box"><div class="n">${totalDays}</div><div class="l">Total Days</div></div>
+    <div class="stat-box"><div class="n">${teachingDays}</div><div class="l">Teaching Weekdays</div></div>
+    <div class="stat-box"><div class="n">${sorted.filter(e=>e.category==='Examination').reduce((s,e)=>s+ncDaysBetween(e.startDate,e.endDate),0)}</div><div class="l">Exam Days</div></div>
+    <div class="stat-box"><div class="n">${sorted.filter(e=>e.category==='Holiday').reduce((s,e)=>s+ncDaysBetween(e.startDate,e.endDate),0)}</div><div class="l">Holidays</div></div>
+    <div class="stat-box"><div class="n">${sorted.filter(e=>e.category==='Vacation').reduce((s,e)=>s+ncDaysBetween(e.startDate,e.endDate),0)}</div><div class="l">Vacation Days</div></div>
+  </div>
+  <table>
+    <thead><tr><th>Event Name</th><th>Category</th><th>Start Date</th><th>End Date</th><th style="text-align:center;">Days</th><th>Semester</th><th>Description</th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table>
+  <div class="print-footer">Department Academic Planner &mdash; NEP 2020 (Maharashtra) &bull; Printed on ${new Date().toLocaleDateString('en-IN', { day:'2-digit', month:'long', year:'numeric' })}</div>
+</body></html>`;
+      const win = window.open('', '_blank', 'width=1050,height=750,scrollbars=yes');
+      win.document.write(html);
+      win.document.close();
+      setTimeout(() => win.print(), 600);
+    }
+
+    function ncOpenImport() { document.getElementById('nc-import-modal').classList.add('open'); }
+    function ncCloseImport() { document.getElementById('nc-import-modal').classList.remove('open'); }
+
+    function ncHandleImport(e) {
+      const file = e.target.files[0]; if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        try {
+          if (file.name.endsWith('.json')) {
+            const data = JSON.parse(ev.target.result);
+            if (Array.isArray(data)) {
+              data.forEach(ev => { if (!ev.id) ev.id = ncUid(); });
+              NC_EVENTS = [...NC_EVENTS, ...data];
+              ncSaveData(); ncApplyFilters();
+              ncToast(`Imported ${data.length} events.`, 'success'); ncCloseImport();
+            }
+          } else if (file.name.endsWith('.csv')) {
+            const lines = ev.target.result.split('\n').filter(l => l.trim());
+            const imported = [];
+            for (let i = 1; i < lines.length; i++) {
+              const cols = ncParseCSV(lines[i]);
+              if (cols.length >= 4) imported.push({ id: ncUid(), name: cols[0], category: cols[1] || 'Other', startDate: cols[2], endDate: cols[3], semester: cols[4] || 'Full Year', desc: cols[5] || '' });
+            }
+            NC_EVENTS = [...NC_EVENTS, ...imported];
+            ncSaveData(); ncApplyFilters();
+            ncToast(`Imported ${imported.length} events.`, 'success'); ncCloseImport();
+          }
+        } catch (err) { ncToast('Failed to parse file.', 'error'); }
+        e.target.value = '';
+      };
+      reader.readAsText(file);
+    }
+
+    function ncParseCSV(line) {
+      const cols = []; let cur = ''; let inQ = false;
+      for (let i = 0; i < line.length; i++) {
+        if (line[i] === '"') { inQ = !inQ; }
+        else if (line[i] === ',' && !inQ) { cols.push(cur.trim()); cur = ''; }
+        else { cur += line[i]; }
+      }
+      cols.push(cur.trim()); return cols;
+    }
+
+    function ncToast(msg, type) {
+      if (typeof showToast === 'function') { showToast(msg); return; }
+      const t = document.createElement('div');
+      t.style.cssText = 'position:fixed;bottom:20px;right:20px;z-index:99999;padding:10px 16px;border-radius:7px;font-size:13px;font-weight:500;color:#fff;box-shadow:0 4px 14px rgba(0,0,0,.2);';
+      t.style.background = type === 'success' ? '#1B5E20' : type === 'error' ? '#B71C1C' : '#1B2A4A';
+      t.textContent = msg;
+      document.body.appendChild(t);
+      setTimeout(() => t.remove(), 3000);
+    }
 
     /* ========================================================
-       PAGE RENDER
+       PAGE RENDER — Academic Calendar
        ======================================================== */
     function pageAcademicCalendar() {
-      const wd = acalCountWorkingDays();
-      const hols = ACAL_HOLIDAYS.filter(h => h.type === 'holiday').length;
-      const tests = ACAL_HOLIDAYS.filter(h => h.type === 'test').length;
-      const exams = ACAL_HOLIDAYS.filter(h => h.type === 'exam').length;
-      const totalLectures = wd * ACAL_CONFIG.lecturesPerDay;
-      const onTrack = wd >= ACAL_CONFIG.workingDaysTarget;
-
-      const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June',
-        'July', 'August', 'September', 'October', 'November', 'December'];
-
       return `
-        ${pageHeader("Planning", "Academic Calendar", "AI-generated semester calendar — configure, review, approve.")}
+        ${pageHeader("Planning", "Academic Calendar", "Manage your department's academic calendar — events, holidays, and schedules.")}
 
-        <!-- TOP TOOLBAR -->
-        <div class="toolbar" style="margin-bottom:14px;">
-          <div style="font-size:14px; font-weight:700; color:var(--blue-deep);">
-            ${esc(ACAL_CONFIG.academicYear)} — ${esc(ACAL_CONFIG.semesterLabel)}
-            ${ACAL_APPROVED ? '<span class="tag" style="background:var(--green-pale);color:var(--green);margin-left:8px;">✓ Approved</span>' : ''}
-          </div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;">
-            <button class="ghost" id="acal-btn-export">Export PDF</button>
-            <button class="primary ${ACAL_APPROVED ? '' : ''}" id="acal-btn-approve">${ACAL_APPROVED ? '✓ Approved' : 'Approve Calendar'}</button>
-            <button class="primary" style="background:var(--purple);border:none;" id="acal-btn-regen">✨ Regenerate with AI</button>
-          </div>
-        </div>
+        <div id="new-acal-root">
+          <div class="nc-layout">
 
-        <!-- SECTION 1: Configuration -->
-        <div class="card acal-section">
-          <div class="toolbar" style="margin-bottom:14px;">
-            <h3 style="margin:0;">Calendar Configuration</h3>
-            <span class="tag" style="background:var(--green-pale);color:var(--green);">● Configured</span>
-          </div>
-          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:12px;">
-            <div class="field" style="margin:0;">
-              <label>Academic Year</label>
-              <input type="text" id="acal-cfg-ay" value="${esc(ACAL_CONFIG.academicYear)}">
-            </div>
-            <div class="field" style="margin:0;">
-              <label>Semester</label>
-              <select id="acal-cfg-sem">
-                <option ${ACAL_CONFIG.semesterLabel.includes('I (Odd') ? 'selected' : ''}>Semester I (Odd)</option>
-                <option ${ACAL_CONFIG.semesterLabel.includes('II') ? 'selected' : ''}>Semester II (Even)</option>
-              </select>
-            </div>
-            <div class="field" style="margin:0;">
-              <label>Semester Start</label>
-              <input type="date" id="acal-cfg-start" value="${ACAL_CONFIG.startDate}">
-            </div>
-            <div class="field" style="margin:0;">
-              <label>Semester End</label>
-              <input type="date" id="acal-cfg-end" value="${ACAL_CONFIG.endDate}">
-            </div>
-          </div>
-          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;">
-            <div class="field" style="margin:0;">
-              <label>Exam Start Date</label>
-              <input type="date" id="acal-cfg-exam" value="${ACAL_CONFIG.examStart}">
-            </div>
-            <div class="field" style="margin:0;">
-              <label>Working Days Target</label>
-              <input type="number" id="acal-cfg-wdt" value="${ACAL_CONFIG.workingDaysTarget}" min="60" max="130">
-            </div>
-            <div class="field" style="margin:0;">
-              <label>Lectures per Day</label>
-              <input type="number" id="acal-cfg-lpd" value="${ACAL_CONFIG.lecturesPerDay}" min="1" max="10">
-            </div>
-            <div class="field" style="margin:0;">
-              <label>Weekend Off</label>
-              <select id="acal-cfg-wkd">
-                <option value="sunday_only" ${ACAL_CONFIG.weekendRule === 'sunday_only' ? 'selected' : ''}>Sunday only</option>
-                <option value="sat_sun"     ${ACAL_CONFIG.weekendRule === 'sat_sun' ? 'selected' : ''}>Saturday &amp; Sunday</option>
-              </select>
-            </div>
-          </div>
-          <div style="margin-top:10px;">
-            <button class="primary" id="acal-btn-apply-cfg" style="font-size:12px;padding:7px 16px;">Apply Configuration</button>
-          </div>
-        </div>
-
-        <!-- SECTION 2: AI Panel -->
-        <div class="acal-ai-panel">
-          <div class="acal-ai-header">
-            <div class="acal-ai-dot"></div>
-            <div class="acal-ai-title">AI Calendar Intelligence</div>
-            <button class="ghost" id="acal-btn-ai" style="margin-left:auto;font-size:12px;padding:5px 12px;">✨ Ask AI to Analyse</button>
-          </div>
-          <div class="acal-ai-output" id="acal-ai-output">Click "Ask AI to Analyse" to automatically audit the academic calendar with optimal working day distribution, exam periods, and holiday scheduling based on UGC norms and regional holidays.</div>
-        </div>
-
-        <!-- SECTION 3: Holiday/Event Manager + Summary -->
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
-
-          <!-- Holiday Manager -->
-          <div class="card" style="margin:0;">
-            <div class="toolbar" style="margin-bottom:10px;">
-              <h3 style="margin:0;">Holiday &amp; Event Manager</h3>
-              <button class="primary" id="acal-btn-add-holiday" style="font-size:12px;padding:5px 12px;">+ Add</button>
-            </div>
-            <div style="overflow-x:auto;max-height:260px;overflow-y:auto;">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Date</th><th>Day</th><th>Event / Holiday</th><th>Type</th><th></th>
-                  </tr>
-                </thead>
-                <tbody id="acal-holiday-tbody"></tbody>
-              </table>
-            </div>
-          </div>
-
-          <!-- Calendar Summary -->
-          <div class="card" style="margin:0;">
-            <h3 style="margin:0 0 12px;">Calendar Summary</h3>
-            <div class="acal-summary-grid">
-              <div class="acal-stat-box">
-                <div class="acal-stat-label">Working Days</div>
-                <div class="acal-stat-value" id="acal-stat-wd">${wd}</div>
-              </div>
-              <div class="acal-stat-box">
-                <div class="acal-stat-label">Holidays</div>
-                <div class="acal-stat-value" id="acal-stat-hol">${hols}</div>
-              </div>
-              <div class="acal-stat-box">
-                <div class="acal-stat-label">Exam Days</div>
-                <div class="acal-stat-value" id="acal-stat-exam">12</div>
-              </div>
-              <div class="acal-stat-box">
-                <div class="acal-stat-label">Internal Tests</div>
-                <div class="acal-stat-value" id="acal-stat-tests">${tests}</div>
-              </div>
-            </div>
-            <div class="${onTrack ? 'acal-compliance-ok' : 'acal-compliance-warn'}" id="acal-compliance-msg">
-              ${onTrack
-          ? `✓ ${wd} working days meet the ≥${ACAL_CONFIG.workingDaysTarget}-day UGC requirement`
-          : `⚠ Only ${wd} working days — ${ACAL_CONFIG.workingDaysTarget - wd} more needed to meet the ${ACAL_CONFIG.workingDaysTarget}-day requirement`}
-            </div>
-          </div>
-        </div>
-
-        <!-- SECTION 4: Calendar View (Month / Semester tabs) -->
-        <div class="card">
-          <div class="toolbar" style="margin-bottom:0;">
-            <span id="acal-view-title" style="font-size:14px;font-weight:700;color:var(--blue-deep);">Month-wise Calendar View</span>
-            <div style="display:flex;align-items:center;gap:10px;">
-              <div class="acal-view-tabs">
-                <button class="acal-view-tab active" id="acal-tab-month" onclick="acalSwitchView('month')">Month View</button>
-                <button class="acal-view-tab" id="acal-tab-semester" onclick="acalSwitchView('semester')">Semester View</button>
-              </div>
-              <div id="acal-month-nav" style="display:flex;gap:4px;align-items:center;">
-                <button class="ghost" id="acal-prev-month" style="padding:5px 10px;font-size:12px;">← Prev</button>
-                <span id="acal-month-label" style="font-weight:700;font-size:13px;min-width:110px;text-align:center;color:var(--blue-deep);">${MONTH_NAMES[ACAL_CURRENT_MONTH]} ${ACAL_CURRENT_YEAR}</span>
-                <button class="ghost" id="acal-next-month" style="padding:5px 10px;font-size:12px;">Next →</button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Month View -->
-          <div id="acal-view-month" style="padding:16px;">
-            <div class="acal-cal-grid">
-              <div class="acal-day-header">Mon</div><div class="acal-day-header">Tue</div>
-              <div class="acal-day-header">Wed</div><div class="acal-day-header">Thu</div>
-              <div class="acal-day-header">Fri</div><div class="acal-day-header">Sat</div>
-              <div class="acal-day-header">Sun</div>
-            </div>
-            <div class="acal-cal-grid" id="acal-days-grid"></div>
-            <div class="acal-legend" style="margin-top:12px;">
-              <div class="acal-legend-item"><div class="acal-legend-dot" style="background:var(--green-pale);border:1.5px solid var(--green);"></div> Working Day</div>
-              <div class="acal-legend-item"><div class="acal-legend-dot" style="background:var(--red-pale);border:1.5px solid var(--red);"></div> Holiday</div>
-              <div class="acal-legend-item"><div class="acal-legend-dot" style="background:#ccfbf1;border:1.5px solid #0d9488;"></div> Internal Test</div>
-              <div class="acal-legend-item"><div class="acal-legend-dot" style="background:var(--purple-pale);border:1.5px solid var(--purple);"></div> College Event</div>
-              <div class="acal-legend-item"><div class="acal-legend-dot" style="background:var(--orange-pale);border:1.5px solid var(--orange);"></div> Examination</div>
-              <div class="acal-legend-item"><div class="acal-legend-dot" style="background:var(--blue-pale);border:1.5px solid var(--ink-soft);"></div> Weekend / Holiday</div>
-            </div>
-          </div>
-
-          <!-- Semester View -->
-          <div id="acal-view-semester" style="display:none;padding:16px;">
-            <div class="acal-sem-banner" id="acal-sem-banner">
-              <div>
-                <div class="acal-sem-banner-sub">Full Semester Overview</div>
-                <div class="acal-sem-banner-title" id="acal-sem-banner-title">${esc(ACAL_CONFIG.academicYear)} · ${esc(ACAL_CONFIG.semesterLabel)}</div>
-              </div>
-              <div class="acal-sem-banner-stats">
-                <div style="text-align:center;">
-                  <div class="acal-banner-stat-val" id="acal-sem-stat-work">—</div>
-                  <div class="acal-banner-stat-lbl">Working</div>
+            <!-- SIDEBAR -->
+            <aside class="nc-sidebar">
+              <div class="nc-sidebar-section">
+                <div class="nc-sidebar-label">Academic Setup</div>
+                <div class="nc-form-group">
+                  <label>Academic Year</label>
+                  <select class="nc-form-control" id="nc-acad-year">
+                    <option>2024–2025</option>
+                    <option selected>2025–2026</option>
+                    <option>2026–2027</option>
+                    <option>2027–2028</option>
+                  </select>
                 </div>
-                <div style="text-align:center;">
-                  <div class="acal-banner-stat-val" id="acal-sem-stat-hol" style="color:#fca5a5;">—</div>
-                  <div class="acal-banner-stat-lbl">Holidays</div>
+                <div class="nc-form-group">
+                  <label>Department</label>
+                  <input class="nc-form-control" id="nc-dept" type="text" value="Computer Science & Engineering" placeholder="Department name">
                 </div>
-                <div style="text-align:center;">
-                  <div class="acal-banner-stat-val" id="acal-sem-stat-exam" style="color:#fdba74;">—</div>
-                  <div class="acal-banner-stat-lbl">Exam Days</div>
-                </div>
-                <div style="text-align:center;">
-                  <div class="acal-banner-stat-val" id="acal-sem-stat-tests" style="color:#5eead4;">—</div>
-                  <div class="acal-banner-stat-lbl">Tests</div>
+                <div class="nc-form-group">
+                  <label>Semester Filter</label>
+                  <select class="nc-form-control" id="nc-sem-filter">
+                    <option value="">All Semesters</option>
+                    <option>Odd Semester</option>
+                    <option>Even Semester</option>
+                    <option>Summer Term</option>
+                    <option>Full Year</option>
+                  </select>
                 </div>
               </div>
-            </div>
-            <div class="acal-sem-grid" id="acal-sem-grid"></div>
-            <div class="acal-sem-stats" id="acal-sem-stats"></div>
-            <div class="acal-legend" style="margin-top:12px;">
-              <div class="acal-legend-item"><div class="acal-legend-dot" style="background:var(--green-pale);border:1.5px solid var(--green);"></div> Working Day</div>
-              <div class="acal-legend-item"><div class="acal-legend-dot" style="background:var(--red-pale);border:1.5px solid var(--red);"></div> Holiday</div>
-              <div class="acal-legend-item"><div class="acal-legend-dot" style="background:#ccfbf1;border:1.5px solid #0d9488;"></div> Internal Test</div>
-              <div class="acal-legend-item"><div class="acal-legend-dot" style="background:var(--purple-pale);border:1.5px solid var(--purple);"></div> College Event</div>
-              <div class="acal-legend-item"><div class="acal-legend-dot" style="background:var(--orange-pale);border:1.5px solid var(--orange);"></div> Examination</div>
-              <div class="acal-legend-item"><div class="acal-legend-dot" style="background:var(--blue-pale);border:1.5px solid var(--ink-soft);"></div> Weekend</div>
-            </div>
-          </div>
-        </div>
 
-        <!-- SECTION 5: Editable Report -->
-        <div class="acal-section" style="margin-top:20px;">
-          <div class="toolbar" style="margin-bottom:10px;">
-            <div>
-              <div style="font-size:16px;font-weight:700;font-family:'Space Grotesk',sans-serif;color:var(--blue-deep);">Editable Calendar Report</div>
-              <div style="font-size:12.5px;color:var(--ink-soft);margin-top:2px;">Click any field or table cell to edit. Print when ready.</div>
-            </div>
-            <div style="display:flex;gap:7px;flex-wrap:wrap;">
-              <button class="ghost" id="acal-rpt-reset" style="font-size:12px;padding:5px 12px;">↺ Reset</button>
-              <button class="ghost" id="acal-rpt-print" style="font-size:12px;padding:5px 12px;">🖨 Print</button>
-              <button class="primary" id="acal-rpt-pdf" style="font-size:12px;padding:5px 12px;">⬇ Export PDF</button>
-            </div>
-          </div>
+              <div class="nc-gold-rule"></div>
 
-          <!-- Report toolbar -->
-          <div class="acal-report-toolbar">
-            <span class="acal-report-toolbar-lbl">Format:</span>
-            <button class="ghost" style="background:rgba(255,255,255,.12);color:white;font-weight:700;font-size:11px;padding:4px 9px;" onclick="document.execCommand('bold')"><b>B</b></button>
-            <button class="ghost" style="background:rgba(255,255,255,.12);color:white;font-style:italic;font-size:11px;padding:4px 9px;" onclick="document.execCommand('italic')"><i>I</i></button>
-            <button class="ghost" style="background:rgba(255,255,255,.12);color:white;text-decoration:underline;font-size:11px;padding:4px 9px;" onclick="document.execCommand('underline')"><u>U</u></button>
-            <div style="width:1px;height:18px;background:rgba(255,255,255,.15);margin:0 4px;"></div>
-            <span class="acal-report-toolbar-lbl">Highlight:</span>
-            <button class="ghost" style="background:#fef3c7;color:var(--orange);font-size:10px;padding:4px 8px;" onclick="document.execCommand('hiliteColor',false,'#fef3c7')">Amber</button>
-            <button class="ghost" style="background:var(--green-pale);color:var(--green);font-size:10px;padding:4px 8px;" onclick="document.execCommand('hiliteColor',false,'#e6f0e9')">Green</button>
-            <button class="ghost" style="background:var(--red-pale);color:var(--red);font-size:10px;padding:4px 8px;" onclick="document.execCommand('hiliteColor',false,'#f6e5e3')">Red</button>
-            <button class="ghost" style="background:rgba(255,255,255,.12);color:white;font-size:10px;padding:4px 8px;" onclick="document.execCommand('hiliteColor',false,'transparent')">Clear</button>
-            <span style="margin-left:auto;font-size:10px;color:rgba(255,255,255,.35);font-family:'IBM Plex Mono',monospace;">click any cell to edit</span>
-          </div>
-          <div class="acal-report-frame">
-            <div class="acal-report-page" id="acal-report-page">
-              <!-- HEADER -->
-              <div class="acal-report-header-block">
-                <div style="display:flex;align-items:flex-start;justify-content:space-between;">
-                  <div style="flex:1;">
-                    <div contenteditable="true" class="acal-report-institution" id="acal-r-inst" spellcheck="false">${esc(ACAL_CONFIG.institutionName) || 'Department of Engineering'}</div>
-                    <div style="display:flex;gap:10px;margin-top:4px;flex-wrap:wrap;">
-                      <div contenteditable="true" class="acal-report-subtitle" id="acal-r-univ" spellcheck="false">${esc(ACAL_CONFIG.university) || 'University'}</div>
-                      <span style="color:var(--line);">·</span>
-                      <div contenteditable="true" class="acal-report-subtitle" id="acal-r-reg" spellcheck="false">${esc(ACAL_CONFIG.regulation) || 'NEP 2020'}</div>
-                    </div>
+              <div class="nc-sidebar-section">
+                <div class="nc-sidebar-label">Search</div>
+                <div class="nc-search-box">
+                  <span class="nc-icon">🔍</span>
+                  <input class="nc-form-control" id="nc-search" type="text" placeholder="Search events…">
+                </div>
+              </div>
+
+              <div class="nc-sidebar-section">
+                <div class="nc-sidebar-label">Filter by Category</div>
+                <div class="nc-chips" id="nc-filter-chips"></div>
+              </div>
+
+              <div class="nc-sidebar-section">
+                <div class="nc-sidebar-label">Sort</div>
+                <select class="nc-form-control" id="nc-sort-by">
+                  <option value="date">Date (Ascending)</option>
+                  <option value="date-desc">Date (Descending)</option>
+                  <option value="name">Event Name</option>
+                  <option value="category">Category</option>
+                  <option value="duration">Duration</option>
+                </select>
+              </div>
+
+              <div class="nc-sidebar-section">
+                <div class="nc-sidebar-label">Date Range</div>
+                <div class="nc-form-group">
+                  <label>From</label>
+                  <input class="nc-form-control" id="nc-range-from" type="date">
+                </div>
+                <div class="nc-form-group">
+                  <label>To</label>
+                  <input class="nc-form-control" id="nc-range-to" type="date">
+                </div>
+              </div>
+
+              <div class="nc-sidebar-section">
+                <div class="nc-sidebar-label">Export / Import</div>
+                <div style="display:flex;flex-direction:column;gap:5px;">
+                  <button class="nc-btn nc-btn-outline" style="width:100%;justify-content:center;" onclick="ncExportCSV()">⬇ Export CSV</button>
+                  <button class="nc-btn nc-btn-outline" style="width:100%;justify-content:center;" onclick="ncPrint()">🖨 Print</button>
+                  <button class="nc-btn nc-btn-outline" style="width:100%;justify-content:center;" onclick="ncOpenImport()">⬆ Import</button>
+                </div>
+              </div>
+            </aside>
+
+            <!-- MAIN -->
+            <main class="nc-main">
+              <!-- Dashboard stats -->
+              <div class="nc-dashboard" id="nc-dashboard"></div>
+
+              <!-- Toolbar -->
+              <div class="nc-toolbar">
+                <div class="nc-toolbar-left">
+                  <div class="nc-month-nav" id="nc-month-nav">
+                    <button onclick="ncPrevMonth()">‹</button>
+                    <span class="nc-month-label" id="nc-month-label"></span>
+                    <button onclick="ncNextMonth()">›</button>
                   </div>
-                  <div style="text-align:right;flex-shrink:0;margin-left:16px;">
-                    <div style="font-size:10px;color:#6b7280;font-weight:600;">Generated by AcadPlan</div>
-                    <div style="font-size:10px;color:#6b7280;" id="acal-r-gendate"></div>
+                  <button class="nc-btn nc-btn-outline" style="font-size:11px;padding:4px 10px;" onclick="ncGoToday()">Today</button>
+                </div>
+                <div class="nc-toolbar-right">
+                  <div class="nc-view-toggle">
+                    <button class="nc-view-btn active" id="nc-vbtn-cal" onclick="ncSetView('calendar')">📅 Calendar</button>
+                    <button class="nc-view-btn" id="nc-vbtn-list" onclick="ncSetView('list')">☰ List</button>
+                  </div>
+                  <button class="nc-btn nc-btn-gold" onclick="ncOpenAddModal()">＋ Add Event</button>
+                </div>
+              </div>
+
+              <!-- Calendar View -->
+              <div class="nc-cal-wrap" id="nc-cal-view">
+                <div id="nc-cal-grid"></div>
+              </div>
+
+              <!-- List View -->
+              <div class="nc-list-wrap nc-hidden" id="nc-list-view">
+                <table class="nc-list-table">
+                  <thead>
+                    <tr>
+                      <th onclick="ncSortList('name')">Event Name</th>
+                      <th onclick="ncSortList('category')">Category</th>
+                      <th onclick="ncSortList('date')">Start Date</th>
+                      <th onclick="ncSortList('endDate')">End Date</th>
+                      <th>Semester</th>
+                      <th onclick="ncSortList('duration')">Days</th>
+                      <th>Description</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="nc-list-body"></tbody>
+                </table>
+              </div>
+            </main>
+          </div>
+
+          <!-- Event Add/Edit Modal -->
+          <div class="nc-modal-overlay" id="nc-event-modal">
+            <div class="nc-modal">
+              <div class="nc-modal-header">
+                <div class="nc-modal-title" id="nc-modal-title">Add New Event</div>
+                <button class="nc-modal-close" onclick="ncCloseModal()">✕</button>
+              </div>
+              <div class="nc-modal-body">
+                <div class="nc-form-group-m">
+                  <label>Event Name *</label>
+                  <input class="nc-form-control" id="nc-ev-name" type="text" placeholder="e.g. Mid-Semester Examination">
+                </div>
+                <div class="nc-form-row">
+                  <div class="nc-form-group-m">
+                    <label>Category *</label>
+                    <select class="nc-form-control" id="nc-ev-cat">
+                      <option value="Teaching">Teaching</option>
+                      <option value="Examination">Examination</option>
+                      <option value="Holiday">Holiday</option>
+                      <option value="Vacation">Vacation</option>
+                      <option value="Admission">Admission</option>
+                      <option value="Registration">Registration</option>
+                      <option value="Academic">Academic Events</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                  <div class="nc-form-group-m">
+                    <label>Semester</label>
+                    <select class="nc-form-control" id="nc-ev-sem">
+                      <option value="Odd Semester">Odd Semester</option>
+                      <option value="Even Semester">Even Semester</option>
+                      <option value="Summer Term">Summer Term</option>
+                      <option value="Full Year">Full Year</option>
+                    </select>
                   </div>
                 </div>
-                <div style="margin-top:14px;text-align:center;">
-                  <div contenteditable="true" class="acal-report-doc-title" spellcheck="false">ACADEMIC CALENDAR</div>
-                  <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:4px;">
-                    <div contenteditable="true" class="acal-report-subtitle" style="font-size:14px;font-weight:700;color:#111;" spellcheck="false">Academic Year ${esc(ACAL_CONFIG.academicYear)}</div>
-                    <span style="color:#d1d5db;">·</span>
-                    <div contenteditable="true" class="acal-report-subtitle" style="font-size:14px;font-weight:700;color:#111;" spellcheck="false">${esc(ACAL_CONFIG.semesterLabel)}</div>
+                <div class="nc-form-row">
+                  <div class="nc-form-group-m">
+                    <label>Start Date *</label>
+                    <input class="nc-form-control" id="nc-ev-start" type="date" onchange="ncUpdateDurPreview()">
+                  </div>
+                  <div class="nc-form-group-m">
+                    <label>End Date *</label>
+                    <input class="nc-form-control" id="nc-ev-end" type="date" onchange="ncUpdateDurPreview()">
                   </div>
                 </div>
-              </div>
-
-              <!-- 1. Key Dates -->
-              <div class="acal-report-section-head">1. Key Semester Dates</div>
-              <div class="acal-report-kv-grid" id="acal-r-keydates"></div>
-
-              <!-- 2. Month Summary -->
-              <div class="acal-report-section-head">2. Month-wise Working Day Summary</div>
-              <table class="acal-report-table">
-                <thead><tr><th>Month</th><th>Total Days</th><th>Working Days</th><th>Holidays</th><th>Events / Tests</th><th>Lectures ≈</th></tr></thead>
-                <tbody id="acal-r-month-tbody"></tbody>
-              </table>
-
-              <!-- 3. Calendar Grid -->
-              <div class="acal-report-section-head">3. Semester Calendar</div>
-              <div class="acal-report-monthly-grid" id="acal-r-cal-grid"></div>
-              <div class="acal-legend" style="margin-top:8px;font-size:10.5px;">
-                <div class="acal-legend-item"><div class="acal-legend-dot" style="background:var(--green-pale);border:1.5px solid var(--green);"></div> Working</div>
-                <div class="acal-legend-item"><div class="acal-legend-dot" style="background:var(--red-pale);border:1.5px solid var(--red);"></div> Holiday</div>
-                <div class="acal-legend-item"><div class="acal-legend-dot" style="background:#ccfbf1;border:1.5px solid #0d9488;"></div> Internal Test</div>
-                <div class="acal-legend-item"><div class="acal-legend-dot" style="background:var(--purple-pale);border:1.5px solid var(--purple);"></div> Event</div>
-                <div class="acal-legend-item"><div class="acal-legend-dot" style="background:var(--orange-pale);border:1.5px solid var(--orange);"></div> Exam</div>
-                <div class="acal-legend-item"><div class="acal-legend-dot" style="background:var(--blue-pale);border:1.5px solid var(--ink-soft);"></div> Weekend</div>
-              </div>
-
-              <!-- 4. Holiday Schedule -->
-              <div class="acal-report-section-head">4. Holiday, Event &amp; Assessment Schedule</div>
-              <table class="acal-report-table">
-                <thead><tr><th>#</th><th>Date</th><th>Day</th><th>Description</th><th>Type</th><th>Remarks</th></tr></thead>
-                <tbody id="acal-r-holiday-tbody"></tbody>
-              </table>
-
-              <!-- 5. Compliance -->
-              <div class="acal-report-section-head">5. Compliance Statement</div>
-              <div contenteditable="true" id="acal-r-compliance"
-                style="font-size:11.5px;line-height:1.7;color:#111;padding:9px 11px;background:var(--green-pale);border-left:4px solid var(--green);border-radius:0 4px 4px 0;outline:none;margin-bottom:14px;"
-                spellcheck="false">This Academic Calendar has been prepared in accordance with the UGC guidelines and NEP 2020 framework. The semester provides a minimum of 90 working days as mandated. The calendar is subject to approval by the Academic Council and may be revised due to unforeseen circumstances. All Internal Assessments and Examinations have been scheduled as per university norms.</div>
-
-              <!-- 6. Signatures -->
-              <div class="acal-report-section-head">6. Approval &amp; Signatures</div>
-              <div class="acal-report-sig-row">
-                <div class="acal-report-sig">
-                  <div class="acal-report-sig-line"></div>
-                  <div contenteditable="true" class="acal-report-sig-label" spellcheck="false">Head of Department</div>
+                <div class="nc-form-group-m">
+                  <label>Description</label>
+                  <textarea class="nc-form-control" id="nc-ev-desc" placeholder="Optional notes…"></textarea>
                 </div>
-                <div class="acal-report-sig">
-                  <div class="acal-report-sig-line"></div>
-                  <div contenteditable="true" class="acal-report-sig-label" spellcheck="false">Dean – Academics</div>
-                </div>
-                <div class="acal-report-sig">
-                  <div class="acal-report-sig-line"></div>
-                  <div contenteditable="true" class="acal-report-sig-label" spellcheck="false">Principal</div>
-                </div>
+                <div id="nc-dur-preview" style="font-size:11px;color:var(--nc-text-muted);margin-top:-6px;"></div>
               </div>
-            </div><!-- /acal-report-page -->
-          </div><!-- /acal-report-frame -->
-        </div>
-
-        <!-- Holiday Add/Edit Modal (rendered inline) -->
-        <div id="acal-holiday-overlay" style="display:none;">
-          <div class="modal-box" style="max-width:420px;">
-            <h3>Add Holiday / Event</h3>
-            <div class="field"><label>Date</label><input type="date" id="acal-h-date"></div>
-            <div class="field"><label>Name / Description</label><input type="text" id="acal-h-name" placeholder="e.g. Diwali Holiday"></div>
-            <div class="field"><label>Type</label>
-              <select id="acal-h-type">
-                <option value="holiday">Public Holiday</option>
-                <option value="event">College Event</option>
-                <option value="test">Internal Assessment</option>
-                <option value="exam">Examination</option>
-              </select>
+              <div class="nc-modal-footer">
+                <button class="nc-btn nc-btn-outline" onclick="ncCloseModal()">Cancel</button>
+                <button class="nc-btn nc-btn-gold" onclick="ncSaveEvent()">Save Event</button>
+              </div>
             </div>
-            <div style="display:flex;gap:8px;margin-top:16px;">
-              <button class="primary" id="acal-h-save">Add to Calendar</button>
-              <button class="ghost" id="acal-h-cancel">Cancel</button>
+          </div>
+
+          <!-- Day Events Modal -->
+          <div class="nc-modal-overlay" id="nc-day-modal">
+            <div class="nc-modal" style="max-width:420px;">
+              <div class="nc-modal-header">
+                <div class="nc-modal-title" id="nc-day-modal-title"></div>
+                <button class="nc-modal-close" onclick="document.getElementById('nc-day-modal').classList.remove('open')">✕</button>
+              </div>
+              <div class="nc-modal-body" id="nc-day-modal-body"></div>
+              <div class="nc-modal-footer">
+                <button class="nc-btn nc-btn-gold" onclick="document.getElementById('nc-day-modal').classList.remove('open');ncOpenAddModal()">+ Add Event</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Import Modal -->
+          <div class="nc-modal-overlay" id="nc-import-modal">
+            <div class="nc-modal" style="max-width:420px;">
+              <div class="nc-modal-header">
+                <div class="nc-modal-title">Import Events</div>
+                <button class="nc-modal-close" onclick="ncCloseImport()">✕</button>
+              </div>
+              <div class="nc-modal-body">
+                <div style="border:2px dashed var(--nc-border);border-radius:var(--nc-radius);padding:24px;text-align:center;cursor:pointer;" onclick="document.getElementById('nc-file-input').click()">
+                  <input type="file" id="nc-file-input" accept=".json,.csv" style="display:none;" onchange="ncHandleImport(event)">
+                  <div style="font-size:28px;margin-bottom:8px;">📂</div>
+                  <div style="font-weight:600;color:var(--nc-navy);">Click to select file</div>
+                  <div style="font-size:11px;color:var(--nc-text-muted);margin-top:4px;">Supports JSON or CSV</div>
+                </div>
+                <div style="margin-top:12px;padding:10px;background:var(--nc-bg);border-radius:var(--nc-radius);font-size:11px;color:var(--nc-text-muted);">
+                  <strong>CSV format:</strong> name, category, startDate, endDate, semester, description<br>
+                  <strong>JSON format:</strong> Array of event objects with same fields.
+                </div>
+              </div>
+              <div class="nc-modal-footer">
+                <button class="nc-btn nc-btn-outline" onclick="ncCloseImport()">Cancel</button>
+              </div>
             </div>
           </div>
         </div>
       `;
     }
 
-    /* ========================================================
-       BIND EVENTS
-       ======================================================== */
     function bindAcademicCalendar() {
-      // Render sub-components
-      acalRenderMonthGrid();
-      acalRenderHolidayTable();
-      acalInitReport();
+      ncLoadData();
+      ncBuildChips();
+      NC_FILTERED = [...NC_EVENTS];
+      NC_FILTERED.sort((a, b) => a.startDate.localeCompare(b.startDate));
+      ncRender();
 
-      // Config apply
-      document.getElementById('acal-btn-apply-cfg').addEventListener('click', () => {
-        ACAL_CONFIG.academicYear = document.getElementById('acal-cfg-ay').value.trim() || ACAL_CONFIG.academicYear;
-        ACAL_CONFIG.semesterLabel = document.getElementById('acal-cfg-sem').value;
-        ACAL_CONFIG.startDate = document.getElementById('acal-cfg-start').value || ACAL_CONFIG.startDate;
-        ACAL_CONFIG.endDate = document.getElementById('acal-cfg-end').value || ACAL_CONFIG.endDate;
-        ACAL_CONFIG.examStart = document.getElementById('acal-cfg-exam').value || ACAL_CONFIG.examStart;
-        ACAL_CONFIG.workingDaysTarget = parseInt(document.getElementById('acal-cfg-wdt').value, 10) || 90;
-        ACAL_CONFIG.lecturesPerDay = parseInt(document.getElementById('acal-cfg-lpd').value, 10) || 6;
-        ACAL_CONFIG.weekendRule = document.getElementById('acal-cfg-wkd').value;
-        ACAL_APPROVED = false;
-        // Navigate re-renders the page with updated config
-        ROUTE = 'academic-calendar';
-        render();
+      // Wire sidebar inputs
+      ['nc-sem-filter', 'nc-sort-by', 'nc-range-from', 'nc-range-to'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('change', ncApplyFilters);
       });
+      const search = document.getElementById('nc-search');
+      if (search) search.addEventListener('input', ncApplyFilters);
 
-      // Month nav
-      const btnPrev = document.getElementById('acal-prev-month');
-      if (btnPrev) btnPrev.addEventListener('click', () => {
-        ACAL_CURRENT_MONTH--;
-        if (ACAL_CURRENT_MONTH < 0) { ACAL_CURRENT_MONTH = 11; ACAL_CURRENT_YEAR--; }
-        acalRenderMonthGrid();
-      });
-      const btnNext = document.getElementById('acal-next-month');
-      if (btnNext) btnNext.addEventListener('click', () => {
-        ACAL_CURRENT_MONTH++;
-        if (ACAL_CURRENT_MONTH > 11) { ACAL_CURRENT_MONTH = 0; ACAL_CURRENT_YEAR++; }
-        acalRenderMonthGrid();
-      });
-
-      // Holiday overlay
-      const overlay = document.getElementById('acal-holiday-overlay');
-      const btnAdd = document.getElementById('acal-btn-add-holiday');
-      if (btnAdd) btnAdd.addEventListener('click', () => { overlay.style.display = 'flex'; });
-      const btnCancel = document.getElementById('acal-h-cancel');
-      if (btnCancel) btnCancel.addEventListener('click', () => { overlay.style.display = 'none'; });
-      if (overlay) overlay.addEventListener('click', e => { if (e.target === overlay) overlay.style.display = 'none'; });
-      const btnSaveH = document.getElementById('acal-h-save');
-      if (btnSaveH) btnSaveH.addEventListener('click', acalAddHoliday);
-
-      // Approve
-      const btnApprove = document.getElementById('acal-btn-approve');
-      if (btnApprove) btnApprove.addEventListener('click', () => {
-        ACAL_APPROVED = true;
-        render();
-      });
-
-      // Export PDF
-      const btnExport = document.getElementById('acal-btn-export');
-      if (btnExport) btnExport.addEventListener('click', acalPrintReport);
-
-      // Regenerate with AI
-      const btnRegen = document.getElementById('acal-btn-regen');
-      if (btnRegen) btnRegen.addEventListener('click', acalGenerateAI);
-
-      // AI inline button
-      const btnAI = document.getElementById('acal-btn-ai');
-      if (btnAI) btnAI.addEventListener('click', acalGenerateAI);
-
-      // Report buttons
-      const btnReset = document.getElementById('acal-rpt-reset');
-      if (btnReset) btnReset.addEventListener('click', () => { if (confirm('Reset all report edits?')) { acalInitReport(); } });
-      const btnPrint = document.getElementById('acal-rpt-print');
-      if (btnPrint) btnPrint.addEventListener('click', acalPrintReport);
-      const btnPDF = document.getElementById('acal-rpt-pdf');
-      if (btnPDF) btnPDF.addEventListener('click', acalPrintReport);
-    }
-
-    /* ========================================================
-       CALENDAR RENDER — MONTH VIEW
-       ======================================================== */
-    function acalRenderMonthGrid() {
-      const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June',
-        'July', 'August', 'September', 'October', 'November', 'December'];
-      const label = document.getElementById('acal-month-label');
-      if (label) label.textContent = `${MONTH_NAMES[ACAL_CURRENT_MONTH]} ${ACAL_CURRENT_YEAR}`;
-
-      const grid = document.getElementById('acal-days-grid');
-      if (!grid) return;
-      grid.innerHTML = '';
-
-      const firstDay = new Date(ACAL_CURRENT_YEAR, ACAL_CURRENT_MONTH, 1).getDay();
-      const startOffset = firstDay === 0 ? 6 : firstDay - 1; // Mon-based
-      const daysInMonth = new Date(ACAL_CURRENT_YEAR, ACAL_CURRENT_MONTH + 1, 0).getDate();
-
-      for (let i = 0; i < startOffset; i++) {
-        const el = document.createElement('div');
-        el.className = 'acal-day empty';
-        grid.appendChild(el);
-      }
-      for (let d = 1; d <= daysInMonth; d++) {
-        const date = new Date(ACAL_CURRENT_YEAR, ACAL_CURRENT_MONTH, d);
-        const ds = acalDateStr(ACAL_CURRENT_YEAR, ACAL_CURRENT_MONTH, d);
-        const h = acalFindEvent(ds);
-        const isWk = acalIsWeekend(date);
-
-        const el = document.createElement('div');
-        let cls = 'acal-day';
-        if (isWk) cls += ' sunday';
-        else if (h) cls += ' ' + h.type;
-        else cls += ' working';
-        el.className = cls;
-        el.title = h ? h.name : (isWk ? 'Weekend' : 'Working Day');
-        el.innerHTML = `<span class="day-num">${d}</span>${(h || isWk) ? '<span class="day-dot"></span>' : ''}`;
-        if (h) el.addEventListener('click', () => acalToast(h.name + ' — ' + h.type));
-        grid.appendChild(el);
-      }
-    }
-
-    /* ========================================================
-       CALENDAR RENDER — SEMESTER VIEW
-       ======================================================== */
-    function acalRenderSemesterView() {
-      const start = new Date(ACAL_CONFIG.startDate + 'T00:00:00');
-      const end = new Date(ACAL_CONFIG.endDate + 'T00:00:00');
-
-      // Build list of months to show
-      const months = [];
-      const cur = new Date(start.getFullYear(), start.getMonth(), 1);
-      while (cur <= end) {
-        months.push({ y: cur.getFullYear(), m: cur.getMonth() });
-        cur.setMonth(cur.getMonth() + 1);
-      }
-      // Cap to 5 months for layout
-      const MONTHS = months.slice(0, 5);
-      const MN = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-      const FULL_MN = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-      const DN = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-
-      const semGrid = document.getElementById('acal-sem-grid');
-      const semStats = document.getElementById('acal-sem-stats');
-      if (!semGrid) return;
-      semGrid.innerHTML = '';
-      semStats.innerHTML = '';
-
-      let totalWork = 0, totalHol = 0, totalExam = 0, totalTest = 0;
-
-      MONTHS.forEach(({ y, m }) => {
-        const firstDow = new Date(y, m, 1).getDay();
-        const offset = firstDow === 0 ? 6 : firstDow - 1;
-        const days = new Date(y, m + 1, 0).getDate();
-        let mWork = 0, mHol = 0;
-
-        const col = document.createElement('div');
-        col.className = 'acal-sem-month';
-
-        const titleEl = document.createElement('div');
-        titleEl.className = 'acal-sem-month-title';
-        titleEl.textContent = FULL_MN[m].toUpperCase() + ' ' + y;
-        col.appendChild(titleEl);
-
-        const g = document.createElement('div');
-        g.className = 'acal-sem-month-grid';
-
-        DN.forEach(d => {
-          const dh = document.createElement('div');
-          dh.className = 'acal-sem-dh'; dh.textContent = d; g.appendChild(dh);
-        });
-        for (let i = 0; i < offset; i++) {
-          const e = document.createElement('div'); e.className = 'acal-sem-day empty'; g.appendChild(e);
-        }
-        for (let d = 1; d <= days; d++) {
-          const date = new Date(y, m, d);
-          const ds = acalDateStr(y, m, d);
-          const h = acalFindEvent(ds);
-          const isWk = acalIsWeekend(date);
-          const outside = date < start || date > end;
-          const cell = document.createElement('div');
-          cell.textContent = d;
-          if (outside) cell.className = 'acal-sem-day outside';
-          else if (isWk) cell.className = 'acal-sem-day sunday';
-          else if (h) {
-            const cls = { holiday: 'holiday', test: 'test', event: 'event', exam: 'exam' }[h.type] || 'event';
-            cell.className = `acal-sem-day ${cls}`;
-            cell.title = h.name;
-            if (h.type === 'holiday') { mHol++; totalHol++; }
-            if (h.type === 'test') totalTest++;
-            if (h.type === 'exam') totalExam++;
-          } else {
-            cell.className = 'acal-sem-day working';
-            mWork++;
+      // Modal overlay clicks to close
+      ['nc-event-modal', 'nc-day-modal', 'nc-import-modal'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('click', function (e) {
+          if (e.target === this) {
+            if (id === 'nc-event-modal') ncCloseModal();
+            else if (id === 'nc-import-modal') ncCloseImport();
+            else this.classList.remove('open');
           }
-          g.appendChild(cell);
-        }
-        col.appendChild(g);
-        semGrid.appendChild(col);
-        totalWork += mWork;
-
-        // Per-month stat
-        const stat = document.createElement('div');
-        stat.className = 'acal-sem-stat';
-        stat.innerHTML = `<div class="acal-sem-stat-val">${mWork}</div><div class="acal-sem-stat-lbl">Working<br>${MN[m]}</div>`;
-        semStats.appendChild(stat);
-      });
-
-      // Update banner stats
-      const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
-      setEl('acal-sem-stat-work', totalWork);
-      setEl('acal-sem-stat-hol', totalHol);
-      setEl('acal-sem-stat-exam', totalExam);
-      setEl('acal-sem-stat-tests', totalTest);
-    }
-
-    /* ========================================================
-       VIEW SWITCH
-       ======================================================== */
-    function acalSwitchView(view) {
-      ACAL_CAL_VIEW = view;
-      const tabM = document.getElementById('acal-tab-month');
-      const tabS = document.getElementById('acal-tab-semester');
-      const vM = document.getElementById('acal-view-month');
-      const vS = document.getElementById('acal-view-semester');
-      const nav = document.getElementById('acal-month-nav');
-      const vt = document.getElementById('acal-view-title');
-      if (tabM) tabM.classList.toggle('active', view === 'month');
-      if (tabS) tabS.classList.toggle('active', view === 'semester');
-      if (vM) vM.style.display = view === 'month' ? '' : 'none';
-      if (vS) vS.style.display = view === 'semester' ? '' : 'none';
-      if (nav) nav.style.display = view === 'month' ? 'flex' : 'none';
-      if (vt) vt.textContent = view === 'month' ? 'Month-wise Calendar View' : 'Semester-wise Calendar View';
-      if (view === 'semester') acalRenderSemesterView();
-    }
-
-    /* ========================================================
-       HOLIDAY TABLE
-       ======================================================== */
-    function acalRenderHolidayTable() {
-      const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-      const TYPE_MAP = {
-        holiday: ['var(--red-pale)', 'var(--red)', 'Holiday'],
-        event: ['var(--purple-pale)', 'var(--purple)', 'Event'],
-        test: ['#ccfbf1', '#0d9488', 'Internal Test'],
-        exam: ['var(--orange-pale)', 'var(--orange)', 'Exam'],
-      };
-      const tbody = document.getElementById('acal-holiday-tbody');
-      if (!tbody) return;
-      tbody.innerHTML = ACAL_HOLIDAYS.map((h, i) => {
-        const d = new Date(h.date + 'T00:00:00');
-        const tm = TYPE_MAP[h.type] || ['var(--blue-pale)', 'var(--ink-soft)', h.type];
-        const bg = i % 2 === 0 ? '#f7f5ee' : '#fff';
-        return `<tr style="background:${bg}">
-          <td style="font-family:'IBM Plex Mono',monospace;font-size:11px;">${h.date}</td>
-          <td style="font-size:11px;color:var(--ink-soft);">${DAY_NAMES[d.getDay()]}</td>
-          <td>${esc(h.name)}</td>
-          <td><span style="padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;background:${tm[0]};color:${tm[1]};">${tm[2]}</span></td>
-          <td><button onclick="acalDeleteHoliday(${i})" style="background:none;border:none;cursor:pointer;color:var(--red);font-size:13px;padding:2px 4px;" title="Remove">✕</button></td>
-        </tr>`;
-      }).join('');
-    }
-
-    function acalAddHoliday() {
-      const date = document.getElementById('acal-h-date').value;
-      const name = document.getElementById('acal-h-name').value.trim();
-      const type = document.getElementById('acal-h-type').value;
-      if (!date || !name) { acalToast('Please fill in date and name.'); return; }
-      ACAL_HOLIDAYS.push({ date, name, type });
-      ACAL_HOLIDAYS.sort((a, b) => a.date.localeCompare(b.date));
-      const overlay = document.getElementById('acal-holiday-overlay');
-      if (overlay) overlay.style.display = 'none';
-      // Clear fields
-      document.getElementById('acal-h-date').value = '';
-      document.getElementById('acal-h-name').value = '';
-      acalToast('Added: ' + name);
-      acalRenderHolidayTable();
-      acalRenderMonthGrid();
-      acalUpdateSummaryStats();
-      acalInitReport(); // refresh report
-    }
-
-    function acalDeleteHoliday(idx) {
-      ACAL_HOLIDAYS.splice(idx, 1);
-      acalRenderHolidayTable();
-      acalRenderMonthGrid();
-      acalUpdateSummaryStats();
-      acalInitReport();
-      acalToast('Removed.');
-    }
-
-    function acalUpdateSummaryStats() {
-      const wd = acalCountWorkingDays();
-      const hols = ACAL_HOLIDAYS.filter(h => h.type === 'holiday').length;
-      const tests = ACAL_HOLIDAYS.filter(h => h.type === 'test').length;
-      const setEl = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
-      setEl('acal-stat-wd', wd);
-      setEl('acal-stat-hol', hols);
-      setEl('acal-stat-tests', tests);
-      const onTrack = wd >= ACAL_CONFIG.workingDaysTarget;
-      const msg = document.getElementById('acal-compliance-msg');
-      if (msg) {
-        msg.className = onTrack ? 'acal-compliance-ok' : 'acal-compliance-warn';
-        msg.textContent = onTrack
-          ? `✓ ${wd} working days meet the ≥${ACAL_CONFIG.workingDaysTarget}-day UGC requirement`
-          : `⚠ Only ${wd} working days — ${ACAL_CONFIG.workingDaysTarget - wd} more needed to meet the ${ACAL_CONFIG.workingDaysTarget}-day requirement`;
-      }
-    }
-
-    /* ========================================================
-       AI GENERATION
-       ======================================================== */
-    async function acalGenerateAI() {
-      const el = document.getElementById('acal-ai-output');
-      if (!el) return;
-      el.innerHTML = '<span class="acal-ai-loading">⟳ Consulting AI to analyse academic calendar…</span>';
-
-      const holidayList = ACAL_HOLIDAYS.map(h => `- ${h.date}: ${h.name} (${h.type})`).join('\n');
-      const wd = acalCountWorkingDays();
-      const prompt = `You are an academic planning assistant. Analyse this academic calendar for ${ACAL_CONFIG.academicYear} ${ACAL_CONFIG.semesterLabel} running from ${ACAL_CONFIG.startDate} to ${ACAL_CONFIG.endDate}.
-
-Current working days: ${wd} (target: ${ACAL_CONFIG.workingDaysTarget})
-Lectures per day: ${ACAL_CONFIG.lecturesPerDay}
-Weekend rule: ${ACAL_CONFIG.weekendRule === 'sunday_only' ? 'Sundays off only' : 'Saturday & Sunday off'}
-
-Events in the system:
-${holidayList}
-
-Provide a concise analysis with bullet points covering:
-1. Whether working day count meets the UGC requirement and if adjustments are needed
-2. Assessment of holiday distribution across the semester
-3. Recommendations for 2 internal assessment dates (avoid existing holidays)
-4. Exam preparation period suggestion
-5. Key risks or observations about the calendar
-Be concise and practical.`;
-
-      try {
-        const response = await fetch("https://api.anthropic.com/v1/messages", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            model: "claude-sonnet-4-6",
-            max_tokens: 1000,
-            messages: [{ role: "user", content: prompt }]
-          })
         });
-        const data = await response.json();
-        el.textContent = data.content.map(i => i.text || '').join('');
-        acalToast('AI analysis complete.');
-      } catch (e) {
-        const wd2 = acalCountWorkingDays();
-        const ok = wd2 >= ACAL_CONFIG.workingDaysTarget;
-        el.textContent = `Academic Calendar Analysis — ${ACAL_CONFIG.academicYear} ${ACAL_CONFIG.semesterLabel}
-
-${ok ? '✓' : '⚠'} Working Days: ${wd2} ${ok ? '(meets' : '(falls short of'} the ${ACAL_CONFIG.workingDaysTarget}-day UGC requirement${ok ? ')' : ')'}
-  Semester: ${ACAL_CONFIG.startDate} – ${ACAL_CONFIG.endDate}
-
-Recommended Internal Assessment Schedule:
-• I Internal Test: Last week of September (covers Units I & II)
-• II Internal Test: First week of November (covers Units III & IV)
-
-Exam Preparation Period: 5 working days before exam commencement
-
-Key Observations:
-• ${ACAL_HOLIDAYS.filter(h => h.type === 'holiday').length} public holidays declared — ${ACAL_HOLIDAYS.filter(h => h.type === 'holiday').length > 8 ? 'higher than average; schedule buffer lectures' : 'within acceptable range'}
-• Internal assessments: ${ACAL_HOLIDAYS.filter(h => h.type === 'test').length} scheduled
-• Ensure syllabus coverage ≥85% before exam preparation period begins
-• Review holiday clusters for compensatory lecture planning`;
-        acalToast('AI analysis loaded (offline mode).');
-      }
-    }
-
-    /* ========================================================
-       EDITABLE REPORT
-       ======================================================== */
-    const ACAL_REPORT_KEY_DATES = [
-      { key: 'Semester Commencement', val: '' },
-      { key: 'Last Working Day', val: '' },
-      { key: 'Exam Start Date', val: '' },
-      { key: 'Semester End Date', val: '' },
-      { key: 'Total Working Days', val: '' },
-      { key: 'Lectures per Day', val: '' },
-      { key: 'Working Days per Week', val: '' },
-      { key: 'I Internal Assessment', val: '' },
-      { key: 'II Internal Assessment', val: '' },
-      { key: 'Exam Preparation Period', val: '' },
-    ];
-
-    function acalInitReport() {
-      // Stamp generation date
-      const gendate = document.getElementById('acal-r-gendate');
-      if (gendate) gendate.textContent = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
-
-      // Compute key date values dynamically from config
-      const startD = new Date(ACAL_CONFIG.startDate + 'T00:00:00');
-      const endD = new Date(ACAL_CONFIG.endDate + 'T00:00:00');
-      const examD = ACAL_CONFIG.examStart ? new Date(ACAL_CONFIG.examStart + 'T00:00:00') : null;
-      const fmtDate = d => d.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
-      const testEvents = ACAL_HOLIDAYS.filter(h => h.type === 'test');
-      const wd = acalCountWorkingDays();
-
-      const keyDates = [
-        { key: 'Semester Commencement', val: fmtDate(startD) },
-        { key: 'Last Working Day', val: examD ? fmtDate(new Date(examD.getTime() - 86400000)) : '—' },
-        { key: 'Exam Start Date', val: examD ? fmtDate(examD) : '—' },
-        { key: 'Semester End Date', val: fmtDate(endD) },
-        { key: 'Total Working Days', val: `${wd} days (UGC target: ≥${ACAL_CONFIG.workingDaysTarget})` },
-        { key: 'Lectures per Day', val: `${ACAL_CONFIG.lecturesPerDay} periods` },
-        { key: 'Working Days per Week', val: ACAL_CONFIG.weekendRule === 'sat_sun' ? 'Monday – Friday' : 'Monday – Saturday' },
-        { key: 'I Internal Assessment', val: testEvents[0] ? testEvents[0].date : '—' },
-        { key: 'II Internal Assessment', val: testEvents[1] ? testEvents[1].date : '—' },
-        { key: 'Exam Preparation Period', val: examD ? `${fmtDate(new Date(examD.getTime() - 5 * 86400000))} – ${fmtDate(new Date(examD.getTime() - 86400000))}` : '—' },
-      ];
-
-      // Key dates grid
-      const kd = document.getElementById('acal-r-keydates');
-      if (kd) kd.innerHTML = keyDates.map(({ key, val }) => `
-        <div class="acal-report-kv">
-          <span class="acal-report-kv-key">${esc(key)}</span>
-          <span contenteditable="true" class="acal-report-kv-val" spellcheck="false">${esc(val)}</span>
-        </div>`).join('');
-
-      // Month summary table body
-      acalRenderReportMonthTable();
-
-      // Calendar mini-grid
-      acalRenderReportCalGrid();
-
-      // Holiday table in report
-      acalRenderReportHolidayTable();
-    }
-
-    function acalRenderReportMonthTable() {
-      const tbody = document.getElementById('acal-r-month-tbody');
-      if (!tbody) return;
-      const start = new Date(ACAL_CONFIG.startDate + 'T00:00:00');
-      const end = new Date(ACAL_CONFIG.endDate + 'T00:00:00');
-      const MN = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-
-      // Build month set
-      const months = [];
-      const cur = new Date(start.getFullYear(), start.getMonth(), 1);
-      while (cur <= end) { months.push({ y: cur.getFullYear(), m: cur.getMonth() }); cur.setMonth(cur.getMonth() + 1); }
-
-      let twDay = 0, thol = 0, tev = 0;
-      const rows = months.map(({ y, m }, idx) => {
-        const total = new Date(y, m + 1, 0).getDate();
-        const dStart = new Date(y, m, 1) < start ? start.getDate() : 1;
-        const dEnd = new Date(y, m + 1, 0) > end ? end.getDate() : new Date(y, m + 1, 0).getDate();
-        let working = 0, holidays = 0, events = 0;
-        for (let d = dStart; d <= dEnd; d++) {
-          const date = new Date(y, m, d);
-          const ds = acalDateStr(y, m, d);
-          if (acalIsWeekend(date)) continue;
-          const h = acalFindEvent(ds);
-          if (!h) working++;
-          else if (h.type === 'holiday') holidays++;
-          else events++;
-        }
-        twDay += working; thol += holidays; tev += events;
-        const bg = idx % 2 === 0 ? '#f7f5ee' : '#fff';
-        return `<tr style="background:${bg}">
-          <td contenteditable="true" style="font-weight:600;">${MN[m]} ${y}</td>
-          <td contenteditable="true" style="text-align:center;">${total}</td>
-          <td contenteditable="true" style="text-align:center;color:var(--green);font-weight:700;">${working}</td>
-          <td contenteditable="true" style="text-align:center;color:var(--red);">${holidays}</td>
-          <td contenteditable="true" style="text-align:center;color:var(--purple);">${events}</td>
-          <td contenteditable="true" style="text-align:center;">${working * ACAL_CONFIG.lecturesPerDay}</td>
-        </tr>`;
       });
-      tbody.innerHTML = rows.join('') + `<tr style="background:var(--blue-pale);font-weight:700;">
-        <td><strong>TOTAL</strong></td><td></td>
-        <td style="text-align:center;color:var(--blue-deep);">${twDay}</td>
-        <td style="text-align:center;color:var(--red);">${thol}</td>
-        <td style="text-align:center;color:var(--purple);">${tev}</td>
-        <td style="text-align:center;">${twDay * ACAL_CONFIG.lecturesPerDay}</td>
-      </tr>`;
-    }
 
-    function acalRenderReportCalGrid() {
-      const g = document.getElementById('acal-r-cal-grid');
-      if (!g) return;
-      g.innerHTML = '';
-      const start = new Date(ACAL_CONFIG.startDate + 'T00:00:00');
-      const end = new Date(ACAL_CONFIG.endDate + 'T00:00:00');
-      const MN = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-      const DN = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-      const cur = new Date(start.getFullYear(), start.getMonth(), 1);
-      let count = 0;
-      while (cur <= end && count < 5) {
-        const y = cur.getFullYear(), m = cur.getMonth();
-        const firstDow = new Date(y, m, 1).getDay();
-        const offset = firstDow === 0 ? 6 : firstDow - 1;
-        const days = new Date(y, m + 1, 0).getDate();
-
-        const col = document.createElement('div');
-        col.className = 'acal-report-month-mini';
-
-        const titleEl = document.createElement('div');
-        titleEl.className = 'acal-report-month-mini-title';
-        titleEl.textContent = MN[m].toUpperCase() + ' ' + y;
-        col.appendChild(titleEl);
-
-        const grid = document.createElement('div');
-        grid.className = 'acal-report-month-mini-grid';
-        DN.forEach(d => { const e = document.createElement('div'); e.className = 'acal-rmg-dh'; e.textContent = d; grid.appendChild(e); });
-        for (let i = 0; i < offset; i++) { const e = document.createElement('div'); e.className = 'acal-rmg-d em'; grid.appendChild(e); }
-        for (let d = 1; d <= days; d++) {
-          const date = new Date(y, m, d);
-          const ds = acalDateStr(y, m, d);
-          const h = acalFindEvent(ds);
-          const isWk = acalIsWeekend(date);
-          const outside = date < start || date > end;
-          const e = document.createElement('div');
-          e.textContent = d;
-          const clsMap = { holiday: 'h', test: 't', event: 'e', exam: 'x' };
-          e.className = 'acal-rmg-d' + (outside ? ' em' : isWk ? ' su' : h ? (' ' + (clsMap[h.type] || '')) : '');
-          e.title = h ? h.name : '';
-          grid.appendChild(e);
+      // ESC key
+      document.addEventListener('keydown', function ncKeyHandler(e) {
+        if (e.key === 'Escape') {
+          ncCloseModal(); ncCloseImport();
+          document.getElementById('nc-day-modal')?.classList.remove('open');
         }
-        col.appendChild(grid);
-        g.appendChild(col);
-        cur.setMonth(cur.getMonth() + 1);
-        count++;
-      }
+        if ((e.ctrlKey || e.metaKey) && e.key === 'n') { e.preventDefault(); ncOpenAddModal(); }
+      });
     }
 
-    function acalRenderReportHolidayTable() {
-      const tbody = document.getElementById('acal-r-holiday-tbody');
-      if (!tbody) return;
-      const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-      const TYPE_STYLE = {
-        holiday: 'color:var(--red);background:var(--red-pale)',
-        test: 'color:#0d9488;background:#ccfbf1',
-        event: 'color:var(--purple);background:var(--purple-pale)',
-        exam: 'color:var(--orange);background:var(--orange-pale)',
-      };
-      const TYPE_LABEL = { holiday: 'Public Holiday', test: 'Internal Test', event: 'College Event', exam: 'Examination' };
-      tbody.innerHTML = ACAL_HOLIDAYS.map((h, i) => {
-        const d = new Date(h.date + 'T00:00:00');
-        const bg = i % 2 === 0 ? '#f7f5ee' : '#fff';
-        const sty = TYPE_STYLE[h.type] || '';
-        return `<tr style="background:${bg}">
-          <td style="text-align:center;color:#6b7280;">${i + 1}</td>
-          <td contenteditable="true">${esc(h.date)}</td>
-          <td style="text-align:center;color:#6b7280;">${DAY_NAMES[d.getDay()]}</td>
-          <td contenteditable="true" style="font-weight:500;">${esc(h.name)}</td>
-          <td><span style="padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600;${sty}">${TYPE_LABEL[h.type] || h.type}</span></td>
-          <td contenteditable="true" style="color:#6b7280;font-size:11px;">${h.type === 'holiday' ? 'No classes' : h.type === 'test' ? 'All courses' : h.type === 'exam' ? 'Exams only' : 'Adjusted'}</td>
-        </tr>`;
-      }).join('');
+    function ncSortList(col) {
+      if (NC_SORT.col === col) NC_SORT.dir = NC_SORT.dir === 'asc' ? 'desc' : 'asc';
+      else { NC_SORT.col = col; NC_SORT.dir = 'asc'; }
+      NC_FILTERED.sort((a, b) => {
+        let av, bv;
+        if (col === 'date') { av = a.startDate; bv = b.startDate; }
+        else if (col === 'endDate') { av = a.endDate; bv = b.endDate; }
+        else if (col === 'name') { av = a.name; bv = b.name; }
+        else if (col === 'category') { av = a.category; bv = b.category; }
+        else if (col === 'duration') {
+          av = ncDaysBetween(a.startDate, a.endDate); bv = ncDaysBetween(b.startDate, b.endDate);
+          return NC_SORT.dir === 'asc' ? av - bv : bv - av;
+        }
+        const r = (av || '').localeCompare(bv || '');
+        return NC_SORT.dir === 'asc' ? r : -r;
+      });
+      ncRenderList();
     }
-
-    /* ========================================================
-       REPORT PRINT / EXPORT
-       ======================================================== */
-    function acalPrintReport() {
-      const content = document.getElementById('acal-report-page');
-      if (!content) { acalToast('Report not rendered yet.'); return; }
-      const win = window.open('', '_blank');
-      win.document.write(`<!DOCTYPE html><html><head>
-        <title>Academic Calendar Report</title>
-        <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-        <style>
-          *{box-sizing:border-box;margin:0;padding:0}
-          body{font-family:'Inter',sans-serif;color:#111;font-size:12px;line-height:1.5;background:white}
-          @page{margin:20mm}
-          .acal-report-institution{font-size:17px;font-weight:700;font-family:'Space Grotesk',sans-serif}
-          .acal-report-doc-title{font-size:22px;font-weight:800;text-align:center;margin:12px 0 4px;display:block;width:100%}
-          .acal-report-section-head{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border-bottom:1px solid #e5e7eb;padding-bottom:5px;margin:20px 0 10px;display:flex;align-items:center;gap:7px}
-          .acal-report-section-head::before{content:'';display:block;width:4px;height:13px;background:#1d4e6b;border-radius:2px}
-          .acal-report-table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:12px}
-          .acal-report-table th{background:#0f3247;color:white;padding:6px 8px;text-align:left;font-size:10px;letter-spacing:.05em;text-transform:uppercase}
-          .acal-report-table td{padding:5px 8px;border-bottom:1px solid #e5e7eb}
-          .acal-report-kv-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
-          .acal-report-kv{display:flex;align-items:baseline;gap:7px;padding:6px 9px;background:#f7f5ee;border-radius:4px;border:1px solid #e5e7eb}
-          .acal-report-kv-key{font-size:10px;font-weight:700;color:#6b7280;min-width:120px}
-          .acal-report-kv-val{font-size:12px;font-weight:500}
-          .acal-report-header-block{border-bottom:3px solid #111;padding-bottom:16px;margin-bottom:20px}
-          .acal-report-subtitle{font-size:12px;color:#6b7280;font-weight:500}
-          .acal-report-monthly-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:6px}
-          .acal-report-month-mini{border:1px solid #e5e7eb;border-radius:4px;overflow:hidden}
-          .acal-report-month-mini-title{background:#0f3247;color:white;font-size:7.5px;font-weight:700;text-align:center;padding:3px;letter-spacing:.06em}
-          .acal-report-month-mini-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;padding:2px;background:#e5e7eb}
-          .acal-rmg-dh{background:#f3f4f6;text-align:center;font-size:5.5px;font-weight:700;color:#6b7280;padding:1.5px 0}
-          .acal-rmg-d{background:white;text-align:center;font-size:6.5px;padding:1.5px 0}
-          .acal-rmg-d.h{background:#f6e5e3;color:#b23a3a;font-weight:700}
-          .acal-rmg-d.t{background:#ccfbf1;color:#0d9488;font-weight:700}
-          .acal-rmg-d.e{background:#ece8f5;color:#5b4b8a;font-weight:700}
-          .acal-rmg-d.x{background:#faeadf;color:#d9622b;font-weight:700}
-          .acal-rmg-d.su{background:#e4ecf0;color:#5b6472}
-          .acal-rmg-d.em{background:white;color:transparent}
-          .acal-report-sig-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;margin-top:36px;padding-top:16px;border-top:1px solid #e5e7eb}
-          .acal-report-sig{text-align:center}
-          .acal-report-sig-line{border-bottom:1px solid #111;width:80%;margin:28px auto 5px}
-          .acal-report-sig-label{font-size:10px;color:#6b7280;font-weight:700}
-          .acal-legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;font-size:10px;color:#6b7280}
-          .acal-legend-item{display:flex;align-items:center;gap:4px}
-          .acal-legend-dot{width:8px;height:8px;border-radius:2px}
-          [contenteditable]{border:none!important;outline:none!important;background:transparent!important;box-shadow:none!important}
-        </style>
-      </head><body>${content.innerHTML}</body></html>`);
-      win.document.close();
-      setTimeout(() => win.print(), 600);
-    }
-
-    /* ========================================================
-       TOAST
-       ======================================================== */
-    function acalToast(msg) {
-      // Use the main app's toast if available, otherwise a minimal fallback
-      if (typeof showToast === 'function') { showToast(msg); return; }
-      const c = document.getElementById('toast-container') || document.body;
-      const t = document.createElement('div');
-      t.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#1d4e6b;color:#fff;padding:10px 16px;border-radius:7px;font-size:13px;z-index:9999;box-shadow:0 4px 14px rgba(0,0,0,.2);';
-      t.textContent = msg;
-      document.body.appendChild(t);
-      setTimeout(() => t.remove(), 3000);
-    }
-
 
     const PAGES = {
       "academic-calendar": { render: pageAcademicCalendar, bind: bindAcademicCalendar },
