@@ -2176,7 +2176,7 @@
       font-weight: 500;
     }
 
-    /* Calendar grid */
+    /* ── Calendar grid ── */
     #new-acal-root .nc-cal-wrap {
       flex: 1;
       overflow-y: auto;
@@ -2191,6 +2191,7 @@
       box-shadow: var(--nc-shadow);
     }
 
+    /* Day-of-week header — strict equal columns */
     #new-acal-root .nc-cal-header {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
@@ -2212,19 +2213,24 @@
       color: var(--nc-gold-light);
     }
 
+    /* Body: simple 7-column grid — headers and cells share identical column widths */
     #new-acal-root .nc-cal-body {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
     }
 
+    /* Day cells */
     #new-acal-root .nc-cal-day {
       border-right: 1px solid var(--nc-border-light);
       border-bottom: 1px solid var(--nc-border-light);
-      min-height: 90px;
-      padding: 5px;
-      position: relative;
+      min-height: 108px;
+      padding: 6px 6px 5px;
       cursor: pointer;
       transition: background 0.1s;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      overflow: hidden;
     }
 
     #new-acal-root .nc-cal-day:nth-child(7n) {
@@ -2257,6 +2263,7 @@
       align-items: center;
       justify-content: center;
       font-weight: 700;
+      margin: 0 auto 2px;
     }
 
     #new-acal-root .nc-cal-day.weekend .nc-day-num {
@@ -2267,36 +2274,91 @@
       font-size: 12px;
       font-weight: 600;
       color: var(--nc-text);
-      margin-bottom: 2px;
+      text-align: center;
+      margin-bottom: 3px;
+      flex-shrink: 0;
     }
 
-    #new-acal-root .nc-cal-events {
+    /* Event chips list inside each cell */
+    #new-acal-root .nc-cell-events {
       display: flex;
       flex-direction: column;
-      gap: 2px;
+      gap: 3px;
+      flex: 1;
+      min-height: 0;
     }
 
-    #new-acal-root .nc-event-pill {
-      font-size: 9px;
-      font-weight: 500;
-      padding: 1px 4px;
+    /* One event entry (dot + text block) */
+    #new-acal-root .nc-cell-event {
+      display: flex;
+      align-items: flex-start;
+      gap: 4px;
+      cursor: pointer;
       border-radius: 3px;
+      padding: 1px 3px;
+      transition: background 0.12s;
+    }
+
+    #new-acal-root .nc-cell-event:hover {
+      background: rgba(0, 0, 0, 0.06);
+    }
+
+    /* Colored category dot */
+    #new-acal-root .nc-cell-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    /* Text stack: name + date range */
+    #new-acal-root .nc-cell-text {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    #new-acal-root .nc-cell-name {
+      font-size: 9.5px;
+      font-weight: 600;
+      color: var(--nc-navy);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      cursor: pointer;
-      line-height: 1.4;
+      line-height: 1.3;
     }
 
-    #new-acal-root .nc-more-events {
-      font-size: 9px;
+    /* End-event name: slightly muted to distinguish from start */
+    #new-acal-root .nc-cell-event.ev-end .nc-cell-name {
+      font-weight: 500;
       color: var(--nc-text-muted);
-      font-weight: 600;
-      cursor: pointer;
     }
 
-    #new-acal-root .nc-more-events:hover {
+    #new-acal-root .nc-cell-dates {
+      font-size: 8px;
+      color: var(--nc-text-muted);
+      line-height: 1.25;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* "All Events" link */
+    #new-acal-root .nc-all-events-link {
+      font-size: 8.5px;
+      color: var(--nc-gold);
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: auto;
+      padding-top: 3px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    #new-acal-root .nc-all-events-link:hover {
       color: var(--nc-navy);
+      text-decoration: underline;
     }
 
     /* Pill colors */
@@ -6272,6 +6334,22 @@
       return courses;
     }
 
+    // ---- Resync helper: detect stale batches & rebuild from current program data ----
+    function ttValidateAndResync() {
+      const progs = visiblePrograms();
+      if (!progs.length) return false;
+
+      const validProgIds = new Set(progs.map(p => p.id));
+      const hasValidBatch = TT_BATCHES.some(b => validProgIds.has(b.progId));
+
+      if (!hasValidBatch || TT_BATCHES.length === 0) {
+        ttSeedBatches();
+        ttSaveLocal();
+        return true;
+      }
+      return false;
+    }
+
     function ttFacultyForCourse(courseId) {
       // Find first assigned faculty for a course from the assignments array
       let found = "";
@@ -6291,18 +6369,37 @@
     function ttBuildSessions() {
       const courses = ttCourseList();
       const sessions = [];
+
+      // Track which (progId, sem, division, courseId) theory sessions have already been added.
+      // Theory is a whole-division event — one entry per division, not per sub-batch.
+      const theoryAdded = new Set();
+
       TT_BATCHES.forEach(batch => {
-        const batchCourses = courses.filter(c => c.progId === batch.progId && c.sem === batch.sem);
+        const batchCourses = courses.filter(c =>
+          c.progId === batch.progId && Number(c.sem) === Number(batch.sem)
+        );
         const bk = ttBatchKey(batch);
         batchCourses.forEach(course => {
           if (course.type === "Lab") {
-            // Lab sessions go to sub-batches (each sub-batch gets its own lab slot)
+            // Lab sessions go to each sub-batch individually
             const blocks = Math.max(1, Math.round((course.P || 2) / 2));
-            for (let i = 0; i < blocks; i++) sessions.push({ bk, batch, course, length: 2, isLab: true });
+            for (let i = 0; i < blocks; i++)
+              sessions.push({ bk, batch, course, length: 2, isLab: true });
           } else {
-            // Theory sessions: whole division attends together
+            // Theory sessions: whole division attends together.
+            // Use a division-level key (without subBatch suffix) so we only add
+            // one set of sessions per division, regardless of how many sub-batches exist.
+            const divisionBk = batch.progId + "||" + batch.sem + "||" + batch.division;
+            const theoryKey = divisionBk + "::" + course.id;
+            if (theoryAdded.has(theoryKey)) return; // already added for this division
+            theoryAdded.add(theoryKey);
+
+            // Build a division-level batch object (subBatch = "") so the scheduler
+            // treats this as one combined slot for the whole division.
+            const divisionBatch = Object.assign({}, batch, { subBatch: "" });
+            const divBk = ttBatchKey(divisionBatch);
             const count = Math.max(1, course.hours);
-            for (let j = 0; j < count; j++) sessions.push({ bk, batch, course, length: 1, isLab: false });
+            for (let j = 0; j < count; j++) sessions.push({ bk: divBk, batch: divisionBatch, course, length: 1, isLab: false });
           }
         });
       });
@@ -7133,14 +7230,38 @@
       if (cfgBrk) cfgBrk.addEventListener("change", () => { TT_CONFIG.breakPeriod = parseInt(cfgBrk.value, 10) || 0; ttSaveLocal(); });
       const genBtn = document.getElementById("tt-generate-btn");
       if (genBtn) genBtn.addEventListener("click", () => {
-        if (!TT_BATCHES.length) { alert("Add at least one student batch first."); return; }
         const statusEl = document.getElementById("tt-gen-status");
-        statusEl.textContent = "Generating…";
+
+        // Auto-resync batches if they are stale (e.g. loaded from localStorage with old progIds)
+        const reseeded = ttValidateAndResync();
+
+        if (!TT_BATCHES.length) {
+          const progs = visiblePrograms();
+          if (!progs.length) {
+            statusEl.textContent = "";
+            alert("No programmes found. Please add programmes and courses in the Curriculum Builder first.");
+            return;
+          }
+          alert("No student batches found. Please go to the Student Batches tab and click '↺ Re-sync from Load Distribution'.");
+          return;
+        }
+
+        const courses = ttCourseList();
+        if (!courses.length) {
+          statusEl.textContent = "";
+          alert("No courses found in the active curriculum version. Please add courses in the Curriculum Builder first.");
+          return;
+        }
+
+        statusEl.textContent = reseeded ? "Resynced batches. Generating…" : "Generating…";
         setTimeout(() => {
           TT_GENERATED = ttGenerate(60);
           ttSaveGenerated();
           const p = TT_GENERATED.sessionsTotal - TT_GENERATED.unresolved.length;
-          statusEl.textContent = `Done — ${p} / ${TT_GENERATED.sessionsTotal} sessions placed.`;
+          const msg = TT_GENERATED.sessionsTotal === 0
+            ? "No sessions to schedule. Check that your batches and courses are configured correctly."
+            : `Done — ${p} / ${TT_GENERATED.sessionsTotal} sessions placed.`;
+          statusEl.textContent = msg;
           render();
         }, 30);
       });
@@ -7822,8 +7943,38 @@
       return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
     }
     function ncFmtDisplay(str) {
+      if (!str) return '—';
       const d = new Date(str + 'T00:00:00');
+      if (isNaN(d)) return str; // fallback: show raw string rather than "Invalid Date"
       return d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+    }
+
+    // Normalise any date string to YYYY-MM-DD for internal storage.
+    // Supported inputs: 'DD MMM YYYY' (e.g. 02 Jul 2026), 'YYYY-MM-DD', 'DD/MM/YYYY', 'MM/DD/YYYY'.
+    const NC_MONTHS = { jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6, jul: 7, aug: 8, sep: 9, oct: 10, nov: 11, dec: 12 };
+    function ncParseDate(str) {
+      if (!str) return '';
+      str = String(str).trim();
+      // Already ISO: YYYY-MM-DD
+      if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return str;
+      // DD MMM YYYY  (e.g. "02 Jul 2026" or "2 July 2026")
+      const dmy = str.match(/^(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})$/);
+      if (dmy) {
+        const m = NC_MONTHS[dmy[2].toLowerCase().slice(0, 3)];
+        if (m) return `${dmy[3]}-${String(m).padStart(2, '0')}-${String(dmy[1]).padStart(2, '0')}`;
+      }
+      // DD/MM/YYYY
+      const slash = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+      if (slash) {
+        // Heuristic: if first part > 12, it must be the day
+        const [, a, b, y] = slash;
+        if (parseInt(a) > 12) return `${y}-${b.padStart(2, '0')}-${a.padStart(2, '0')}`;  // DD/MM
+        return `${y}-${a.padStart(2, '0')}-${b.padStart(2, '0')}`;                         // MM/DD fallback
+      }
+      // Last resort: let Date parse it and reformat
+      const d = new Date(str);
+      if (!isNaN(d)) return ncFmtDate(d);
+      return str; // give up — caller will see Invalid Date in display
     }
     function ncHexAlpha(hex, a) {
       const r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
@@ -7885,39 +8036,101 @@
     function ncRenderCalendar() {
       const grid = document.getElementById('nc-cal-grid');
       if (!grid) return;
+
       const firstDay = new Date(NC_YEAR, NC_MONTH, 1);
       const lastDay = new Date(NC_YEAR, NC_MONTH + 1, 0);
       const startDow = firstDay.getDay();
+      const prevLast = new Date(NC_YEAR, NC_MONTH, 0);
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+
       const lbl = document.getElementById('nc-month-label');
       if (lbl) lbl.textContent = firstDay.toLocaleString('default', { month: 'long', year: 'numeric' });
 
-      let html = `<div class="nc-cal-header">${['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => `<div class="nc-cal-dow">${d}</div>`).join('')}</div><div class="nc-cal-body">`;
-      const today = new Date(); today.setHours(0, 0, 0, 0);
-      const prevLast = new Date(NC_YEAR, NC_MONTH, 0);
-      for (let i = startDow - 1; i >= 0; i--) {
-        html += `<div class="nc-cal-day other-month"><div class="nc-day-num">${prevLast.getDate() - i}</div></div>`;
+      // Category colour map
+      const CAT_COLOR = {
+        Teaching: 'var(--nc-cat-teaching)',
+        Examination: 'var(--nc-cat-exam)',
+        Holiday: 'var(--nc-cat-holiday)',
+        Vacation: 'var(--nc-cat-vacation)',
+        Admission: 'var(--nc-cat-admission)',
+        Registration: 'var(--nc-cat-registration)',
+        Academic: 'var(--nc-cat-academic)',
+        Other: 'var(--nc-cat-other)',
+      };
+
+      // Build one cell's HTML
+      function renderCell(dateStr, dayNum, cls) {
+        // Events that START on this date
+        const startEvs = NC_FILTERED.filter(e => e.startDate === dateStr);
+        // Events that END on this date (multi-day — started before)
+        const endEvs = NC_FILTERED.filter(e => e.endDate === dateStr && e.startDate !== dateStr);
+        // All events covering this date (for the "All Events" count)
+        const allEvs = NC_FILTERED.filter(e => e.startDate <= dateStr && e.endDate >= dateStr);
+
+        // Show at most 2 chips; start events first, then end events
+        const shown = [...startEvs, ...endEvs].slice(0, 2);
+
+        let chipsHtml = '';
+        shown.forEach(ev => {
+          const isEnd = ev.endDate === dateStr && ev.startDate !== dateStr;
+          const color = CAT_COLOR[ev.category] || '#888';
+          const dateRange = `${ncFmtDisplay(ev.startDate)} \u2192 ${ncFmtDisplay(ev.endDate)}`;
+          const prefix = isEnd ? '\u21a9\ufe0e ' : '';  // ↩ for end events
+          const safeName = (prefix + ev.name).replace(/"/g, '&quot;');
+          chipsHtml += `<div class="nc-cell-event${isEnd ? ' ev-end' : ''}" onclick="event.stopPropagation();ncEditEvent('${ev.id}')" title="${safeName} \u00b7 ${dateRange}">`;
+          chipsHtml += `<span class="nc-cell-dot" style="background:${color};"></span>`;
+          chipsHtml += `<span class="nc-cell-text">`;
+          chipsHtml += `<span class="nc-cell-name">${prefix}${ev.name}</span>`;
+          chipsHtml += `<span class="nc-cell-dates">${dateRange}</span>`;
+          chipsHtml += `</span></div>`;
+        });
+
+        // "All Events" link — shown whenever the day has any events
+        const allLink = allEvs.length > 0
+          ? `<div class="nc-all-events-link" onclick="event.stopPropagation();ncShowDayEvents('${dateStr}')">All Events (${allEvs.length})</div>`
+          : '';
+
+        return `<div class="${cls}" onclick="ncShowDayEvents('${dateStr}')">`
+          + `<div class="nc-day-num">${dayNum}</div>`
+          + `<div class="nc-cell-events">${chipsHtml}</div>`
+          + allLink
+          + `</div>`;
       }
+
+      // Build grid HTML
+      let html = `<div class="nc-cal-header">${['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => `<div class="nc-cal-dow">${d}</div>`).join('')
+        }</div><div class="nc-cal-body">`;
+
+      // Previous-month filler cells
+      for (let i = startDow - 1; i >= 0; i--) {
+        const dt = new Date(NC_YEAR, NC_MONTH - 1, prevLast.getDate() - i);
+        html += renderCell(ncFmtDate(dt), dt.getDate(), 'nc-cal-day other-month');
+      }
+
+      // Current-month day cells
       for (let d = 1; d <= lastDay.getDate(); d++) {
-        const date = new Date(NC_YEAR, NC_MONTH, d); date.setHours(0, 0, 0, 0);
-        const dateStr = ncFmtDate(date);
-        const isToday = date.getTime() === today.getTime();
-        const isWknd = date.getDay() === 0 || date.getDay() === 6;
-        const dayEvents = NC_FILTERED.filter(e => e.startDate <= dateStr && e.endDate >= dateStr);
+        const dt = new Date(NC_YEAR, NC_MONTH, d); dt.setHours(0, 0, 0, 0);
+        const dateStr = ncFmtDate(dt);
+        const isToday = dt.getTime() === today.getTime();
+        const isWknd = dt.getDay() === 0 || dt.getDay() === 6;
         let cls = 'nc-cal-day';
         if (isToday) cls += ' today';
         if (isWknd) cls += ' weekend';
-        const shown = dayEvents.slice(0, 3);
-        const rest = dayEvents.length - shown.length;
-        const pills = shown.map(e => `<div class="nc-event-pill pill-${e.category}" title="${e.name.replace(/"/g, '&quot;')}" onclick="event.stopPropagation();ncEditEvent('${e.id}')">${e.name}</div>`).join('');
-        const more = rest > 0 ? `<div class="nc-more-events" onclick="event.stopPropagation();ncShowDayEvents('${dateStr}')">+${rest} more</div>` : '';
-        html += `<div class="${cls}" onclick="ncShowDayEvents('${dateStr}')"><div class="nc-day-num">${d}</div><div class="nc-cal-events">${pills}${more}</div></div>`;
+        html += renderCell(dateStr, d, cls);
       }
-      const cells = startDow + lastDay.getDate();
-      const rem = cells % 7 === 0 ? 0 : 7 - (cells % 7);
-      for (let d = 1; d <= rem; d++) html += `<div class="nc-cal-day other-month"><div class="nc-day-num">${d}</div></div>`;
-      html += '</div>';
+
+      // Next-month filler cells
+      const totalCells = startDow + lastDay.getDate();
+      const rem = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
+      for (let d = 1; d <= rem; d++) {
+        const dt = new Date(NC_YEAR, NC_MONTH + 1, d);
+        html += renderCell(ncFmtDate(dt), d, 'nc-cal-day other-month');
+      }
+
+      html += '</div>';  // .nc-cal-body
       grid.innerHTML = html;
     }
+
 
     function ncRenderList() {
       const tbody = document.getElementById('nc-list-body');
@@ -8088,7 +8301,12 @@
 
     function ncExportCSV() {
       const header = ['name', 'category', 'startDate', 'endDate', 'semester', 'description'];
-      const rows = NC_EVENTS.map(e => [e.name, e.category, e.startDate, e.endDate, e.semester, e.desc || ''].map(v => `"${String(v).replace(/"/g, '""')}"`).join(','));
+      const rows = NC_EVENTS.map(e => [
+        e.name, e.category,
+        ncFmtDisplay(e.startDate),  // export as DD MMM YYYY
+        ncFmtDisplay(e.endDate),
+        e.semester, e.desc || ''
+      ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(','));
       const csv = [header.join(','), ...rows].join('\r\n');
       const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = 'academic-calendar.csv'; a.click();
       ncToast('Exported as CSV.', 'success');
@@ -8096,8 +8314,8 @@
 
     function ncPrint() {
       const sorted = [...NC_FILTERED].sort((a, b) => a.startDate.localeCompare(b.startDate));
-      const deptEl = document.getElementById('nc-dept-name');
-      const dept = (deptEl && deptEl.value) ? deptEl.value : 'Department';
+      const deptEl = document.getElementById('nc-dept');
+      const dept = (deptEl && deptEl.value) ? deptEl.value : (DEPARTMENT.name || 'Department');
       const yearEl = document.getElementById('nc-acad-year');
       const year = (yearEl && yearEl.value) ? yearEl.value : '';
       const rows = sorted.map(e => {
@@ -8156,21 +8374,21 @@
       <div class="print-title">Academic Calendar</div>
       <div class="print-sub">${dept}${year ? ' &nbsp;&mdash;&nbsp; ' + year : ''}</div>
     </div>
-    <div class="print-meta">Generated: ${new Date().toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' })}<br>${sorted.length} events listed</div>
+    <div class="print-meta">Generated: ${new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}<br>${sorted.length} events listed</div>
   </div>
   <div class="stats">
     <div class="stat-box"><div class="n">${sorted.length}</div><div class="l">Total Events</div></div>
     <div class="stat-box"><div class="n">${totalDays}</div><div class="l">Total Days</div></div>
     <div class="stat-box"><div class="n">${teachingDays}</div><div class="l">Teaching Weekdays</div></div>
-    <div class="stat-box"><div class="n">${sorted.filter(e=>e.category==='Examination').reduce((s,e)=>s+ncDaysBetween(e.startDate,e.endDate),0)}</div><div class="l">Exam Days</div></div>
-    <div class="stat-box"><div class="n">${sorted.filter(e=>e.category==='Holiday').reduce((s,e)=>s+ncDaysBetween(e.startDate,e.endDate),0)}</div><div class="l">Holidays</div></div>
-    <div class="stat-box"><div class="n">${sorted.filter(e=>e.category==='Vacation').reduce((s,e)=>s+ncDaysBetween(e.startDate,e.endDate),0)}</div><div class="l">Vacation Days</div></div>
+    <div class="stat-box"><div class="n">${sorted.filter(e => e.category === 'Examination').reduce((s, e) => s + ncDaysBetween(e.startDate, e.endDate), 0)}</div><div class="l">Exam Days</div></div>
+    <div class="stat-box"><div class="n">${sorted.filter(e => e.category === 'Holiday').reduce((s, e) => s + ncDaysBetween(e.startDate, e.endDate), 0)}</div><div class="l">Holidays</div></div>
+    <div class="stat-box"><div class="n">${sorted.filter(e => e.category === 'Vacation').reduce((s, e) => s + ncDaysBetween(e.startDate, e.endDate), 0)}</div><div class="l">Vacation Days</div></div>
   </div>
   <table>
     <thead><tr><th>Event Name</th><th>Category</th><th>Start Date</th><th>End Date</th><th style="text-align:center;">Days</th><th>Semester</th><th>Description</th></tr></thead>
     <tbody>${rows}</tbody>
   </table>
-  <div class="print-footer">Department Academic Planner &mdash; NEP 2020 (Maharashtra) &bull; Printed on ${new Date().toLocaleDateString('en-IN', { day:'2-digit', month:'long', year:'numeric' })}</div>
+  <div class="print-footer">Department Academic Planner &mdash; NEP 2020 (Maharashtra) &bull; Printed on ${new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}</div>
 </body></html>`;
       const win = window.open('', '_blank', 'width=1050,height=750,scrollbars=yes');
       win.document.write(html);
@@ -8178,32 +8396,53 @@
       setTimeout(() => win.print(), 600);
     }
 
-    function ncOpenImport() { document.getElementById('nc-import-modal').classList.add('open'); }
+    function ncOpenImport() {
+      // Reset mode to 'add' each time the modal opens
+      const addRadio = document.getElementById('nc-import-mode-add');
+      if (addRadio) addRadio.checked = true;
+      document.getElementById('nc-import-modal').classList.add('open');
+    }
     function ncCloseImport() { document.getElementById('nc-import-modal').classList.remove('open'); }
 
     function ncHandleImport(e) {
       const file = e.target.files[0]; if (!file) return;
+      const replaceMode = document.querySelector('input[name="nc-import-mode"]:checked')?.value === 'replace';
       const reader = new FileReader();
       reader.onload = (ev) => {
         try {
           if (file.name.endsWith('.json')) {
             const data = JSON.parse(ev.target.result);
             if (Array.isArray(data)) {
-              data.forEach(ev => { if (!ev.id) ev.id = ncUid(); });
-              NC_EVENTS = [...NC_EVENTS, ...data];
+              data.forEach(ev => {
+                if (!ev.id) ev.id = ncUid();
+                // Normalise dates to YYYY-MM-DD regardless of input format
+                ev.startDate = ncParseDate(ev.startDate);
+                ev.endDate = ncParseDate(ev.endDate);
+              });
+              NC_EVENTS = replaceMode ? data : [...NC_EVENTS, ...data];
               ncSaveData(); ncApplyFilters();
-              ncToast(`Imported ${data.length} events.`, 'success'); ncCloseImport();
+              const action = replaceMode ? 'Replaced calendar with' : 'Added';
+              ncToast(`${action} ${data.length} events.`, 'success'); ncCloseImport();
             }
           } else if (file.name.endsWith('.csv')) {
             const lines = ev.target.result.split('\n').filter(l => l.trim());
             const imported = [];
             for (let i = 1; i < lines.length; i++) {
               const cols = ncParseCSV(lines[i]);
-              if (cols.length >= 4) imported.push({ id: ncUid(), name: cols[0], category: cols[1] || 'Other', startDate: cols[2], endDate: cols[3], semester: cols[4] || 'Full Year', desc: cols[5] || '' });
+              if (cols.length >= 4) imported.push({
+                id: ncUid(),
+                name: cols[0],
+                category: cols[1] || 'Other',
+                startDate: ncParseDate(cols[2]),  // normalise DD MMM YYYY → YYYY-MM-DD
+                endDate: ncParseDate(cols[3]),
+                semester: cols[4] || 'Full Year',
+                desc: cols[5] || ''
+              });
             }
-            NC_EVENTS = [...NC_EVENTS, ...imported];
+            NC_EVENTS = replaceMode ? imported : [...NC_EVENTS, ...imported];
             ncSaveData(); ncApplyFilters();
-            ncToast(`Imported ${imported.length} events.`, 'success'); ncCloseImport();
+            const action = replaceMode ? 'Replaced calendar with' : 'Added';
+            ncToast(`${action} ${imported.length} events.`, 'success'); ncCloseImport();
           }
         } catch (err) { ncToast('Failed to parse file.', 'error'); }
         e.target.value = '';
@@ -8247,16 +8486,13 @@
                 <div class="nc-sidebar-label">Academic Setup</div>
                 <div class="nc-form-group">
                   <label>Academic Year</label>
-                  <select class="nc-form-control" id="nc-acad-year">
-                    <option>2024–2025</option>
-                    <option selected>2025–2026</option>
-                    <option>2026–2027</option>
-                    <option>2027–2028</option>
+                  <select class="nc-form-control" id="nc-acad-year" readonly title="Fetched from the Academic Year selector in the top toolbar">
+                    ${ACADEMIC_YEARS.map(y => `<option value="${esc(y.label)}" ${currentYear() && currentYear().label === y.label ? 'selected' : ''}>${esc(y.label)}</option>`).join('')}
                   </select>
                 </div>
                 <div class="nc-form-group">
                   <label>Department</label>
-                  <input class="nc-form-control" id="nc-dept" type="text" value="Computer Science & Engineering" placeholder="Department name">
+                  <input class="nc-form-control" id="nc-dept" type="text" value="" placeholder="Department name" readonly title="Fetched from Department &amp; Programs">
                 </div>
                 <div class="nc-form-group">
                   <label>Semester Filter</label>
@@ -8449,6 +8685,25 @@
                 <button class="nc-modal-close" onclick="ncCloseImport()">✕</button>
               </div>
               <div class="nc-modal-body">
+                <!-- Import mode choice -->
+                <div style="margin-bottom:14px;">
+                  <div style="font-size:12px;font-weight:600;color:var(--nc-navy);margin-bottom:8px;">Import Action</div>
+                  <label style="display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border:1.5px solid var(--nc-border);border-radius:var(--nc-radius);cursor:pointer;margin-bottom:6px;transition:border-color .15s;" onmouseover="this.style.borderColor='var(--nc-gold)'" onmouseout="this.style.borderColor=document.getElementById('nc-import-mode-add').checked?'var(--nc-gold)':'var(--nc-border)'">
+                    <input type="radio" id="nc-import-mode-add" name="nc-import-mode" value="add" checked style="margin-top:2px;accent-color:var(--nc-gold);">
+                    <div>
+                      <div style="font-size:13px;font-weight:600;color:var(--nc-navy);">Add to Existing Calendar</div>
+                      <div style="font-size:11px;color:var(--nc-text-muted);margin-top:2px;">Keep existing events and append the imported events.</div>
+                    </div>
+                  </label>
+                  <label style="display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border:1.5px solid var(--nc-border);border-radius:var(--nc-radius);cursor:pointer;transition:border-color .15s;" onmouseover="this.style.borderColor='var(--nc-gold)'" onmouseout="this.style.borderColor=document.getElementById('nc-import-mode-replace').checked?'var(--nc-gold)':'var(--nc-border)'">
+                    <input type="radio" id="nc-import-mode-replace" name="nc-import-mode" value="replace" style="margin-top:2px;accent-color:var(--nc-gold);">
+                    <div>
+                      <div style="font-size:13px;font-weight:600;color:var(--nc-navy);">Replace Existing Calendar</div>
+                      <div style="font-size:11px;color:var(--nc-text-muted);margin-top:2px;">Remove all current events and replace with the imported calendar.</div>
+                    </div>
+                  </label>
+                </div>
+                <!-- File drop zone -->
                 <div style="border:2px dashed var(--nc-border);border-radius:var(--nc-radius);padding:24px;text-align:center;cursor:pointer;" onclick="document.getElementById('nc-file-input').click()">
                   <input type="file" id="nc-file-input" accept=".json,.csv" style="display:none;" onchange="ncHandleImport(event)">
                   <div style="font-size:28px;margin-bottom:8px;">📂</div>
@@ -8457,6 +8712,7 @@
                 </div>
                 <div style="margin-top:12px;padding:10px;background:var(--nc-bg);border-radius:var(--nc-radius);font-size:11px;color:var(--nc-text-muted);">
                   <strong>CSV format:</strong> name, category, startDate, endDate, semester, description<br>
+                  <strong>Date format:</strong> <code>DD MMM YYYY</code> &nbsp;(e.g. <em>02 Jul 2026</em>)<br>
                   <strong>JSON format:</strong> Array of event objects with same fields.
                 </div>
               </div>
@@ -8471,6 +8727,18 @@
 
     function bindAcademicCalendar() {
       ncLoadData();
+      // Sync Department field from DEPARTMENT.name (set in Department & Programs)
+      const ncDeptInput = document.getElementById('nc-dept');
+      if (ncDeptInput) ncDeptInput.value = DEPARTMENT.name || '';
+      // Sync Academic Year from the global toolbar selection
+      const ncYearSel = document.getElementById('nc-acad-year');
+      if (ncYearSel && currentYear()) {
+        const activeLabel = currentYear().label;
+        // Try to select the matching option; if none exists add it
+        const opt = Array.from(ncYearSel.options).find(o => o.value === activeLabel);
+        if (opt) { ncYearSel.value = activeLabel; }
+        else { const o = new Option(activeLabel, activeLabel, true, true); ncYearSel.add(o, 0); }
+      }
       ncBuildChips();
       NC_FILTERED = [...NC_EVENTS];
       NC_FILTERED.sort((a, b) => a.startDate.localeCompare(b.startDate));
